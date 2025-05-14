@@ -1,0 +1,81 @@
+[
+    {
+      "id": "r1",
+      "text": "Using tools and equipment to build or fix something physical sounds like a great day to me.",
+      "category": "Realistic",
+      "style": "task",
+      "scale": [
+        "Absolutely not. I'd rather watch paint dry.",
+        "Not really my vibe, but maybe once.",
+        "Could be okay in small doses.",
+        "Yeah, I'd probably enjoy that kind of work.",
+        "Totally. Let me fix, build, tinker — I'm in."
+      ]
+    },
+    {
+      "id": "i1",
+      "text": "I love solving problems that don’t have obvious answers — especially if it means digging deep into research or data.",
+      "category": "Investigative",
+      "style": "trait",
+      "scale": [
+        "That sounds like a brain fog nightmare.",
+        "Only if someone else is guiding me.",
+        "Maybe — if I'm in the right headspace.",
+        "Honestly, that kind of thing gets me thinking.",
+        "Yes. Give me the puzzle. I'm fully invested."
+      ]
+    },
+    {
+      "id": "a1",
+      "text": "Being able to express myself creatively at work is a non-negotiable.",
+      "category": "Artistic",
+      "style": "value",
+      "scale": [
+        "Hard pass. I don't need that at all.",
+        "I can live without it, sure.",
+        "It'd be a nice bonus if it's there.",
+        "I'd feel a little lost without that outlet.",
+        "If I'm not creating, something's missing in me."
+      ]
+    },
+    {
+      "id": "s1",
+      "text": "Helping someone understand something complicated makes me feel genuinely good.",
+      "category": "Social",
+      "style": "trait",
+      "scale": [
+        "Nope. Sounds like a patience test.",
+        "Maybe, but only if I have to.",
+        "Sometimes it’s kinda rewarding, I guess.",
+        "Yeah, I get a buzz from that.",
+        "Absolutely. Helping someone 'get it' is magic."
+      ]
+    },
+    {
+      "id": "e1",
+      "text": "Convincing someone to see things my way is actually kind of thrilling.",
+      "category": "Enterprising",
+      "style": "trait",
+      "scale": [
+        "Noooope. I run from confrontation.",
+        "Only if it's really important.",
+        "Sometimes, if I'm in the zone.",
+        "I love a good debate or pitch.",
+        "Let me talk. I was born for this."
+      ]
+    },
+    {
+      "id": "c1",
+      "text": "Organizing chaos into a clean, labeled system brings me a weird amount of joy.",
+      "category": "Conventional",
+      "style": "trait",
+      "scale": [
+        "Mess is fine. I thrive in the void.",
+        "Structure is... meh. I’ll survive.",
+        "Okay, I admit — order has its perks.",
+        "It’s satisfying to bring logic to the madness.",
+        "Yes. I want folders in my folders. Bring it on."
+      ]
+    }
+  ]
+  
