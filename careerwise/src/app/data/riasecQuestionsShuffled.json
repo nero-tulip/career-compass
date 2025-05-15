@@ -1,0 +1,782 @@
+[
+    {
+        "id": "a2",
+        "text": "I want my work to feel like a form of creative expression — not just execution.",
+        "category": "Artistic",
+        "style": "value",
+        "scale": [
+            "Nope. Work is work, not art class.",
+            "That’s not really a priority for me.",
+            "It'd be a nice bonus, but not essential.",
+            "I think I'd feel stifled without some creativity.",
+            "Yes. Expression through work is core to who I am."
+        ]
+    },
+    {
+        "id": "e8",
+        "text": "You’re launching a new app and pitching it to investors. You handle strategy, branding, and rally a team to bring it to life.",
+        "category": "Enterprising",
+        "style": "scenario",
+        "scale": [
+            "Sounds terrifying and stressful.",
+            "Only if someone else handled the pressure.",
+            "It’s ambitious, but exciting.",
+            "That actually sounds really energizing.",
+            "Yes. That’s exactly the kind of challenge I want."
+        ]
+    },
+    {
+        "id": "s2",
+        "text": "I feel fulfilled when I support someone else’s growth or success.",
+        "category": "Social",
+        "style": "value",
+        "scale": [
+            "I don’t really connect with that.",
+            "It’s not something I think about much.",
+            "It’s fine, I guess — if it happens naturally.",
+            "I genuinely enjoy helping others level up.",
+            "Yes. Empowering others gives my work meaning."
+        ]
+    },
+    {
+        "id": "i3",
+        "text": "I enjoy analyzing complex systems or concepts to see how they work.",
+        "category": "Investigative",
+        "style": "trait",
+        "scale": [
+            "Not really. That sounds mentally exhausting.",
+            "Only if someone else explains it first.",
+            "I can get into it occasionally.",
+            "I like figuring out how stuff fits together.",
+            "Yes. That kind of analysis lights me up."
+        ]
+    },
+    {
+        "id": "c9",
+        "text": "You’re managing the back end of an online store — handling inventory systems, automations, shipping workflows, and making sure every process runs efficiently.",
+        "category": "Conventional",
+        "style": "scenario",
+        "scale": [
+            "Ugh, that sounds like mindless clicking.",
+            "Only if I had really good tools.",
+            "It depends on how well the system’s built.",
+            "I love creating efficient digital systems.",
+            "Absolutely. Optimizing that kind of flow is my jam."
+        ]
+    },
+    {
+        "id": "r5",
+        "text": "Spending the day fixing a bike, setting up gear, or doing something hands-on with tools sounds fun to me.",
+        "category": "Realistic",
+        "style": "task",
+        "scale": [
+            "Nope. That sounds like a nightmare.",
+            "Maybe for like 10 minutes.",
+            "Could be tolerable, I guess.",
+            "Yeah, I'd probably enjoy that kind of work.",
+            "Absolutely. Give me the toolkit already."
+        ]
+    },
+    {
+        "id": "e10",
+        "text": "You’re a lawyer — crafting arguments, debating in court, convincing people of your position, and negotiating outcomes.",
+        "category": "Enterprising",
+        "style": "career-visual",
+        "scale": [
+            "No way. I’d fold under pressure.",
+            "Only if I could stay behind the scenes.",
+            "It’s intense, but maybe exciting.",
+            "I love the idea of persuasive work.",
+            "Yes. I’d eat that job up."
+        ]
+    },
+    {
+        "id": "s3",
+        "text": "I care deeply about making others feel seen and understood.",
+        "category": "Social",
+        "style": "value",
+        "scale": [
+            "I don't think that's my responsibility.",
+            "That’s nice, but not something I focus on.",
+            "I try when I can.",
+            "It matters to me more than I admit.",
+            "Yes. Making people feel understood is huge for me."
+        ]
+    },
+    {
+        "id": "c10",
+        "text": "You’re a logistics coordinator — managing shipments, organizing schedules, and making sure everything arrives where it needs to, on time.",
+        "category": "Conventional",
+        "style": "career-visual",
+        "scale": [
+            "That sounds like anxiety in spreadsheet form.",
+            "Only if there were tools to help.",
+            "Could be satisfying in the right system.",
+            "I like keeping things moving and on track.",
+            "Yes. That kind of structured challenge is my thing."
+        ]
+    },
+    {
+        "id": "r4",
+        "text": "Working outdoors or with my body sounds energizing, not draining.",
+        "category": "Realistic",
+        "style": "trait",
+        "scale": [
+            "Nature? Outside? Physical labor? Pass.",
+            "I’d rather stay indoors, honestly.",
+            "If it's part of the job, sure.",
+            "Yeah, being active sounds refreshing.",
+            "Absolutely. I need movement and fresh air."
+        ]
+    },
+    {
+        "id": "e4",
+        "text": "I want to influence decisions and drive things forward, not just follow instructions.",
+        "category": "Enterprising",
+        "style": "value",
+        "scale": [
+            "No thanks. Tell me what to do and I’ll do it.",
+            "Only if no one else steps up.",
+            "I like contributing, not leading.",
+            "I want to help set the direction.",
+            "I need to be in the driver's seat."
+        ]
+    },
+    {
+        "id": "i4",
+        "text": "I could happily spend hours learning about something obscure just for fun.",
+        "category": "Investigative",
+        "style": "trait",
+        "scale": [
+            "Absolutely not. Why would I do that?",
+            "Only if it's directly useful.",
+            "Maybe once in a while.",
+            "Yeah, I get into weird rabbit holes sometimes.",
+            "YES. I'm fueled by curiosity and Wikipedia spirals."
+        ]
+    },
+    {
+        "id": "s7",
+        "text": "Working in a hospital, school, or nonprofit where I support others directly feels like something I’d find meaningful.",
+        "category": "Social",
+        "style": "values-based-role",
+        "scale": [
+            "Nope. I need distance from people’s problems.",
+            "Maybe, if it wasn't too intense.",
+            "It depends on the role and cause.",
+            "Yeah, that kind of work feels impactful.",
+            "Definitely. That kind of job would fulfill me."
+        ]
+    },
+    {
+        "id": "c8",
+        "text": "You’re managing the operations of a major conference. You keep the schedule tight, the teams on task, and every tiny detail on track.",
+        "category": "Conventional",
+        "style": "scenario",
+        "scale": [
+            "Nope. I’d crumble under that pressure.",
+            "Maybe if I had a checklist and help.",
+            "I could see the appeal of that.",
+            "I love making sure things run smoothly.",
+            "Yes. That kind of order is extremely satisfying to me."
+        ]
+    },
+    {
+        "id": "r7",
+        "text": "Restoring a vintage car, building furniture, or doing DIY projects sounds like something I’d genuinely enjoy.",
+        "category": "Realistic",
+        "style": "role-example",
+        "scale": [
+            "Not even a little bit.",
+            "Only if someone else planned it.",
+            "Maybe once in a while.",
+            "Yeah, that kind of project sounds cool.",
+            "Absolutely. That’s my ideal weekend."
+        ]
+    },
+    {
+        "id": "a4",
+        "text": "I want to feel emotionally connected to the work I’m doing.",
+        "category": "Artistic",
+        "style": "value",
+        "scale": [
+            "Nope. I want efficiency, not feelings.",
+            "That sounds a bit overdramatic.",
+            "It’s nice when that happens.",
+            "I feel best when my work has emotional resonance.",
+            "Yes. If I don’t feel it, I can’t do it."
+        ]
+    },
+    {
+        "id": "i7",
+        "text": "Researching ancient civilizations, decoding puzzles, or tracking patterns in data sounds intriguing to me.",
+        "category": "Investigative",
+        "style": "role-example",
+        "scale": [
+            "I’d rather clean my inbox.",
+            "Only if I had to do it.",
+            "That sounds mildly interesting.",
+            "Yeah, I could get into that.",
+            "Totally. I love chasing knowledge trails."
+        ]
+    },
+    {
+        "id": "c5",
+        "text": "I’d enjoy managing schedules, tracking details, or creating systems that keep things running smoothly.",
+        "category": "Conventional",
+        "style": "task",
+        "scale": [
+            "No way. That’s mind-numbing.",
+            "Only if no one else would do it.",
+            "It’s useful, I guess.",
+            "I like keeping things clean and tight.",
+            "Yes. That’s my wheelhouse."
+        ]
+    },
+    {
+        "id": "r3",
+        "text": "I'd rather fix something broken than replace it with something new.",
+        "category": "Realistic",
+        "style": "value",
+        "scale": [
+            "Absolutely not. Toss it and move on.",
+            "Only if there's no other option.",
+            "Maybe, if it’s something simple.",
+            "Fixing things sounds kind of satisfying.",
+            "Yes. Making it work again feels meaningful."
+        ]
+    },
+    {
+        "id": "a1",
+        "text": "Being able to express myself creatively at work is a non-negotiable.",
+        "category": "Artistic",
+        "style": "value",
+        "scale": [
+            "Hard pass. I don't need that at all.",
+            "I can live without it, sure.",
+            "It'd be a nice bonus if it's there.",
+            "I'd feel a little lost without that outlet.",
+            "If I'm not creating, something's missing in me."
+        ]
+    },
+    {
+        "id": "i6",
+        "text": "A research-heavy role like data analysis, lab work, or technical strategy actually sounds appealing.",
+        "category": "Investigative",
+        "style": "task",
+        "scale": [
+            "Absolutely not. Boring central.",
+            "Only if the topic was super interesting.",
+            "It depends on the environment.",
+            "Yeah, I’d enjoy getting deep into it.",
+            "Yes. I thrive in roles like that."
+        ]
+    },
+    {
+        "id": "c3",
+        "text": "I love making systems more efficient, predictable, or easy to follow.",
+        "category": "Conventional",
+        "style": "task",
+        "scale": [
+            "Not really. Chaos doesn't bother me.",
+            "I only fix things when they’re broken.",
+            "I sometimes enjoy cleaning things up.",
+            "I like improving systems behind the scenes.",
+            "Yes. That kind of streamlining gives me life."
+        ]
+    },
+    {
+        "id": "e1",
+        "text": "Convincing someone to see things my way is actually kind of thrilling.",
+        "category": "Enterprising",
+        "style": "trait",
+        "scale": [
+            "Noooope. I run from confrontation.",
+            "Only if it's really important.",
+            "Sometimes, if I'm in the zone.",
+            "I love a good debate or pitch.",
+            "Let me talk. I was born for this."
+        ]
+    },
+    {
+        "id": "a3",
+        "text": "I often imagine new ways to express ideas, even if I don’t act on them.",
+        "category": "Artistic",
+        "style": "trait",
+        "scale": [
+            "Nope. I don’t think like that at all.",
+            "Maybe once in a blue moon.",
+            "I sometimes notice creative angles.",
+            "Yeah, my brain kind of does that automatically.",
+            "Constantly. I can’t not see creative possibilities."
+        ]
+    },
+    {
+        "id": "r2",
+        "text": "I’d enjoy a job where I get to move around, use my hands, and make physical things happen.",
+        "category": "Realistic",
+        "style": "trait",
+        "scale": [
+            "No thanks. I'd rather not move at all.",
+            "That sounds exhausting and unnecessary.",
+            "Maybe now and then, if it’s not too intense.",
+            "Yeah, that kind of hands-on work feels satisfying.",
+            "Absolutely. I need to be *doing*, not just thinking."
+        ]
+    },
+    {
+        "id": "i10",
+        "text": "You’re a lab researcher — running experiments, analyzing results, and trying to uncover patterns no one has seen before.",
+        "category": "Investigative",
+        "style": "career-visual",
+        "scale": [
+            "No thanks. I need more variety.",
+            "Only if I had support.",
+            "It sounds useful, but intense.",
+            "I like that kind of deep, focused work.",
+            "Yes. That’s exactly my kind of challenge."
+        ]
+    },
+    {
+        "id": "c6",
+        "text": "Filling out spreadsheets, organizing files, or running logistics makes me feel in control.",
+        "category": "Conventional",
+        "style": "task",
+        "scale": [
+            "Nope. That sounds like slow death.",
+            "Maybe, for like 30 minutes.",
+            "It’s fine if it helps the team.",
+            "Honestly, that kind of order feels good.",
+            "Yes. Let me spreadsheet my soul."
+        ]
+    },
+    {
+        "id": "a7",
+        "text": "Writing a novel, creating a comic, or directing a short film feels like something I could see myself doing one day.",
+        "category": "Artistic",
+        "style": "aspirational-role",
+        "scale": [
+            "No way. That’s not me.",
+            "Maybe if I had a wild idea.",
+            "It sounds interesting but unlikely.",
+            "Yeah, I’ve thought about that.",
+            "Yes. I daydream about stuff like that a lot."
+        ]
+    },
+    {
+        "id": "s1",
+        "text": "Helping someone understand something complicated makes me feel genuinely good.",
+        "category": "Social",
+        "style": "trait",
+        "scale": [
+            "Nope. Sounds like a patience test.",
+            "Maybe, but only if I have to.",
+            "Sometimes it’s kinda rewarding, I guess.",
+            "Yeah, I get a buzz from that.",
+            "Absolutely. Helping someone 'get it' is magic."
+        ]
+    },
+    {
+        "id": "e2",
+        "text": "I get energy from pitching ideas, influencing decisions, or driving momentum.",
+        "category": "Enterprising",
+        "style": "trait",
+        "scale": [
+            "Please no. Just give me a quiet task.",
+            "That sounds like a lot of pressure.",
+            "I can do it, but it’s not my jam.",
+            "I actually like that kind of challenge.",
+            "Yes. I live for persuasion, action, and big moves."
+        ]
+    },
+    {
+        "id": "c7",
+        "text": "I think I’d enjoy being a project manager, administrator, or operations coordinator — keeping things running efficiently.",
+        "category": "Conventional",
+        "style": "role-example",
+        "scale": [
+            "Ugh, that sounds dry.",
+            "Only if no one else would do it.",
+            "It has its appeal, I guess.",
+            "Yeah, I like roles that keep things moving.",
+            "Totally. I’d be great at that."
+        ]
+    },
+    {
+        "id": "a10",
+        "text": "You’re an illustrator — creating artwork for books, campaigns, and online content, working closely with clients and expressing your visual style.",
+        "category": "Artistic",
+        "style": "career-visual",
+        "scale": [
+            "I’d be lost with a blank page.",
+            "Maybe if I had direction.",
+            "It could be fun creatively.",
+            "That sounds really fulfilling.",
+            "Yes. I’d love that kind of creative role."
+        ]
+    },
+    {
+        "id": "i5",
+        "text": "Solving technical problems, debugging things, or improving how systems run sounds rewarding.",
+        "category": "Investigative",
+        "style": "task",
+        "scale": [
+            "Nope. That sounds tedious.",
+            "Only if it’s easy to fix.",
+            "I could give it a shot.",
+            "I like getting to the bottom of things.",
+            "Yes. I’d love to be the problem solver."
+        ]
+    },
+    {
+        "id": "e6",
+        "text": "Managing a team, pitching investors, or leading big meetings sounds energizing, not scary.",
+        "category": "Enterprising",
+        "style": "trait",
+        "scale": [
+            "Terrifying. No thanks.",
+            "I’d need a lot of prep.",
+            "Maybe if I believed in the project.",
+            "I’d be excited by that kind of role.",
+            "Yes. I’d be in my element there."
+        ]
+    },
+    {
+        "id": "s10",
+        "text": "You’re a personal trainer — guiding people through workouts, motivating them, and helping them hit their fitness goals.",
+        "category": "Social",
+        "style": "career-visual",
+        "scale": [
+            "That sounds exhausting and awkward.",
+            "Only if I didn’t have to be too intense.",
+            "It could be rewarding to help people.",
+            "Yeah, I’d enjoy that kind of connection.",
+            "Yes. That role fits me really well."
+        ]
+    },
+    {
+        "id": "r6",
+        "text": "I'd love a job where I get to work with animals, machinery, or my hands instead of a laptop.",
+        "category": "Realistic",
+        "style": "task",
+        "scale": [
+            "Please no. Keyboard life forever.",
+            "Only if it’s a short-term thing.",
+            "Maybe for part of the day.",
+            "That kind of mix actually sounds nice.",
+            "Yes. Let me be up and moving, not sitting."
+        ]
+    },
+    {
+        "id": "a6",
+        "text": "A job where I get to invent things, pitch wild ideas, or challenge creative boundaries sounds amazing.",
+        "category": "Artistic",
+        "style": "task",
+        "scale": [
+            "Yikes. No thanks.",
+            "Only if there are rules in place.",
+            "Sounds fun, but also chaotic.",
+            "That’s the kind of challenge I like.",
+            "Yes. Wild ideas are where I live."
+        ]
+    },
+    {
+        "id": "e3",
+        "text": "I often get ideas for businesses, products, or ways to improve things.",
+        "category": "Enterprising",
+        "style": "trait",
+        "scale": [
+            "Not really. I don’t think like that.",
+            "Maybe occasionally, but I forget them fast.",
+            "I get random ideas sometimes.",
+            "I think about improvement constantly.",
+            "Yes. I'm always spotting opportunity."
+        ]
+    },
+    {
+        "id": "s9",
+        "text": "You're volunteering as a peer mentor for students trying to choose their career paths. You listen, ask questions, and share what you’ve learned.",
+        "category": "Social",
+        "style": "scenario",
+        "scale": [
+            "Nope. I wouldn’t know what to say.",
+            "Only if someone trained me first.",
+            "It depends on the student.",
+            "Yeah, I like helping others gain clarity.",
+            "Definitely. Guiding others feels deeply meaningful to me."
+        ]
+    },
+    {
+        "id": "r9",
+        "text": "You're working on a farm-to-table project, tending to plants, handling tools, and being outside all day in shifting conditions.",
+        "category": "Realistic",
+        "style": "scenario",
+        "scale": [
+            "Absolutely not. That sounds like my nightmare.",
+            "Maybe, but only for a short time.",
+            "I could try it if the setting was nice.",
+            "Yeah, that kind of hands-on work feels grounding.",
+            "Totally. I'd love being immersed in nature and tools."
+        ]
+    },
+    {
+        "id": "c1",
+        "text": "Organizing chaos into a clean, labeled system brings me a weird amount of joy.",
+        "category": "Conventional",
+        "style": "trait",
+        "scale": [
+            "Mess is fine. I thrive in the void.",
+            "Structure is... meh. I’ll survive.",
+            "Okay, I admit — order has its perks.",
+            "It’s satisfying to bring logic to the madness.",
+            "Yes. I want folders in my folders. Bring it on."
+        ]
+    },
+    {
+        "id": "a5",
+        "text": "I'd be happy in a job where I get to design, write, perform, or create visual content regularly.",
+        "category": "Artistic",
+        "style": "task",
+        "scale": [
+            "No thanks. That’s not my thing.",
+            "Only once in a while, maybe.",
+            "That could be fun in the right setting.",
+            "Yes, I’d get excited about that.",
+            "Absolutely. That’s where I feel most alive."
+        ]
+    },
+    {
+        "id": "i2",
+        "text": "I often find myself asking questions like 'why does that work the way it does?'",
+        "category": "Investigative",
+        "style": "trait",
+        "scale": [
+            "I don’t really care how things work.",
+            "I only ask that stuff by accident.",
+            "Sometimes I get curious, sure.",
+            "I catch myself nerding out on random things.",
+            "Yes. I constantly want to understand how things tick."
+        ]
+    },
+    {
+        "id": "s8",
+        "text": "You’re working in a small clinic, helping people understand and manage their health. You explain things clearly and support them through tough emotions.",
+        "category": "Social",
+        "style": "scenario",
+        "scale": [
+            "No way. That’s way too personal.",
+            "Maybe, but only behind the scenes.",
+            "It could be rewarding in the right moment.",
+            "Yeah, I like being there for people.",
+            "Yes. I’d love helping people in that way."
+        ]
+    },
+    {
+        "id": "c2",
+        "text": "It makes me happy when everything’s structured, categorized, and under control.",
+        "category": "Conventional",
+        "style": "trait",
+        "scale": [
+            "Chaos is fine. I'm not here to sort anything.",
+            "It’s whatever. I'm not bothered either way.",
+            "I guess I like when things feel organized.",
+            "Clean systems bring me peace, honestly.",
+            "Yes. Structure is my love language."
+        ]
+    },
+    {
+        "id": "a8",
+        "text": "You’re leading a team to write, produce, and perform a live theater show. It’s bold, collaborative, and creative chaos for weeks.",
+        "category": "Artistic",
+        "style": "scenario",
+        "scale": [
+            "No thank you. That’s way too much.",
+            "Maybe if I had a tiny role.",
+            "It sounds interesting but intense.",
+            "That sounds creatively fulfilling.",
+            "Yes. That’s totally my kind of environment."
+        ]
+    },
+    {
+        "id": "e5",
+        "text": "Roles like sales, marketing, politics, or launching businesses sound exciting to me.",
+        "category": "Enterprising",
+        "style": "task",
+        "scale": [
+            "Nope. I don't want to sell or persuade.",
+            "Maybe, but I’m skeptical.",
+            "I'd try it with the right product.",
+            "I think I'd actually enjoy that world.",
+            "Yes. That sounds like my zone."
+        ]
+    },
+    {
+        "id": "r10",
+        "text": "You’re a mechanic — spending your day diagnosing car issues, working with tools, and fixing real problems with your hands.",
+        "category": "Realistic",
+        "style": "career-visual",
+        "scale": [
+            "Hard pass. I'd destroy the engine and cry.",
+            "Maybe if someone walked me through it.",
+            "Could be satisfying in small doses.",
+            "Yeah, I like the idea of fixing things.",
+            "Yes. I’d thrive in that kind of hands-on role."
+        ]
+    },
+    {
+        "id": "i8",
+        "text": "You’re part of a research team trying to figure out why a mysterious species of plant is dying out. It involves experiments, analysis, and digging through data for patterns.",
+        "category": "Investigative",
+        "style": "scenario",
+        "scale": [
+            "Ugh, sounds tedious and slow.",
+            "Might be fun with the right team.",
+            "I’d try it if I had a clear goal.",
+            "That sounds genuinely fascinating.",
+            "Yes. I’d love solving something like that."
+        ]
+    },
+    {
+        "id": "a9",
+        "text": "You’re designing branding and visuals for a startup — color palettes, fonts, layout, the whole vibe. It’s creative freedom with a tight deadline.",
+        "category": "Artistic",
+        "style": "scenario",
+        "scale": [
+            "Sounds stressful and vague.",
+            "Only if I had strong direction.",
+            "That could be interesting if the brand’s cool.",
+            "Yeah, I’d enjoy shaping the aesthetic.",
+            "Absolutely. Give me creative control and a vision."
+        ]
+    },
+    {
+        "id": "e7",
+        "text": "I could see myself pitching ideas to investors, leading a company, or growing a business someday.",
+        "category": "Enterprising",
+        "style": "aspirational-role",
+        "scale": [
+            "No thanks. I’d hate that pressure.",
+            "Only if I had to.",
+            "Maybe, if I believed in the idea.",
+            "Yeah, that would be a challenge I’d want.",
+            "Yes. That sounds like something I’d thrive in."
+        ]
+    },
+    {
+        "id": "s6",
+        "text": "I’d love a job where talking with people, explaining things, and making them feel heard is the main focus.",
+        "category": "Social",
+        "style": "task",
+        "scale": [
+            "No thanks. I'm not a people person.",
+            "Only if I had to do it.",
+            "I could get into that role.",
+            "That actually sounds really meaningful.",
+            "Yes. I’m at my best in conversation."
+        ]
+    },
+    {
+        "id": "r1",
+        "text": "Using tools and equipment to build or fix something physical sounds like a great day to me.",
+        "category": "Realistic",
+        "style": "task",
+        "scale": [
+            "Absolutely not. I'd rather watch paint dry.",
+            "Not really my vibe, but maybe once.",
+            "Could be okay in small doses.",
+            "Yeah, I'd probably enjoy that kind of work.",
+            "Totally. Let me fix, build, tinker — I'm in."
+        ]
+    },
+    {
+        "id": "c4",
+        "text": "It matters to me that rules, roles, and expectations are clearly defined.",
+        "category": "Conventional",
+        "style": "value",
+        "scale": [
+            "Not at all. I prefer figuring it out as I go.",
+            "Only when things are super confusing.",
+            "It’s helpful, but not required.",
+            "Structure makes everything smoother.",
+            "Yes. Clear systems = clear minds."
+        ]
+    },
+    {
+        "id": "i1",
+        "text": "I love solving problems that don’t have obvious answers — especially if it means digging deep into research or data.",
+        "category": "Investigative",
+        "style": "trait",
+        "scale": [
+            "That sounds like a brain fog nightmare.",
+            "Only if someone else is guiding me.",
+            "Maybe — if I'm in the right headspace.",
+            "Honestly, that kind of thing gets me thinking.",
+            "Yes. Give me the puzzle. I'm fully invested."
+        ]
+    },
+    {
+        "id": "s4",
+        "text": "I'd enjoy a role where I get to coach, mentor, or guide others.",
+        "category": "Social",
+        "style": "task",
+        "scale": [
+            "That sounds awkward and stressful.",
+            "Only if it’s a small part of the job.",
+            "Maybe, if I know what I’m doing.",
+            "That kind of guidance feels natural to me.",
+            "Absolutely. Helping others grow is my jam."
+        ]
+    },
+    {
+        "id": "r8",
+        "text": "You’re outdoors building a custom treehouse from scratch. It involves carpentry, problem-solving, and working with your hands all day.",
+        "category": "Realistic",
+        "style": "scenario",
+        "scale": [
+            "Nope. That sounds exhausting.",
+            "Maybe, if the weather’s nice.",
+            "I’d be curious to try it once.",
+            "Honestly, that sounds satisfying.",
+            "Yes. That is my ideal kind of work."
+        ]
+    },
+    {
+        "id": "e9",
+        "text": "You're organizing a community fundraiser. You’re in charge of the campaign strategy, messaging, outreach, and leading the volunteers.",
+        "category": "Enterprising",
+        "style": "scenario",
+        "scale": [
+            "That sounds like way too much responsibility.",
+            "Maybe if someone else handled the logistics.",
+            "Could be rewarding in the right context.",
+            "I love leading efforts that make an impact.",
+            "Yes. That kind of leadership role excites me."
+        ]
+    },
+    {
+        "id": "i9",
+        "text": "You're analyzing a massive dataset to figure out trends in education. You’re deep in spreadsheets, articles, and graphs all day.",
+        "category": "Investigative",
+        "style": "scenario",
+        "scale": [
+            "I’d fall asleep by hour one.",
+            "I could tolerate it for a good cause.",
+            "It depends on the topic — maybe.",
+            "I like finding meaning in numbers.",
+            "Yes. That kind of intellectual puzzle excites me."
+        ]
+    },
+    {
+        "id": "s5",
+        "text": "I'd enjoy being a counselor, teacher, or coach — helping people directly with their growth.",
+        "category": "Social",
+        "style": "task",
+        "scale": [
+            "Nope. That’s way too personal.",
+            "Maybe in small doses.",
+            "I’d be open to trying something like that.",
+            "That sounds genuinely fulfilling.",
+            "Absolutely. Sign me up."
+        ]
+    }
+]

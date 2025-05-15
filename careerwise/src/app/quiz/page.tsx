@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import macroQuestions from '@/app/data/macroQuestions.json';
-import riaQuestions from '@/app/data/riasecQuestions.json';
+import riaQuestions from '@/app/data/riasecQuestionsShuffled.json';
 
 interface QuestionBase {
   id: string;
