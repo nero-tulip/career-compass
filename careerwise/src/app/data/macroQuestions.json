@@ -1,0 +1,99 @@
+[
+    {
+      "id": "m1",
+      "text": "How important is earning a high income to you?",
+      "dimension": "income",
+      "scale": [
+        "I genuinely don’t care, as long as I’m happy.",
+        "Nice to have, but not a priority.",
+        "I want to live comfortably, not lavishly.",
+        "It’s pretty important to me long-term.",
+        "Making serious money is a major goal for me."
+      ]
+    },
+    {
+      "id": "m2",
+      "text": "Would you ever want to start or run your own business?",
+      "dimension": "entrepreneurialDrive",
+      "scale": [
+        "No way. I want stability and predictability.",
+        "Only if I had no other choice.",
+        "Maybe, if the timing and idea felt right.",
+        "I’d love to try it at some point.",
+        "Yes. That’s absolutely the dream."
+      ]
+    },
+    {
+      "id": "m3",
+      "text": "How important is job security to you?",
+      "dimension": "jobSecurity",
+      "scale": [
+        "It’s my top priority. I need to feel safe.",
+        "Very important, but I can tolerate mild risk.",
+        "It matters, but I also want purpose.",
+        "I’d trade some security for meaning or freedom.",
+        "I don’t care — I’ll figure it out as I go."
+      ]
+    },
+    {
+      "id": "m4",
+      "text": "Do you enjoy leading others?",
+      "dimension": "leadership",
+      "scale": [
+        "Absolutely not. I’d rather follow directions.",
+        "Only if I have to.",
+        "I'm okay stepping up occasionally.",
+        "I enjoy leading when the opportunity arises.",
+        "I thrive when I’m in charge."
+      ]
+    },
+    {
+      "id": "m5",
+      "text": "How important is professional status or prestige to you?",
+      "dimension": "prestige",
+      "scale": [
+        "I don’t care at all about titles or image.",
+        "It’s not a focus, but recognition feels nice.",
+        "I like the idea of being respected.",
+        "I want to feel accomplished and admired.",
+        "I’m absolutely chasing prestige — unapologetically."
+      ]
+    },
+    {
+      "id": "m6",
+      "text": "How much social interaction do you want in your work?",
+      "dimension": "socialInteraction",
+      "scale": [
+        "As little as possible. Let me work alone.",
+        "Minimal — just enough to get by.",
+        "Balanced. Some solo, some people time.",
+        "I like being around others regularly.",
+        "I need constant interaction to stay energized."
+      ]
+    },
+    {
+      "id": "m7",
+      "text": "How important is it for your work to create a meaningful impact?",
+      "dimension": "impact",
+      "scale": [
+        "I just want a job — not everything has to mean something.",
+        "If it helps people, cool. Not a must.",
+        "I’d like to contribute in small ways.",
+        "It’s important that my work improves something.",
+        "I need my work to feel deeply purposeful."
+      ]
+    },
+    {
+      "id": "m8",
+      "text": "How much control do you want over your daily schedule?",
+      "dimension": "flexibility",
+      "scale": [
+        "I’m fine with a strict 9-to-5.",
+        "Some routine keeps me grounded.",
+        "Balance would be ideal.",
+        "I’d prefer flexibility when possible.",
+        "I want full control over my time."
+      ]
+    }
+  ]
+  
