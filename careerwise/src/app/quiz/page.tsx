@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import macroQuestions from '@/app/data/macroQuestions.json';
 import riaQuestions from '@/app/data/riasecQuestionsShuffled.json';
+import type { Answer } from '@/app/types/quiz';
 
 interface QuestionBase {
   id: string;
@@ -10,19 +11,16 @@ interface QuestionBase {
   scale: string[];
 }
 
-interface MacroQuestion extends QuestionBase {
-  dimension: string;
-}
 
 interface RiaSecQuestion extends QuestionBase {
   category: string;
   style: string;
 }
 
-interface Answer {
-  questionId: string;
-  score: number;
+interface MacroQuestion extends QuestionBase {
+  dimension: string;
 }
+
 
 const QUESTIONS_PER_PAGE = 10;
 type Phase = 'macro' | 'riasec';
