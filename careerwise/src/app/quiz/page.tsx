@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import macroQuestions from '@/app/data/macroQuestions.json';
 import riaQuestions from '@/app/data/riasecQuestionsShuffled.json';
 import type { Answer } from '@/app/types/quiz';
@@ -66,6 +67,7 @@ export default function QuizPage() {
   const [macroAnswers, setMacroAnswers] = useState<Answer[]>([]);
   const [riaAnswers, setRiaAnswers] = useState<Answer[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
+  const router = useRouter();
 
   const handleMacroAnswer = (questionId: string, score: number) => {
     setMacroAnswers((prev) => {
@@ -105,7 +107,7 @@ export default function QuizPage() {
     return (
       <div className="max-w-3xl mx-auto py-8 px-4">
         <h2 className="text-xl font-semibold mb-4">
-          Let’s get to know you—big picture
+          Let&apos;s get to know you—big picture
         </h2>
         {allMacro.map((q) => {
           const sel = macroAnswers.find((a) => a.questionId === q.id)?.score;
@@ -154,10 +156,35 @@ export default function QuizPage() {
     if (currentPage > 0) setCurrentPage((p) => p - 1);
   };
 
-  function handleSubmit() {
-    console.log('Macro answers:', macroAnswers);
-    console.log('RIASEC answers:', riaAnswers);
-    // TODO: router.push('/results', { state: { macroAnswers, riaAnswers } })
+  async function handleSubmit() {
+    try {
+      console.log('Submitting macroAnswers:', macroAnswers);
+      console.log('Submitting riaAnswers:', riaAnswers);
+      const response = await fetch('/api/results', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          macroAnswers,
+          riaAnswers,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit results');
+      }
+
+      const data = await response.json();
+      // Save results to localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('careerwise_results', JSON.stringify(data));
+      }
+      router.push('/results');
+    } catch (error) {
+      console.error('Error submitting results:', error);
+      alert('Failed to submit results. Please try again.');
+    }
   }
 
   return (
