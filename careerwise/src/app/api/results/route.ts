@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import type { Answer } from '@/app/types/quiz';
+import type { MacroAnswer } from '@/app/types/quiz';
 import type { RIASECProfile } from '@/app/types/career';
-import { findMatchingCareers, prepareCareerAnalysisPrompt } from '@/app/lib/careerMatch';
+import { findMatchingCareers, prepareCareerAnalysisPrompt, interpretMacroAnswer } from '@/app/lib/careerMatch';
 
 interface QuizSubmission {
-  macroAnswers: Answer[];
+  macroAnswers: MacroAnswer[];
   riaAnswers: Answer[];
 }
 
@@ -122,6 +123,12 @@ export async function POST(request: Request) {
     const riasecProfile = calculateRIASECProfile(body.riaAnswers);
     console.log('Calculated RIASEC profile:', riasecProfile);
     
+    // Create macro summary for prompt
+    const macroSummary = body.macroAnswers
+      .map((ans: MacroAnswer) => interpretMacroAnswer(ans.questionId, ans.score))
+      .filter(Boolean)
+      .join('\n');
+
     // Find matching careers
     const matchingCareers = findMatchingCareers(riasecProfile);
 
@@ -133,7 +140,7 @@ export async function POST(request: Request) {
     };
 
     // Prepare and get ChatGPT analysis
-    const prompt = prepareCareerAnalysisPrompt(riasecProfile, matchingCareers);
+    const prompt = prepareCareerAnalysisPrompt(riasecProfile, macroSummary);
     const analysis = await getChatGPTAnalysis(prompt);
 
     return NextResponse.json({

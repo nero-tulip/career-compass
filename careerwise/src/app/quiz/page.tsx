@@ -32,7 +32,7 @@ const QuizOptionGrid: React.FC<{
   onSelect: (id: string, score: number) => void;
 }> = ({ question, selected = 0, onSelect }) => (
   <div className="mb-8">
-    <p className="mb-3 font-medium">{question.text}</p>
+    <p className="mb-8 text-lg font-medium">{question.text}</p>
     <div
       className="grid gap-2"
       style={{
@@ -49,7 +49,7 @@ const QuizOptionGrid: React.FC<{
             className={`
               flex flex-col items-center p-2 border rounded
               ${isSel
-                ? 'bg-blue-600 text-white'
+                ? 'bg-blue-900 text-white'
                 : 'bg-white text-gray-800 hover:bg-gray-100'}
             `}
           >

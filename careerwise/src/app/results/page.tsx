@@ -86,15 +86,15 @@ export default function ResultsPage() {
       
       {/* RIASEC Profile */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4">Your RIASEC Profile</h2>
+        <h2 className="text-xl text-blue-950 font-semibold mb-4">Your RIASEC Profile</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {Object.entries(results.profile.riasec).map(([key, value]) => (
-            <div key={key} className="bg-gray-50 rounded-lg p-4">
+            <div key={key} className="bg-gray-800 rounded-lg p-4">
               <div className="flex justify-between items-center mb-2">
-                <span className="font-medium">{riasecLabels[key as keyof typeof riasecLabels]}</span>
-                <span className="text-lg font-bold">{value.toFixed(1)}</span>
+                <span className="font-medium text-gray-100">{riasecLabels[key as keyof typeof riasecLabels]}</span>
+                <span className="text-lg font-bold text-gray-100">{value.toFixed(1)}</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-gray-700 rounded-full h-2">
                 <div 
                   className="bg-blue-600 h-2 rounded-full" 
                   style={{ width: `${(value / 7) * 100}%` }}
@@ -104,40 +104,17 @@ export default function ResultsPage() {
           ))}
         </div>
         <div className="mt-4">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-blue-900">
             <strong>Dominant Traits:</strong> {results.profile.dominantTraits.map(trait => riasecLabels[trait as keyof typeof riasecLabels]).join(', ')}
           </p>
         </div>
       </div>
 
-      {/* Career Matches */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4">Your Top Career Matches</h2>
-        <div className="space-y-4">
-          {results.matchingCareers.map((career, index) => (
-            <div key={career.code} className="border border-gray-200 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-lg font-semibold">{index + 1}. {career.title}</h3>
-                <span className="text-sm text-gray-500">{career.code}</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2 text-sm">
-                {Object.entries(career.riasec).map(([key, value]) => (
-                  <div key={key} className="text-center">
-                    <div className="font-medium">{riasecLabels[key as keyof typeof riasecLabels]}</div>
-                    <div className="text-gray-600">{value.toFixed(1)}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Analysis */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-semibold mb-4">Career Analysis & Recommendations</h2>
+      {/* Analysis - now more prominent and macro */}
+      <div className="bg-gray-900 rounded-lg shadow-md p-8">
+        <h2 className="text-2xl font-semibold mb-4 text-gray-100 text-center">Career Analysis & Your RIASEC Meaning</h2>
         <div className="prose max-w-none">
-          <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+          <p className="text-white leading-relaxed whitespace-pre-line text-lg text-center">
             {results.analysis}
           </p>
         </div>
@@ -156,7 +133,7 @@ export default function ResultsPage() {
         </button>
         <button 
           onClick={() => window.print()}
-          className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+          className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
         >
           Print Results
         </button>
