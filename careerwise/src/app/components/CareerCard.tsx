@@ -22,7 +22,7 @@ export default function CareerCard({ career }: CareerCardProps) {
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{career.code}</p>
         </div>
       </div>
-      <div className="mt-4 grid grid-cols-3 sm:grid-cols-6 gap-2 text-sm">
+      <div className="mt-4 grid grid-cols-3 sm:grid-cols-6 gap-2 text-xs">
         {(["R","I","A","S","E","C"] as const).map((k) => (
           <div key={k} className="space-y-1">
             <div className="flex items-center justify-between">

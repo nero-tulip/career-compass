@@ -88,11 +88,11 @@ export default function ResultsPage() {
 
   return (
     <div className="max-w-5xl mx-auto py-10 px-4">
-      <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-center mb-8">Your career profile</h1>
+      <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-center mb-8">Your career profile</h1>
 
       <div className="grid lg:grid-cols-3 gap-6 items-start mb-8">
         <div className="lg:col-span-2 rounded-xl border border-black/5 dark:border-white/10 p-6 bg-white/60 dark:bg-white/5">
-          <h2 className="text-2xl font-semibold mb-4">RIASEC breakdown</h2>
+          <h2 className="text-lg font-semibold mb-4">RIASEC breakdown</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {Object.entries(results.profile.riasec).map(([key, value]) => (
               <div key={key} className="rounded-lg p-4 bg-gray-900">
@@ -106,10 +106,10 @@ export default function ResultsPage() {
               </div>
             ))}
           </div>
-          <p className="mt-3 text-base text-gray-700 dark:text-gray-300"><span className="font-medium">Dominant traits:</span> {dominantLabels}</p>
+          <p className="mt-3 text-sm text-gray-700 dark:text-gray-300"><span className="font-medium">Dominant traits:</span> {dominantLabels}</p>
         </div>
         <div className="rounded-xl border border-black/5 dark:border-white/10 p-6 bg-white/60 dark:bg-white/5">
-          <h2 className="text-2xl font-semibold mb-2">Top matches</h2>
+          <h2 className="text-lg font-semibold mb-2">Top matches</h2>
           <div className="space-y-3">
             {results.matchingCareers?.slice(0, 3).map((c) => (
               <CareerCard key={c.code} career={c} />
@@ -119,8 +119,8 @@ export default function ResultsPage() {
       </div>
 
       <div className="rounded-xl border border-black/5 dark:border-white/10 p-8 bg-gray-900">
-        <h2 className="text-3xl font-semibold mb-4 text-gray-100 text-center">What this means for you</h2>
-        <p className="text-white leading-relaxed whitespace-pre-line text-xl text-center">{results.analysis}</p>
+        <h2 className="text-2xl font-semibold mb-4 text-gray-100 text-center">What this means for you</h2>
+        <p className="text-white leading-relaxed whitespace-pre-line text-lg text-center">{results.analysis}</p>
       </div>
 
       <div className="mt-8 flex justify-center gap-3">
@@ -129,13 +129,13 @@ export default function ResultsPage() {
             localStorage.removeItem('careerwise_results');
             window.location.href = '/quiz';
           }}
-          className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          className="px-5 py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
         >
           Retake quiz
         </button>
         <button
           onClick={() => window.print()}
-          className="px-6 py-3 rounded-md border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5"
+          className="px-5 py-2.5 rounded-md border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5"
         >
           Print
         </button>

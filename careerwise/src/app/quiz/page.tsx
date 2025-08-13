@@ -1,6 +1,6 @@
- 'use client';
+'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import macroQuestions from '@/app/data/macroQuestions.json';
 import riaQuestions from '@/app/data/riasecQuestionsShuffled.json';
@@ -27,86 +27,41 @@ interface MacroQuestion extends QuestionBase {
 const QUESTIONS_PER_PAGE = 10;
 type Phase = 'macro' | 'riasec';
 
-function getPastelColor(seed: string): string {
-  // Simple hash to hue
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) {
-    hash = (hash << 5) - hash + seed.charCodeAt(i);
-    hash |= 0;
-  }
-  const hue = Math.abs(hash) % 360;
-  // Slightly deeper pastel: a bit more saturation and a bit less lightness
-  return `hsl(${hue}, 70%, 68%)`;
-}
-
 const QuizOptionGrid: React.FC<{
   question: QuestionBase;
   selected?: number;
   onSelect: (id: string, score: number) => void;
-}> = ({ question, selected = 0, onSelect }) => {
-  const sectionRef = useRef<HTMLDivElement | null>(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          setVisible(entry.isIntersecting);
-        });
-      },
-      { threshold: [0.25, 0.6] }
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
-  return (
-    <div ref={sectionRef} className={`mb-24 min-h-[60vh] flex flex-col justify-center snap-center transition-opacity duration-500 ${visible ? 'opacity-100' : 'opacity-40'}`}>
-      <p
-        className={`mb-6 text-2xl md:text-3xl font-semibold text-center transition-all duration-500 ease-out ${
-          visible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-6'
-        }`}
-        style={{ color: getPastelColor(question.id) }}
-      >
-        {question.text}
-      </p>
-      <div
-        className={`grid gap-4 transition-all duration-500 ease-out ${
-          visible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-6'
-        }`}
-        style={{
-          gridTemplateColumns: `repeat(${question.scale.length}, minmax(0,1fr))`,
-        }}
-      >
-        {question.scale.map((label, idx) => {
-          const score = idx + 1;
-          const isSel = selected === score;
-          return (
-            <div key={score} className="flex flex-col items-center">
-              <button
-                onClick={() => onSelect(question.id, score)}
-                className={`
-                  flex items-center justify-center w-full p-3 md:p-4 rounded-md border transition-colors
-                  ${isSel
-                    ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                    : 'bg-white/70 dark:bg-white/5 text-gray-900 dark:text-gray-100 border-black/10 dark:border-white/10 hover:bg-blue-50 dark:hover:bg-white/10'}
-                `}
-                aria-label={`${score}: ${label}`}
-              >
-                <span className="font-semibold text-lg md:text-xl leading-none">{score}</span>
-              </button>
-              {(score === 1 || score === 3 || score === 5) && (
-                <span className="mt-2 text-sm md:text-base leading-snug text-center opacity-90">{label}</span>
-              )}
-            </div>
-          );
-        })}
-      </div>
+}> = ({ question, selected = 0, onSelect }) => (
+  <div className="mb-8">
+    <p className="mb-3 text-base font-medium text-gray-900 dark:text-gray-50">{question.text}</p>
+    <div
+      className="grid gap-2"
+      style={{
+        gridTemplateColumns: `repeat(${question.scale.length}, minmax(0,1fr))`,
+      }}
+    >
+      {question.scale.map((label, idx) => {
+        const score = idx + 1;
+        const isSel = selected === score;
+        return (
+          <button
+            key={score}
+            onClick={() => onSelect(question.id, score)}
+            className={`
+              flex flex-col items-center p-3 rounded-md border
+              ${isSel
+                ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                : 'bg-white/70 dark:bg-white/5 text-gray-900 dark:text-gray-100 border-black/10 dark:border-white/10 hover:bg-white'}
+            `}
+          >
+            <span className="font-semibold text-sm">{score}</span>
+            <span className="mt-1 text-[11px] leading-snug text-center opacity-80">{label}</span>
+          </button>
+        );
+      })}
     </div>
-  );
-};
+  </div>
+);
 
 export default function QuizPage() {
   const [phase, setPhase] = useState<Phase>('macro');
@@ -127,13 +82,6 @@ export default function QuizPage() {
       (allRia.length || 1),
     [currentPage, pageQs, riaAnswers, allRia.length]
   );
-
-  // Reset scroll to top on page or phase change
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }, [currentPage, phase]);
 
   const handleMacroAnswer = (questionId: string, score: number) => {
     setMacroAnswers((prev) => {
@@ -175,7 +123,7 @@ export default function QuizPage() {
         <div className="mb-6">
           <ProgressBar value={allMacro.length ? macroAnswers.length / allMacro.length : 0} label="Part 1 of 2" />
         </div>
-        <h2 className="text-3xl font-semibold tracking-tight mb-4">Big picture</h2>
+        <h2 className="text-2xl font-semibold tracking-tight mb-4">Big picture</h2>
         {allMacro.map((q) => {
           const sel = macroAnswers.find((a) => a.questionId === q.id)?.score;
           return (
@@ -251,11 +199,11 @@ export default function QuizPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto py-10 px-4" style={{ scrollSnapType: 'y mandatory' }}>
+    <div className="max-w-3xl mx-auto py-10 px-4">
       <div className="mb-6">
         <ProgressBar value={progress} label={`Part 2 of 2 • Page ${currentPage + 1} of ${totalPages}`} />
       </div>
-      <h2 className="text-3xl font-semibold tracking-tight mb-4">Career preferences</h2>
+      <h2 className="text-2xl font-semibold tracking-tight mb-4">Career preferences</h2>
       {pageQs.map((q) => {
         const sel = riaAnswers.find((a) => a.questionId === q.id)?.score;
         return (
