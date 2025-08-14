@@ -115,6 +115,13 @@ export default function QuizPage() {
     [currentPage, pageQs, riaAnswers, allRia.length]
   );
 
+  // Reset scroll to top when page or phase changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [currentPage, phase]);
+
   const handleMacroAnswer = (questionId: string, score: number) => {
     setMacroAnswers((prev) => {
       const exists = prev.find((a) => a.questionId === questionId);

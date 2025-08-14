@@ -48,6 +48,23 @@ export default function ResultsPage() {
     }
   }, []);
 
+  const riasecLabels = useMemo(() => ({
+    R: 'Realistic',
+    I: 'Investigative',
+    A: 'Artistic',
+    S: 'Social',
+    E: 'Enterprising',
+    C: 'Conventional'
+  } as const), []);
+
+  // Call hooks unconditionally: compute dominant labels defensively
+  const dominantLabels = useMemo(() => {
+    if (!results) return '';
+    return results.profile.dominantTraits
+      .map(trait => riasecLabels[trait as keyof typeof riasecLabels])
+      .join(', ');
+  }, [results, riasecLabels]);
+
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto py-8 px-4">
@@ -71,20 +88,6 @@ export default function ResultsPage() {
   }
 
   if (!results) return null;
-
-  const riasecLabels = {
-    R: 'Realistic',
-    I: 'Investigative',
-    A: 'Artistic',
-    S: 'Social',
-    E: 'Enterprising',
-    C: 'Conventional'
-  };
-
-  const dominantLabels = useMemo(
-    () => results.profile.dominantTraits.map(trait => riasecLabels[trait as keyof typeof riasecLabels]).join(', '),
-    [results.profile.dominantTraits]
-  );
 
   return (
     <div className="max-w-5xl mx-auto py-10 px-4">
