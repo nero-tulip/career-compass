@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import CareerCard from '@/app/components/CareerCard';
+import ReactMarkdown from 'react-markdown';
 
 interface CareerMatch {
   code: string;
@@ -123,7 +124,18 @@ export default function ResultsPage() {
 
       <div className="rounded-xl border border-black/5 dark:border-white/10 p-8 bg-gray-900">
         <h2 className="text-2xl font-semibold mb-4 text-gray-100 text-center">What this means for you</h2>
-        <p className="text-white leading-relaxed whitespace-pre-line text-lg text-center">{results.analysis}</p>
+        <div className="prose prose-invert max-w-none">
+          <ReactMarkdown
+            components={{
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              h3: (props: any) => (
+                <h3 className="text-xl md:text-2xl font-bold mt-6 mb-3" {...props} />
+              ),
+            }}
+          >
+            {results.analysis}
+          </ReactMarkdown>
+        </div>
       </div>
 
       <div className="mt-8 flex justify-center gap-3">
