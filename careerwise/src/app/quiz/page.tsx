@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import macroQuestions from '@/app/data/macroQuestions.json';
 import riaQuestions from '@/app/data/riasecQuestionsShuffled.json';
@@ -27,41 +27,73 @@ interface MacroQuestion extends QuestionBase {
 const QUESTIONS_PER_PAGE = 10;
 type Phase = 'macro' | 'riasec';
 
+function getPastelColor(seed: string): string {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash << 5) - hash + seed.charCodeAt(i);
+    hash |= 0;
+  }
+  const hue = Math.abs(hash) % 360;
+  return `hsl(${hue}, 70%, 68%)`;
+}
+
 const QuizOptionGrid: React.FC<{
   question: QuestionBase;
   selected?: number;
   onSelect: (id: string, score: number) => void;
-}> = ({ question, selected = 0, onSelect }) => (
-  <div className="mb-8">
-    <p className="mb-3 text-base font-medium text-gray-900 dark:text-gray-50">{question.text}</p>
-    <div
-      className="grid gap-2"
-      style={{
-        gridTemplateColumns: `repeat(${question.scale.length}, minmax(0,1fr))`,
-      }}
-    >
-      {question.scale.map((label, idx) => {
-        const score = idx + 1;
-        const isSel = selected === score;
-        return (
-          <button
-            key={score}
-            onClick={() => onSelect(question.id, score)}
-            className={`
-              flex flex-col items-center p-3 rounded-md border
-              ${isSel
-                ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                : 'bg-white/70 dark:bg-white/5 text-gray-900 dark:text-gray-100 border-black/10 dark:border-white/10 hover:bg-white'}
-            `}
-          >
-            <span className="font-semibold text-sm">{score}</span>
-            <span className="mt-1 text-[11px] leading-snug text-center opacity-80">{label}</span>
-          </button>
-        );
-      })}
+}> = ({ question, selected = 0, onSelect }) => {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => setVisible(entry.isIntersecting));
+      },
+      { threshold: 0.6 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} className="mb-24 min-h-[60vh] flex flex-col justify-center">
+      <p className={`mb-6 text-2xl md:text-3xl font-semibold text-center reveal ${visible ? 'is-visible' : ''}`} style={{ color: getPastelColor(question.id) }}>
+        {question.text}
+      </p>
+      <div
+        className={`grid gap-4 reveal ${visible ? 'is-visible' : ''}`}
+        style={{ gridTemplateColumns: `repeat(${question.scale.length}, minmax(0,1fr))` }}
+      >
+        {question.scale.map((label, idx) => {
+          const score = idx + 1;
+          const isSel = selected === score;
+          return (
+            <div key={score} className="flex flex-col items-center">
+              <button
+                onClick={() => onSelect(question.id, score)}
+                className={`
+                  flex items-center justify-center w-full p-3 md:p-4 rounded-md border transition-colors
+                  ${isSel
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                    : 'bg-white/70 dark:bg-white/5 text-gray-900 dark:text-gray-100 border-black/10 dark:border-white/10 hover:bg-blue-50 dark:hover:bg-white/10'}
+                `}
+                aria-label={`${score}: ${label}`}
+              >
+                <span className="font-semibold text-lg md:text-xl leading-none">{score}</span>
+              </button>
+              {(score === 1 || score === 3 || score === 5) && (
+                <span className="mt-2 text-sm md:text-base leading-snug text-center opacity-90">{label}</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default function QuizPage() {
   const [phase, setPhase] = useState<Phase>('macro');
