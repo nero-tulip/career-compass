@@ -70,7 +70,7 @@ export default function ResultsPage() {
     return (
       <div className="max-w-4xl mx-auto py-8 px-4">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
           <p className="mt-4 text-lg">Analyzing your career profile...</p>
         </div>
       </div>
@@ -105,7 +105,7 @@ export default function ResultsPage() {
                   <span className="text-gray-100 font-semibold">{value.toFixed(1)}</span>
                 </div>
                 <div className="h-2 w-full rounded-full bg-gray-700 overflow-hidden">
-                  <div className="h-full bg-blue-600" style={{ width: `${(value / 7) * 100}%` }} />
+                  <div className="h-full bg-primary" style={{ width: `${(value / 7) * 100}%` }} />
                 </div>
               </div>
             ))}
@@ -144,13 +144,13 @@ export default function ResultsPage() {
             localStorage.removeItem('careerwise_results');
             window.location.href = '/quiz';
           }}
-          className="px-5 py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          className="btn btn-primary"
         >
           Retake quiz
         </button>
         <button
           onClick={() => window.print()}
-          className="px-5 py-2.5 rounded-md border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5"
+          className="btn btn-outline"
         >
           Print
         </button>

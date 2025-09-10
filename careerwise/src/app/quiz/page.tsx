@@ -27,14 +27,22 @@ interface MacroQuestion extends QuestionBase {
 const QUESTIONS_PER_PAGE = 10;
 type Phase = 'macro' | 'riasec';
 
-function getPastelColor(seed: string): string {
+// Deterministic mapping of question id -> one of the darker brand palette classes for better contrast
+const COLOR_CLASSES = [
+  'text-mint-600',
+  'text-sky-600',
+  'text-blush-600',
+  'text-lav-600',
+  'text-sand-600',
+];
+
+function colorClassForId(seed: string): string {
   let hash = 0;
   for (let i = 0; i < seed.length; i++) {
     hash = (hash << 5) - hash + seed.charCodeAt(i);
-    hash |= 0;
+    hash |= 0; // force 32-bit
   }
-  const hue = Math.abs(hash) % 360;
-  return `hsl(${hue}, 70%, 68%)`;
+  return COLOR_CLASSES[Math.abs(hash) % COLOR_CLASSES.length];
 }
 
 const QuizOptionGrid: React.FC<{
@@ -60,7 +68,7 @@ const QuizOptionGrid: React.FC<{
 
   return (
     <div ref={ref} className="mb-24 min-h-[60vh] flex flex-col justify-center">
-      <p className={`mb-6 text-2xl md:text-3xl font-semibold text-center reveal ${visible ? 'is-visible' : ''}`} style={{ color: getPastelColor(question.id) }}>
+  <p className={`mb-6 text-2xl md:text-3xl font-semibold text-center reveal ${visible ? 'is-visible' : ''} ${colorClassForId(question.id)}`}>
         {question.text}
       </p>
       <div
@@ -74,12 +82,7 @@ const QuizOptionGrid: React.FC<{
             <div key={score} className="flex flex-col items-center">
               <button
                 onClick={() => onSelect(question.id, score)}
-                className={`
-                  flex items-center justify-center w-full p-3 md:p-4 rounded-md border transition-colors
-                  ${isSel
-                    ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                    : 'bg-white/70 dark:bg-white/5 text-gray-900 dark:text-gray-100 border-black/10 dark:border-white/10 hover:bg-blue-50 dark:hover:bg-white/10'}
-                `}
+                className={`flex items-center justify-center w-full p-3 md:p-4 quiz-option ${isSel ? 'quiz-option-selected' : ''}`}
                 aria-label={`${score}: ${label}`}
               >
                 <span className="font-semibold text-lg md:text-xl leading-none">{score}</span>
@@ -179,7 +182,7 @@ export default function QuizPage() {
           <button
             onClick={next}
             disabled={!allAnswered}
-            className="px-5 py-2.5 bg-blue-600 text-white rounded-md disabled:opacity-50 hover:bg-blue-700 transition-colors"
+            className="btn btn-primary disabled:opacity-50"
           >
             Next
           </button>
@@ -259,14 +262,14 @@ export default function QuizPage() {
         <button
           onClick={goBack}
           disabled={currentPage === 0}
-          className="px-5 py-2.5 rounded-md border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50"
+          className="btn btn-outline disabled:opacity-50"
         >
           Back
         </button>
         <button
           onClick={goNext}
           disabled={!allOnPageAnswered}
-          className="px-5 py-2.5 bg-blue-600 text-white rounded-md disabled:opacity-50 hover:bg-blue-700 transition-colors"
+          className="btn btn-primary disabled:opacity-50"
         >
           {isLast ? 'Submit' : 'Next'}
         </button>

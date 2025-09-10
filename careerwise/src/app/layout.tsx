@@ -1,16 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Lexend } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const lexend = Lexend({
+  variable: "--font-lexend",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -26,20 +22,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <header className="sticky top-0 z-30 border-b border-black/5 dark:border-white/10 bg-white/70 dark:bg-black/30 backdrop-blur-md">
+  <body className={`${lexend.variable} antialiased`}>
+  <header className="sticky top-0 z-30 border-b border-black/5 dark:border-white/10 backdrop-blur-md bg-white/70 dark:bg-black/30">
           <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
             <Link href="/" className="font-semibold tracking-tight text-xl">
               CareerWise
             </Link>
             <nav className="flex items-center gap-4 text-sm">
-              <Link href="/quiz" className="px-3 py-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+              <Link href="/quiz" className="btn btn-primary">
                 Take the quiz
               </Link>
             </nav>
           </div>
         </header>
-        <main className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-50 via-white to-white dark:from-slate-950 dark:via-black dark:to-black">
+        <main className="min-h-screen bg-hero">
           {children}
         </main>
         <footer className="border-t border-black/5 dark:border-white/10">

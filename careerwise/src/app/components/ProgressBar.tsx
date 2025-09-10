@@ -17,9 +17,9 @@ export default function ProgressBar({ value, label }: ProgressBarProps) {
           <span className="tabular-nums">{Math.round(pct)}%</span>
         </div>
       ) : null}
-      <div className="h-2 w-full rounded-full bg-gray-200 dark:bg-white/10 overflow-hidden">
+      <div className="h-2 w-full rounded-full bar-track overflow-hidden">
         <div
-          className="h-full rounded-full bg-blue-600 transition-[width] duration-300 ease-out"
+          className="h-full rounded-full bar-fill transition-[width] duration-300 ease-out"
           style={{ width: `${pct}%` }}
           aria-valuemin={0}
           aria-valuenow={pct}

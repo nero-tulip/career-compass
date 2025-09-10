@@ -31,7 +31,7 @@ export default function CareerCard({ career }: CareerCardProps) {
             </div>
             <div className="h-1.5 w-full rounded-full bg-gray-200 dark:bg-white/10 overflow-hidden">
               <div
-                className="h-full rounded-full bg-blue-600"
+                className="h-full rounded-full bg-primary"
                 style={{ width: `${(career.riasec[k] / 7) * 100}%` }}
               />
             </div>
