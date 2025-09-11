@@ -23,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en">
   <body className={`${lexend.variable} antialiased`}>
-  <header className="sticky top-0 z-30 border-b border-black/5 dark:border-white/10 backdrop-blur-md bg-white/70 dark:bg-black/30">
+  <header className="site-header sticky top-0 z-30 border-b border-black/5 dark:border-white/10 backdrop-blur-md">
           <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
             <Link href="/" className="font-semibold tracking-tight text-xl">
               CareerWise

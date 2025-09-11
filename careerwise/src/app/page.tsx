@@ -9,7 +9,7 @@ export default function Home() {
             <h1 className="text-4xl md:text-6xl font-semibold tracking-tight leading-tight">
               Find your work fit.
             </h1>
-            <p className="mt-4 text-lg text-gray-600 dark:text-gray-300 max-w-prose">
+            <p className="mt-4 text-lg text-gray-600 dark:text-gray-500 max-w-prose">
               Take a sleek, minimal RIASEC-based quiz to understand your strengths
               and discover work environments that suit you.
             </p>
@@ -32,15 +32,15 @@ export default function Home() {
         <div className="grid md:grid-cols-3 gap-6">
           <div className="rounded-xl border border-black/5 dark:border-white/10 p-6 bg-white/60 dark:bg-white/5">
             <h3 className="font-medium">Answer thoughtfully</h3>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">Two parts: big-picture values, then a quick interests check.</p>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-500">Two parts: big-picture values, then a quick interests check.</p>
           </div>
           <div className="rounded-xl border border-black/5 dark:border-white/10 p-6 bg-white/60 dark:bg-white/5">
             <h3 className="font-medium">See your profile</h3>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">We map your answers to the RIASEC model to show strengths.</p>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-500">We map your answers to the RIASEC model to show strengths.</p>
           </div>
           <div className="rounded-xl border border-black/5 dark:border-white/10 p-6 bg-white/60 dark:bg-white/5">
             <h3 className="font-medium">Get direction</h3>
-            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">Receive a clean summary and matched roles to explore.</p>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-500">Receive a clean summary and matched roles to explore.</p>
           </div>
         </div>
       </div>
