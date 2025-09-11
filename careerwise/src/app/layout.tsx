@@ -27,7 +27,7 @@ export default function RootLayout({
   <header className="site-header sticky top-0 z-30 border-b border-black/5 dark:border-white/10 backdrop-blur-md">
           <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
             <Link href="/" className="font-semibold tracking-tight text-xl">
-              CareerWise
+              CareerCompass
             </Link>
             <HeaderNav />
           </div>
@@ -37,8 +37,7 @@ export default function RootLayout({
         </main>
         <footer className="border-t border-black/5 dark:border-white/10">
           <div className="mx-auto max-w-6xl px-4 py-6 text-sm text-gray-500 dark:text-gray-400 flex items-center justify-between">
-            <span>© {new Date().getFullYear()} CareerWise</span>
-            <span className="opacity-80">Made with Next.js</span>
+            <span>© {new Date().getFullYear()} CareerCompass</span>
           </div>
         </footer>
       </body>
