@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import HeaderNav from "@/app/components/HeaderNav";
 import { Lexend } from "next/font/google";
 import "./globals.css";
 
@@ -10,7 +11,7 @@ const lexend = Lexend({
 });
 
 export const metadata: Metadata = {
-  title: "CareerWise — Find your work fit",
+  title: "CareerCompass",
   description:
     "A sleek, minimal career interests quiz powered by RIASEC to help you understand your strengths and work style.",
 };
@@ -28,11 +29,7 @@ export default function RootLayout({
             <Link href="/" className="font-semibold tracking-tight text-xl">
               CareerWise
             </Link>
-            <nav className="flex items-center gap-4 text-sm">
-              <Link href="/quiz" className="btn btn-primary">
-                Take the quiz
-              </Link>
-            </nav>
+            <HeaderNav />
           </div>
         </header>
         <main className="min-h-screen bg-hero">
