@@ -19,11 +19,15 @@ export default function SignupPage() {
     try {
   await createUserWithEmailAndPassword(auth, email.trim(), password);
   router.push("/");
-    } catch (err: any) {
+    } catch (err: unknown) {
       let msg = "Failed to create account";
-      if (err?.code === "auth/weak-password") msg = "Password should be at least 6 characters";
-      else if (err?.code === "auth/email-already-in-use") msg = "Email already in use";
-      else if (err?.code === "auth/invalid-email") msg = "Invalid email";
+      const code =
+        typeof err === "object" && err !== null && "code" in err
+          ? String((err as { code?: unknown }).code)
+          : undefined;
+      if (code === "auth/weak-password") msg = "Password should be at least 6 characters";
+      else if (code === "auth/email-already-in-use") msg = "Email already in use";
+      else if (code === "auth/invalid-email") msg = "Invalid email";
       setError(msg);
     } finally {
       setLoading(false);
