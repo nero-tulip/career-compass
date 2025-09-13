@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/providers/AuthProvider";
+import StartQuizButton from "./components/StartQuizButton";
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -25,9 +26,7 @@ export default function Home() {
               and discover work environments that suit you.
             </p>
             <div className="mt-8 flex items-center gap-4">
-              <button onClick={handleStart} className="btn btn-primary">
-                Start the quiz
-              </button>
+              <StartQuizButton />
               <a href="#how-it-works" className="btn btn-ghost">
                 Learn more
               </a>

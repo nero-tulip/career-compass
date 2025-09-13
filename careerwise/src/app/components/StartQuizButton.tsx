@@ -13,8 +13,8 @@ export default function StartQuizButton() {
   };
 
   return (
-    <button onClick={go} className="btn-primary">
-      Start quiz
+    <button onClick={go} disabled={loading} aria-busy={loading} className="btn btn-primary disabled:opacity-50">
+      {loading ? "Loading..." : "Start quiz"}
     </button>
   );
 }

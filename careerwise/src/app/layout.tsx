@@ -3,6 +3,7 @@ import Link from "next/link";
 import HeaderNav from "@/app/components/HeaderNav";
 import { Lexend } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/app/providers/AuthProvider";
 
 const lexend = Lexend({
   variable: "--font-lexend",
@@ -24,7 +25,8 @@ export default function RootLayout({
   return (
     <html lang="en">
   <body className={`${lexend.variable} antialiased`}>
-  <header className="site-header sticky top-0 z-30 border-b border-black/5 dark:border-white/10 backdrop-blur-md">
+  <AuthProvider>
+        <header className="site-header sticky top-0 z-30 border-b border-black/5 dark:border-white/10 backdrop-blur-md">
           <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
             <Link href="/" className="font-semibold tracking-tight text-xl">
               CareerCompass
@@ -40,6 +42,7 @@ export default function RootLayout({
             <span>© {new Date().getFullYear()} CareerCompass</span>
           </div>
         </footer>
+      </AuthProvider>
       </body>
     </html>
   );
