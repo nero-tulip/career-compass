@@ -44,11 +44,9 @@ export default function AccountPage() {
 	if (!user) {
 		return (
 			<div className="mx-auto max-w-3xl px-4 py-12">
-				<div className="rounded-xl bg-white dark:bg-zinc-900 border border-black/5 dark:border-white/10 p-6 shadow-sm">
-					  <h1 className="text-2xl font-semibold mb-2">You&apos;re not signed in</h1>
-					<p className="text-gray-600 dark:text-gray-300 mb-4">
-						To view your account details, please create an account or log in.
-					</p>
+					<div className="card p-6">
+						<h1 className="text-2xl font-semibold mb-2">You&apos;re not signed in</h1>
+						<p className="muted mb-4">To view your account details, please create an account or log in.</p>
 					<div className="flex gap-3">
 						<Link href="/signup" className="btn btn-primary">
 							Create account
@@ -69,15 +67,13 @@ export default function AccountPage() {
 		? new Date(user.metadata.creationTime).toLocaleString()
 		: "-";
 
-	return (
-		<div className="mx-auto max-w-3xl px-4 py-12">
-			<div className="rounded-xl bg-white dark:bg-zinc-900 border border-black/5 dark:border-white/10 p-6 shadow-sm">
+		return (
+			<div className="mx-auto max-w-3xl px-4 py-12">
+				<div className="card p-6">
 				<div className="flex items-start justify-between gap-4">
 					<div>
 						<h1 className="text-2xl font-semibold">Your account</h1>
-						<p className="text-gray-600 dark:text-gray-300 mt-1">
-							Manage your details and sign out.
-						</p>
+							<p className="muted mt-1">Manage your details and sign out.</p>
 					</div>
 					<button onClick={handleSignOut} className="btn btn-outline">
 						Sign out
@@ -90,27 +86,27 @@ export default function AccountPage() {
 					</div>
 				)}
 
-				<div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-					<div className="rounded-lg border border-black/5 dark:border-white/10 p-4 bg-black/2.5 dark:bg-white/5">
-						<div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+					<div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+						<div className="rounded-lg border border-[--border] p-4 bg-[--surface]">
+							<div className="text-xs uppercase tracking-wide muted">
 							Email
 						</div>
 						<div className="mt-1 font-medium break-all">{user.email ?? "-"}</div>
 					</div>
-					<div className="rounded-lg border border-black/5 dark:border-white/10 p-4 bg-black/2.5 dark:bg-white/5">
-						<div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+						<div className="rounded-lg border border-[--border] p-4 bg-[--surface]">
+							<div className="text-xs uppercase tracking-wide muted">
 							User ID
 						</div>
 						<div className="mt-1 font-mono text-xs break-all">{user.uid}</div>
 					</div>
-					<div className="rounded-lg border border-black/5 dark:border-white/10 p-4 bg-black/2.5 dark:bg-white/5">
-						<div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+						<div className="rounded-lg border border-[--border] p-4 bg-[--surface]">
+							<div className="text-xs uppercase tracking-wide muted">
 							Last sign-in
 						</div>
 						<div className="mt-1">{lastSignInTime}</div>
 					</div>
-					<div className="rounded-lg border border-black/5 dark:border-white/10 p-4 bg-black/2.5 dark:bg-white/5">
-						<div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">
+						<div className="rounded-lg border border-[--border] p-4 bg-[--surface]">
+							<div className="text-xs uppercase tracking-wide muted">
 							Account created
 						</div>
 						<div className="mt-1">{creationTime}</div>
