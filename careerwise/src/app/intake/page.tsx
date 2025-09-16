@@ -161,7 +161,7 @@ function QuestionBlock({ q, value, onChange }: { q: Q; value: AnswerValue | unde
 
   if (q.type === "text") {
     return (
-      <div ref={ref} className="mb-16">
+      <div ref={ref} className="mb-28">
         {labelEl}
         <div className={`max-w-xl mx-auto reveal ${visible ? "is-visible" : ""}`}>
           <input
@@ -176,7 +176,7 @@ function QuestionBlock({ q, value, onChange }: { q: Q; value: AnswerValue | unde
   }
   if (q.type === "textarea") {
     return (
-      <div ref={ref} className="mb-16">
+      <div ref={ref} className="mb-28">
         {labelEl}
         <div className={`max-w-xl mx-auto reveal ${visible ? "is-visible" : ""}`}>
           <textarea
@@ -193,7 +193,7 @@ function QuestionBlock({ q, value, onChange }: { q: Q; value: AnswerValue | unde
   if (q.type === "select") {
     const v = typeof value === "string" ? value : "";
     return (
-      <div ref={ref} className="mb-20">
+      <div ref={ref} className="mb-32">
         {labelEl}
         <div className={`grid gap-3 sm:grid-cols-2 md:grid-cols-3 max-w-3xl mx-auto reveal ${visible ? "is-visible" : ""}`}>
           {(q.options ?? []).map((opt) => {
@@ -218,7 +218,7 @@ function QuestionBlock({ q, value, onChange }: { q: Q; value: AnswerValue | unde
     const current: string[] = Array.isArray(value) ? (value as string[]) : [];
     const max = q.ui?.maxSelect;
     return (
-      <div ref={ref} className="mb-20">
+  <div ref={ref} className="mb-32">
         {labelEl}
         <div className={`grid gap-3 sm:grid-cols-2 md:grid-cols-3 max-w-3xl mx-auto reveal ${visible ? "is-visible" : ""}`}>
           {(q.options ?? []).map((opt) => {
@@ -249,10 +249,10 @@ function QuestionBlock({ q, value, onChange }: { q: Q; value: AnswerValue | unde
     const min = s.min ?? 0;
     const max = s.max ?? 100;
     return (
-      <div ref={ref} className="mb-20">
+      <div ref={ref} className="mb-32">
         {labelEl}
         <div className={`max-w-3xl mx-auto reveal ${visible ? "is-visible" : ""}`}>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <span className="muted text-sm">{s.leftLabel}</span>
             <input
               type="range"
@@ -260,8 +260,12 @@ function QuestionBlock({ q, value, onChange }: { q: Q; value: AnswerValue | unde
               max={max}
               value={v}
               onChange={(e) => onChange(Number(e.target.value))}
+              step={1}
               className="w-full"
             />
+            <span className="text-sm font-medium tabular-nums rounded-md border border-[--border] bg-[--surface] px-2 py-1 min-w-10 text-center">
+              {v}
+            </span>
             <span className="muted text-sm">{s.rightLabel}</span>
           </div>
         </div>
@@ -270,7 +274,7 @@ function QuestionBlock({ q, value, onChange }: { q: Q; value: AnswerValue | unde
   }
   if (q.type === "country") {
     return (
-      <div ref={ref} className="mb-16">
+      <div ref={ref} className="mb-28">
         {labelEl}
         <div className={`max-w-xl mx-auto reveal ${visible ? "is-visible" : ""}`}>
           <input
@@ -285,7 +289,7 @@ function QuestionBlock({ q, value, onChange }: { q: Q; value: AnswerValue | unde
   }
   if (q.type === "country-multi") {
     return (
-      <div ref={ref} className="mb-16">
+      <div ref={ref} className="mb-28">
         {labelEl}
         <div className={`max-w-xl mx-auto reveal ${visible ? "is-visible" : ""}`}>
           <input

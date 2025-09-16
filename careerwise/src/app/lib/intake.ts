@@ -2,7 +2,7 @@ import { IntakeAnswers } from "@/app/types/intake";
 
 export function summarizeIntake(intake: IntakeAnswers): string {
   const name = (intake["name"] as string) || "there";
-  const age = intake["age_band"] as string | undefined;
+  const ageVal = intake["age_band"] as string | number | undefined;
   const country = intake["country"] as string | undefined;
   const status = intake["status"] as string[] | undefined;
   const creative = intake["creative_analytical"] as number | undefined;
@@ -14,7 +14,8 @@ export function summarizeIntake(intake: IntakeAnswers): string {
 
   const parts: string[] = [];
   parts.push(`User name: ${name}`);
-  if (age) parts.push(`Age band: ${age}`);
+  if (typeof ageVal === "number") parts.push(`Age: ${ageVal}`);
+  else if (typeof ageVal === "string" && ageVal) parts.push(`Age band: ${ageVal}`);
   if (country) parts.push(`Country: ${country}`);
   if (status?.length) parts.push(`Status: ${status.join(" + ")}`);
   if (typeof creative === "number") parts.push(`Creative→Analytical: ${creative}/100`);

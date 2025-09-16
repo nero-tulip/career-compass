@@ -24,6 +24,12 @@
 			"type": "shell",
 			"command": "npm run -s type-check || npm run -s build --no-lint",
 			"group": "build"
+		},
+		{
+			"label": "Type check Next.js project",
+			"type": "shell",
+			"command": "npm run -s type-check || npm run -s build --no-lint",
+			"group": "build"
 		}
 	]
 }
