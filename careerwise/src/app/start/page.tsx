@@ -19,10 +19,10 @@ export default function StartGatePage() {
           <li>View and compare past results</li>
         </ul>
         <div className="mt-4 flex gap-3">
-          <button onClick={() => router.push("/signup")} className="btn-primary">
+          <button onClick={() => router.push("/signup")} className="btn btn-primary">
             Create account
           </button>
-          <button onClick={() => router.push("/login")} className="btn-ghost">
+          <button onClick={() => router.push("/login")} className="btn btn-ghost">
             Sign in
           </button>
         </div>
