@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { auth } from "@/app/lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
+import StartQuizButton from "./StartQuizButton";
 
 export default function HeaderNav() {
   const [user, setUser] = useState<User | null>(null);
@@ -18,16 +19,9 @@ export default function HeaderNav() {
     return () => unsub();
   }, []);
 
-  const handleQuizClick = () => {
-    if (loading) return;
-    router.push(user ? "/intake" : "/start");
-  };
-
   return (
     <nav className="flex items-center gap-3 text-sm">
-      <button onClick={handleQuizClick} className="btn btn-outline">
-        Quiz
-      </button>
+      <StartQuizButton />
       {!loading && !user && (
         <button
           onClick={() => router.push("/signup")}
@@ -39,7 +33,7 @@ export default function HeaderNav() {
       {!loading && user && (
         <button
           onClick={() => router.push("/account")}
-          className="btn btn-primary"
+          className="btn btn-ghost"
         >
           Account
         </button>

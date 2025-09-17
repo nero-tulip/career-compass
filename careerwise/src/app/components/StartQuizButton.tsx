@@ -48,7 +48,7 @@ export default function StartQuizButton() {
       disabled={loading || busy}
       className="btn btn-primary"
     >
-      {busy ? "Loading…" : "Start the quiz"}
+      {busy ? "Loading…" : "Start Questionnaire"}
     </button>
   );
 }
