@@ -157,14 +157,14 @@ export default function RIASECPage() {
         <button
           onClick={back}
           disabled={page === 0}
-          className="btn-ghost disabled:opacity-50"
+          className="btn btn-ghost disabled:opacity-50"
         >
           Back
         </button>
         <button
           onClick={next}
           disabled={!allOnPageAnswered}
-          className="btn-primary disabled:opacity-50"
+          className="btn btn-primary disabled:opacity-50"
         >
           {isLast ? "Submit" : "Next"}
         </button>
