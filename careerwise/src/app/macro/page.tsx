@@ -56,7 +56,7 @@ export default function MacroPage() {
         );
       })}
       <div className="flex justify-end mt-8">
-        <button onClick={onNext} disabled={!allAnswered} className="btn-primary disabled:opacity-50">Next</button>
+        <button onClick={onNext} disabled={!allAnswered} className="btn btn-primary disabled:opacity-50">Next</button>
       </div>
     </div>
   );

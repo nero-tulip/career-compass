@@ -28,11 +28,11 @@
       "text": "How important is job security to you?",
       "dimension": "jobSecurity",
       "scale": [
-        "It’s my top priority. I need to feel safe.",
+        "I don’t care — I’ll figure it out as I go.",
         "Very important, but I can tolerate mild risk.",
         "It matters, but I also want purpose.",
         "I’d trade some security for meaning or freedom.",
-        "I don’t care — I’ll figure it out as I go."
+        "It’s my top priority. I need to feel safe."
       ]
     },
     {
