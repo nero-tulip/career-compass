@@ -5,9 +5,10 @@ import { useEffect, useMemo, useState } from "react";
 import riaQuestions from "@/app/data/riasecQuestionsShuffled.json";
 import type { Answer } from "@/app/types/quiz";
 import ProgressBar from "@/app/components/ProgressBar";
-import QuizOptionGrid from "@/app/components/QuizOptionGrid"; // ensure this component is exported here
+import QuizOptionGrid from "@/app/components/QuizOptionGrid";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { ensureDraft, saveSection } from "@/app/lib/drafts";
+import { getAuth } from "firebase/auth";
 
 interface RiaQ {
   id: string;
@@ -74,35 +75,19 @@ export default function RIASECPage() {
     answers.some((a) => a.questionId === q.id)
   );
 
-  async function postResultsPreview(rid: string) {
-    // Call your results endpoint in "preview" mode so the server can
-    // compute/refresh a rolling snapshot. Keep it cheap (skip long AI) server-side.
-    try {
-      await fetch("/api/results", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rid, mode: "preview" }),
-      });
-    } catch {
-      // swallow preview errors; not fatal for quiz progression
-    }
-  }
 
   const next = async () => {
     if (!allOnPageAnswered) return;
 
     // 1) Ensure draft and save cumulative answers so far
     const { id: rid } = await ensureDraft(user!, ridParam);
-    await saveSection(
-      user!,
-      rid,
-      "riasec",
-      answers,
-      `riasec_page_${page + 1}_saved`
-    );
 
-    // 2) Send a preview to the server on EVERY Next
-    await postResultsPreview(rid);
+    // Coarse statuses only: in-progress OR done on final page
+    const status = isLast ? "riasec_done" : "riasec_in_progress";
+
+    await saveSection(user!, rid, "riasec", answers, status, {
+      progress: { section: "riasec", page: page + 1 },
+    } as any); // extraData arg if your saveSection supports it; safe to omit if not
 
     // 3) Advance or finalize
     if (!isLast) {
@@ -110,15 +95,32 @@ export default function RIASECPage() {
       return;
     }
 
-    // Final page: do a final server compute (can use mode: "final")
+    // Final page: call results API (server/Admin SDK will read the draft by uid+rid)
     try {
-      await fetch("/api/results", {
+      const idToken = await getAuth().currentUser?.getIdToken();
+      if (!idToken) {
+        console.error("Missing ID token for results submission");
+        return;
+      }
+
+      const res = await fetch("/api/results", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
         body: JSON.stringify({ rid, mode: "final" }),
       });
-    } catch {
-      // even if this fails, we still route; your results page can show an error state if needed
+
+      if (!res.ok) {
+        console.error("Results API failed", await res.text());
+        // You can show a toast here
+        return;
+      }
+    } catch (e) {
+      console.error("Results API error", e);
+      // You can show a toast here
+      return;
     }
 
     router.push(`/results?rid=${rid}`);

@@ -1,8 +1,11 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from 'react';
-import CareerCard from '@/app/components/CareerCard';
-import ReactMarkdown from 'react-markdown';
+import React, { useEffect, useMemo, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import CareerCard from "@/app/components/CareerCard";
+import ReactMarkdown from "react-markdown";
+import { useAuth } from "@/app/providers/AuthProvider";
+import { getAuth } from "firebase/auth";
 
 interface CareerMatch {
   code: string;
@@ -34,39 +37,114 @@ interface ResultsData {
 }
 
 export default function ResultsPage() {
+  const sp = useSearchParams();
+  const router = useRouter();
+  const rid = sp.get("rid") || "";
+  const { user, loading } = useAuth();
+
   const [results, setResults] = useState<ResultsData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingPage, setLoadingPage] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Gate: require auth & rid
   useEffect(() => {
-    const stored = typeof window !== 'undefined' ? localStorage.getItem('careerwise_results') : null;
-    if (stored) {
-      setResults(JSON.parse(stored));
-      setLoading(false);
-    } else {
-      setError('No results found. Please complete the quiz first.');
-      setLoading(false);
+    if (loading) return;
+    if (!user) {
+      router.replace("/start");
+      return;
     }
-  }, []);
+    if (!rid) {
+      setError("Missing result id.");
+      setLoadingPage(false);
+      return;
+    }
 
-  const riasecLabels = useMemo(() => ({
-    R: 'Realistic',
-    I: 'Investigative',
-    A: 'Artistic',
-    S: 'Social',
-    E: 'Enterprising',
-    C: 'Conventional'
-  } as const), []);
+    const fetchResult = async () => {
+      try {
+        const idToken = await getAuth().currentUser?.getIdToken();
+        if (!idToken) {
+          setError("Not authenticated.");
+          setLoadingPage(false);
+          return;
+        }
 
-  // Call hooks unconditionally: compute dominant labels defensively
+        const res = await fetch(`/api/results?rid=${encodeURIComponent(rid)}`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${idToken}`,
+          },
+        });
+
+        if (!res.ok) {
+          const j = await res.json().catch(() => ({}));
+          setError(j?.error || "Failed to load results.");
+          setLoadingPage(false);
+          return;
+        }
+
+        const data = await res.json();
+
+        // Shape coming back from API route:
+        // {
+        //   success: true,
+        //   rid,
+        //   result: {
+        //     type, rid, profile: { riasec, dominantTraits }, matchingCareers, analysis, ...
+        //   }
+        // }
+        const result = data?.result || {};
+
+        // Normalize careers for CareerCard (ensure `code` exists)
+        const normalizedCareers: CareerMatch[] = (result?.matchingCareers || []).map(
+          (c: any) => ({
+            code: c.code || (c.title ? c.title.toLowerCase().replace(/\s+/g, "-") : crypto.randomUUID()),
+            title: c.title,
+            riasec: c.riasec || { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 },
+          })
+        );
+
+        const mapped: ResultsData = {
+          profile: {
+            riasec: result?.profile?.riasec || { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 },
+            dominantTraits: result?.profile?.dominantTraits || [],
+          },
+          matchingCareers: normalizedCareers,
+          analysis: result?.analysis || "",
+        };
+
+        setResults(mapped);
+        setLoadingPage(false);
+      } catch (e) {
+        console.error("Failed to load results:", e);
+        setError("Failed to load results.");
+        setLoadingPage(false);
+      }
+    };
+
+    fetchResult();
+  }, [loading, user, rid, router]);
+
+  const riasecLabels = useMemo(
+    () =>
+      ({
+        R: "Realistic",
+        I: "Investigative",
+        A: "Artistic",
+        S: "Social",
+        E: "Enterprising",
+        C: "Conventional",
+      } as const),
+    []
+  );
+
   const dominantLabels = useMemo(() => {
-    if (!results) return '';
-    return results.profile.dominantTraits
-      .map(trait => riasecLabels[trait as keyof typeof riasecLabels])
-      .join(', ');
+    if (!results) return "";
+    return (results.profile.dominantTraits || [])
+      .map((trait) => riasecLabels[trait as keyof typeof riasecLabels] || trait)
+      .join(", ");
   }, [results, riasecLabels]);
 
-  if (loading) {
+  if (loading || loadingPage) {
     return (
       <div className="max-w-4xl mx-auto py-8 px-4">
         <div className="text-center">
@@ -92,7 +170,9 @@ export default function ResultsPage() {
 
   return (
     <div className="max-w-5xl mx-auto py-10 px-4">
-      <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-center mb-8">Your career profile</h1>
+      <h1 className="text-3xl md:text-4xl font-semibold tracking-tight text-center mb-8">
+        Your career profile
+      </h1>
 
       <div className="grid lg:grid-cols-3 gap-6 items-start mb-8">
         <div className="lg:col-span-2 rounded-xl border border-black/5 dark:border-white/10 p-6 bg-white/60 dark:bg-white/5">
@@ -101,16 +181,25 @@ export default function ResultsPage() {
             {Object.entries(results.profile.riasec).map(([key, value]) => (
               <div key={key} className="rounded-lg p-4 bg-gray-900">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-gray-100 font-medium">{riasecLabels[key as keyof typeof riasecLabels]}</span>
-                  <span className="text-gray-100 font-semibold">{value.toFixed(1)}</span>
+                  <span className="text-gray-100 font-medium">
+                    {riasecLabels[key as keyof typeof riasecLabels]}
+                  </span>
+                  <span className="text-gray-100 font-semibold">
+                    {Number(value).toFixed(1)}
+                  </span>
                 </div>
                 <div className="h-2 w-full rounded-full bg-gray-700 overflow-hidden">
-                  <div className="h-full bg-primary" style={{ width: `${(value / 7) * 100}%` }} />
+                  <div
+                    className="h-full bg-primary"
+                    style={{ width: `${(Number(value) / 7) * 100}%` }}
+                  />
                 </div>
               </div>
             ))}
           </div>
-          <p className="mt-3 text-sm text-gray-700 dark:text-gray-300"><span className="font-medium">Dominant traits:</span> {dominantLabels}</p>
+          <p className="mt-3 text-sm text-gray-700 dark:text-gray-300">
+            <span className="font-medium">Dominant traits:</span> {dominantLabels}
+          </p>
         </div>
         <div className="rounded-xl border border-black/5 dark:border-white/10 p-6 bg-white/60 dark:bg-white/5">
           <h2 className="text-lg font-semibold mb-2">Top matches</h2>
@@ -123,7 +212,9 @@ export default function ResultsPage() {
       </div>
 
       <div className="rounded-xl border border-black/5 dark:border-white/10 p-8 bg-gray-900">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-100 text-center">What this means for you</h2>
+        <h2 className="text-2xl font-semibold mb-4 text-gray-100 text-center">
+          What this means for you
+        </h2>
         <div className="prose prose-invert max-w-none">
           <ReactMarkdown
             components={{
@@ -141,17 +232,14 @@ export default function ResultsPage() {
       <div className="mt-8 flex justify-center gap-3">
         <button
           onClick={() => {
-            localStorage.removeItem('careerwise_results');
-            window.location.href = '/quiz';
+            // start a fresh draft flow
+            router.push("/start");
           }}
           className="btn btn-primary"
         >
-          Retake quiz
+          Start a new quiz
         </button>
-        <button
-          onClick={() => window.print()}
-          className="btn btn-outline"
-        >
+        <button onClick={() => window.print()} className="btn btn-outline">
           Print
         </button>
       </div>

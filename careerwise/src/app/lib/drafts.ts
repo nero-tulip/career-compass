@@ -2,40 +2,83 @@
 
 import { doc, setDoc, updateDoc, serverTimestamp, getDoc } from "firebase/firestore";
 import { db } from "@/app/lib/firebase";
-import { User } from "firebase/auth";
-import { v4 as uuid } from "uuid";
+import type { User } from "firebase/auth";
 
 export type SectionId = "intake" | "macro" | "riasec";
 
+// Add any new coarse statuses you use here:
+export type DraftStatus =
+  | "started"
+  | "intake_done"
+  | "macro_done"
+  | "riasec_in_progress"
+  | "riasec_done"
+  | "free_done"
+  | "premium_done";
+
 export async function ensureDraft(user: User, rid?: string) {
-  const id = rid || uuid();
+  const id = rid || crypto.randomUUID();
   const ref = doc(db, "users", user.uid, "drafts", id);
+
   if (!rid) {
-    await setDoc(ref, {
-      status: "started",
-      entitlement: "free",
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    }, { merge: true });
-  } else {
-    const snap = await getDoc(ref);
-    if (!snap.exists()) {
-      await setDoc(ref, {
+    await setDoc(
+      ref,
+      {
         status: "started",
         entitlement: "free",
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-      }, { merge: true });
+      },
+      { merge: true }
+    );
+  } else {
+    // touch updatedAt if it already exists
+    const snap = await getDoc(ref);
+    if (!snap.exists()) {
+      await setDoc(
+        ref,
+        {
+          status: "started",
+          entitlement: "free",
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+    } else {
+      await updateDoc(ref, { updatedAt: serverTimestamp() });
     }
   }
-  return { id, ref };
+
+  return { id };
 }
 
-export async function saveSection(user: User, rid: string, section: SectionId, data: any, status?: string) {
+/**
+ * Save a quiz section to the user's draft.
+ * @param user    Firebase user
+ * @param rid     draft id
+ * @param section "intake" | "macro" | "riasec"
+ * @param data    section payload (answers, etc.)
+ * @param status  optional coarse status to set (e.g., "riasec_in_progress", "riasec_done")
+ * @param extra   optional extra fields to merge (e.g., { progress: { section: "riasec", page: 3 } })
+ */
+export async function saveSection(
+  user: User,
+  rid: string,
+  section: SectionId,
+  data: unknown,
+  status?: DraftStatus,
+  extra?: Record<string, unknown>
+) {
   const ref = doc(db, "users", user.uid, "drafts", rid);
-  await updateDoc(ref, {
+
+  const payload: Record<string, unknown> = {
     [section]: data,
-    status: status || `${section}_done`,
     updatedAt: serverTimestamp(),
-  });
+  };
+
+  if (status) payload.status = status;
+  if (extra) Object.assign(payload, extra);
+
+  await updateDoc(ref, payload);
 }

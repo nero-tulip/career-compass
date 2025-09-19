@@ -1,16 +1,31 @@
+// src/app/api/results/route.ts
 import { NextResponse } from 'next/server';
 import type { Answer } from '@/app/types/quiz';
 import type { MacroAnswer } from '@/app/types/quiz';
 import type { RIASECProfile } from '@/app/types/career';
-import { findMatchingCareers, prepareCareerAnalysisPrompt, interpretMacroAnswer } from '@/app/lib/careerMatch';
+import { prepareCareerAnalysisPrompt, interpretMacroAnswer } from '@/app/lib/careerMatch';
+import careers from '@/app/data/careers.json';
+import { NextRequest } from "next/server";
 
-// NEW: Firestore
-import { db } from '@/app/lib/firebase';
-import { doc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+// 🔒 Admin Firestore (server-only)
+import { getAuth } from 'firebase-admin/auth';
+import { adminDb } from '@/app/lib/firebaseAdmin';
 
-interface QuizSubmission {
-  macroAnswers: MacroAnswer[];
-  riaAnswers: Answer[];
+interface DraftDoc {
+  status?: string;
+  entitlement?: 'free' | 'premium';
+  intake?: unknown;
+  macro?: MacroAnswer[];
+  riasec?: Answer[];
+  progress?: { section?: string; page?: number };
+  createdAt?: unknown;
+  updatedAt?: unknown;
+}
+
+interface CareerRow {
+  title: string;
+  riasec?: Partial<RIASECProfile>;
+  [k: string]: any;
 }
 
 interface CareerProfile {
@@ -19,39 +34,46 @@ interface CareerProfile {
   dominantTraits: string[];
 }
 
-function calculateRIASECProfile(answers: Answer[]): RIASECProfile {
-  const profile: RIASECProfile = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
+/** ---------- Auth: ONLY via Bearer ID token ---------- */
+async function requireUidFromAuthHeader(request: Request): Promise<string> {
+  const authz = request.headers.get('authorization') || request.headers.get('Authorization');
+  if (!authz || !authz.startsWith('Bearer ')) {
+    throw new Error('unauthenticated');
+  }
+  const idToken = authz.slice('Bearer '.length).trim();
+  const decoded = await getAuth().verifyIdToken(idToken);
+  return decoded.uid;
+}
 
-  console.log('=== RIASEC CALCULATION DEBUG ===');
+/** ---------- RIASEC math (dynamic averaging; no hardcoded divisor) ---------- */
+function calculateRIASECProfileDynamic(answers: Answer[]): RIASECProfile {
+  // Totals & counts per key
+  const totals: RIASECProfile = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
+  const counts: Record<keyof RIASECProfile, number> = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
+
+  console.log('=== RIASEC CALCULATION (dynamic) ===');
   console.log('Total answers received:', answers.length);
-  console.log('First few answers:', answers.slice(0, 5));
 
-  // Group answers by category and calculate averages
-  answers.forEach((answer, index) => {
-    const category = answer.questionId.charAt(0).toUpperCase() as keyof RIASECProfile;
-    console.log(
-      `Answer ${index + 1}: questionId="${answer.questionId}", score=${answer.score}, category="${category}"`
-    );
-
-    if (category in profile) {
-      profile[category] += answer.score;
-      console.log(`  -> Added ${answer.score} to ${category}, new total: ${profile[category]}`);
+  for (const a of answers) {
+    // Your current IDs start with the category letter (e.g., "R12")
+    const key = a.questionId.charAt(0).toUpperCase() as keyof RIASECProfile;
+    if (key in totals) {
+      totals[key] += Number(a.score) || 0;
+      counts[key] += 1;
     } else {
-      console.log(`  -> WARNING: category "${category}" not found in profile!`);
+      console.log(`  -> WARNING: Unknown category key in questionId "${a.questionId}"`);
     }
+  }
+
+  const profile: RIASECProfile = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
+  (Object.keys(profile) as (keyof RIASECProfile)[]).forEach((k) => {
+    profile[k] = counts[k] > 0 ? totals[k] / counts[k] : 0;
   });
 
-  console.log('Raw totals before averaging:', { ...profile });
-
-  // Calculate averages (assuming 10 questions per category)
-  (Object.keys(profile) as (keyof RIASECProfile)[]).forEach((key) => {
-    const oldValue = profile[key];
-    profile[key] = profile[key] / 10;
-    console.log(`${key}: ${oldValue} / 10 = ${profile[key]}`);
-  });
-
-  console.log('Final RIASEC profile:', profile);
-  console.log('=== END RIASEC CALCULATION DEBUG ===');
+  console.log('Totals:', totals);
+  console.log('Counts:', counts);
+  console.log('Averages:', profile);
+  console.log('=== END RIASEC CALCULATION (dynamic) ===');
 
   return profile;
 }
@@ -63,6 +85,37 @@ function getDominantTraits(profile: RIASECProfile): string[] {
     .map(([trait]) => trait);
 }
 
+/** ---------- Cosine similarity ranking for careers ---------- */
+function cosineSim(a: RIASECProfile, b: Partial<RIASECProfile>): number {
+  const keys: (keyof RIASECProfile)[] = ['R', 'I', 'A', 'S', 'E', 'C'];
+  let dot = 0, na = 0, nb = 0;
+  for (const k of keys) {
+    const av = a[k] || 0;
+    const bv = (b[k] ?? 0) as number;
+    dot += av * bv;
+    na += av * av;
+    nb += bv * bv;
+  }
+  const denom = Math.sqrt(na) * Math.sqrt(nb);
+  return denom === 0 ? 0 : dot / denom;
+}
+
+function rankCareersByCosine(
+  profile: RIASECProfile,
+  rows: CareerRow[],
+  limit = 3
+) {
+  return rows
+    .filter((c) => c.riasec && typeof c.riasec === 'object')
+    .map((c) => ({
+      ...c,
+      score: cosineSim(profile, c.riasec as Partial<RIASECProfile>),
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit);
+}
+
+/** ---------- Your existing OpenAI call (kept as-is) ---------- */
 async function getChatGPTAnalysis(prompt: string): Promise<string> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error('OpenAI API key not found in environment variables');
@@ -99,59 +152,66 @@ async function getChatGPTAnalysis(prompt: string): Promise<string> {
   return data.choices[0].message.content;
 }
 
+/** ---------- Route handler (minimal changes elsewhere) ---------- */
 export async function POST(request: Request) {
   try {
-    // Extend incoming body to include identifiers and mode
-    const body = (await request.json()) as QuizSubmission & {
-      uid?: string;
-      rid?: string;
-      mode?: 'preview' | 'final';
-    };
+    // Auth → uid (Bearer ID token only)
+    const uid = await requireUidFromAuthHeader(request);
 
-    const uid = body.uid || request.headers.get('x-uid') || undefined;
-    const rid = body.rid;
-    const mode: 'preview' | 'final' = body.mode ?? 'final';
+    // Body with rid + mode
+    const body = (await request.json()) as { rid?: string; mode?: 'preview' | 'final' };
+    const rid = body?.rid;
+    const mode: 'preview' | 'final' = body?.mode ?? 'final';
 
-    if (!uid) {
-      return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
+    if (!rid) return NextResponse.json({ error: 'missing_rid' }, { status: 400 });
+
+    const db = adminDb();
+    const now = new Date();
+
+    // Load draft server-side
+    const draftRef = db.collection('users').doc(uid).collection('drafts').doc(rid);
+    const draftSnap = await draftRef.get();
+    if (!draftSnap.exists) return NextResponse.json({ error: 'draft_not_found' }, { status: 404 });
+    const draft = draftSnap.data() as DraftDoc;
+
+    const macroAnswers = draft.macro ?? [];
+    const riaAnswers = draft.riasec ?? [];
+    if (!Array.isArray(riaAnswers) || riaAnswers.length === 0) {
+      return NextResponse.json({ error: 'no_riasec_answers' }, { status: 400 });
     }
-    if (!rid) {
-      return NextResponse.json({ error: 'missing_rid' }, { status: 400 });
-    }
-    if (!body.macroAnswers || !body.riaAnswers) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
 
-    console.log('API received macroAnswers:', body.macroAnswers);
-    console.log('API received riaAnswers:', body.riaAnswers);
+    // 1) Compute profile (dynamic averaging)
+    const riasecProfile = calculateRIASECProfileDynamic(riaAnswers as Answer[]);
 
-    // 1) Compute RIASEC + macro summary
-    const riasecProfile = calculateRIASECProfile(body.riaAnswers);
-    const macroSummaryText = body.macroAnswers
-      .map((ans: MacroAnswer) => interpretMacroAnswer(ans.questionId, ans.score))
+    // 2) Build macro summary text (unchanged behavior)
+    const macroSummaryText = (macroAnswers as MacroAnswer[])
+      .map((ans) => interpretMacroAnswer(ans.questionId, ans.score))
       .filter(Boolean)
       .join('\n');
 
-    // 2) Find matching careers
-    const matchingCareers = findMatchingCareers(riasecProfile);
+    // 3) Rank careers via cosine similarity
+    const matchingCareers = rankCareersByCosine(riasecProfile, careers as CareerRow[], 3);
 
-    // 3) Career profile object
+    // 4) Assemble profile object (unchanged shape)
     const careerProfile: CareerProfile = {
       riasec: riasecProfile,
-      macroPreferences: {}, // TODO: expand if you add macro dimension scoring
+      macroPreferences: {}, // keep placeholder for now
       dominantTraits: getDominantTraits(riasecProfile),
     };
 
-    // 4) Preview path: save rolling snapshot to the draft and return quickly (no AI call)
+    // 5) Preview mode → write rolling snapshot to draft; no AI call
     if (mode === 'preview') {
-      await updateDoc(doc(db, 'users', uid, 'drafts', rid), {
-        preview: {
-          profile: careerProfile,
-          matchingCareers,
-          at: serverTimestamp(),
+      await draftRef.set(
+        {
+          preview: {
+            profile: careerProfile,
+            matchingCareers,
+            at: now,
+          },
+          updatedAt: now,
         },
-        updatedAt: serverTimestamp(),
-      });
+        { merge: true }
+      );
 
       return NextResponse.json({
         success: true,
@@ -161,30 +221,33 @@ export async function POST(request: Request) {
       });
     }
 
-    // 5) Final path: build prompt, call AI for analysis, persist immutable result, mark draft done, clear activeRid
+    // 6) Final mode → ChatGPT analysis + persist result + mark draft done
     const prompt = prepareCareerAnalysisPrompt(riasecProfile, macroSummaryText);
     const analysis = await getChatGPTAnalysis(prompt);
 
-    // Save immutable free result (you can use rid as resultId)
-    const resultRef = doc(db, 'users', uid, 'results', rid);
-    await setDoc(resultRef, {
-      type: 'free',
+    const resultRef = db.collection('users').doc(uid).collection('results').doc(rid);
+
+    await resultRef.set({
+      type: draft.entitlement === 'premium' ? 'premium' : 'free',
       rid,
       profile: careerProfile,
       matchingCareers,
       analysis,
-      completedAt: serverTimestamp(),
+      completedAt: now,
     });
 
-    // Mark draft as finished
-    await updateDoc(doc(db, 'users', uid, 'drafts', rid), {
-      status: 'free_done',
-      freeResultRef: resultRef.path,
-      updatedAt: serverTimestamp(),
-    });
+    // Mark draft finished and link result
+    await draftRef.set(
+      {
+        status: draft.entitlement === 'premium' ? 'premium_done' : 'free_done',
+        freeResultRef: resultRef.path,
+        updatedAt: now,
+      },
+      { merge: true }
+    );
 
-    // **Clear activeRid so next "Quiz" starts a fresh draft**
-    await updateDoc(doc(db, 'users', uid), { activeRid: null });
+    // Optional: clear activeRid on user (kept from earlier suggestion)
+    await db.collection('users').doc(uid).set({ activeRid: null }, { merge: true });
 
     return NextResponse.json({
       success: true,
@@ -194,8 +257,60 @@ export async function POST(request: Request) {
       matchingCareers,
       analysis,
     });
-  } catch (error) {
-    console.error('Error processing quiz submission:', error);
-    return NextResponse.json({ error: 'Failed to process quiz submission' }, { status: 500 });
+  } catch (error: any) {
+    console.error('Error in /api/results:', error);
+    const msg = typeof error?.message === 'string' ? error.message : 'internal_error';
+    const status =
+      msg === 'unauthenticated' ? 401 :
+      msg === 'missing_rid' ? 400 :
+      msg === 'draft_not_found' ? 404 :
+      msg === 'no_riasec_answers' ? 400 :
+      500;
+
+    return NextResponse.json({ error: msg }, { status });
+  }
+}
+
+// Ensure we’re on Node so process.env and Admin SDK are available
+export const runtime = "nodejs";
+
+// GET /api/results?rid=...
+export async function GET(req: NextRequest) {
+  try {
+    // Auth: Bearer ID token (same as POST)
+    const authz = req.headers.get("authorization") || req.headers.get("Authorization");
+    if (!authz || !authz.startsWith("Bearer ")) {
+      return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+    }
+    const idToken = authz.slice("Bearer ".length).trim();
+    const decoded = await getAuth().verifyIdToken(idToken);
+    const uid = decoded.uid;
+
+    const rid = req.nextUrl.searchParams.get("rid");
+    if (!rid) {
+      return NextResponse.json({ error: "missing_rid" }, { status: 400 });
+    }
+
+    const db = adminDb();
+    const resRef = db.collection("users").doc(uid).collection("results").doc(rid);
+    const snap = await resRef.get();
+
+    if (!snap.exists) {
+      return NextResponse.json({ error: "result_not_found" }, { status: 404 });
+    }
+
+    const data = snap.data() || {};
+
+    // Return exactly what the client needs
+    return NextResponse.json({
+      success: true,
+      rid,
+      result: data,
+    });
+  } catch (err: any) {
+    console.error("GET /api/results error:", err);
+    const msg = typeof err?.message === "string" ? err.message : "internal_error";
+    const status = msg === "unauthenticated" ? 401 : 500;
+    return NextResponse.json({ error: msg }, { status });
   }
 }
