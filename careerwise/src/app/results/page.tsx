@@ -175,20 +175,20 @@ export default function ResultsPage() {
       </h1>
 
       <div className="grid lg:grid-cols-3 gap-6 items-start mb-8">
-        <div className="lg:col-span-2 rounded-xl border border-black/5 dark:border-white/10 p-6 bg-white/60 dark:bg-white/5">
+        <div className="lg:col-span-2 surface-2 p-6">
           <h2 className="text-lg font-semibold mb-4">RIASEC breakdown</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {Object.entries(results.profile.riasec).map(([key, value]) => (
-              <div key={key} className="rounded-lg p-4 bg-gray-900">
+              <div key={key} className="card p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-gray-100 font-medium">
+                  <span className="font-medium">
                     {riasecLabels[key as keyof typeof riasecLabels]}
                   </span>
-                  <span className="text-gray-100 font-semibold">
+                  <span className="font-semibold">
                     {Number(value).toFixed(1)}
                   </span>
                 </div>
-                <div className="h-2 w-full rounded-full bg-gray-700 overflow-hidden">
+                <div className="h-2 w-full rounded-full bar-track overflow-hidden">
                   <div
                     className="h-full bg-primary"
                     style={{ width: `${(Number(value) / 7) * 100}%` }}
@@ -197,11 +197,11 @@ export default function ResultsPage() {
               </div>
             ))}
           </div>
-          <p className="mt-3 text-sm text-gray-700 dark:text-gray-300">
+          <p className="mt-3 text-sm muted">
             <span className="font-medium">Dominant traits:</span> {dominantLabels}
           </p>
         </div>
-        <div className="rounded-xl border border-black/5 dark:border-white/10 p-6 bg-white/60 dark:bg-white/5">
+        <div className="surface-2 p-6">
           <h2 className="text-lg font-semibold mb-2">Top matches</h2>
           <div className="space-y-3">
             {results.matchingCareers?.slice(0, 3).map((c) => (
@@ -211,11 +211,11 @@ export default function ResultsPage() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-black/5 dark:border-white/10 p-8 bg-gray-900">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-100 text-center">
+      <div className="surface-2 p-8">
+        <h2 className="text-2xl font-semibold mb-4 text-center">
           What this means for you
         </h2>
-        <div className="prose prose-invert max-w-none">
+        <div className="prose max-w-none">
           <ReactMarkdown
             components={{
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
