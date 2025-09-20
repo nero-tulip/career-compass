@@ -1,20 +1,23 @@
 // src/app/api/results/route.ts
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import type { Answer } from '@/app/types/quiz';
 import type { MacroAnswer } from '@/app/types/quiz';
 import type { RIASECProfile } from '@/app/types/career';
-import { prepareCareerAnalysisPrompt, interpretMacroAnswer } from '@/app/lib/careerMatch';
+import { interpretMacroAnswer } from '@/app/lib/careerMatch';
 import careers from '@/app/data/careers.json';
-import { NextRequest } from "next/server";
+import { summarizeIntake } from "@/app/lib/intakeSummary";
 
 // 🔒 Admin Firestore (server-only)
 import { getAuth } from 'firebase-admin/auth';
 import { adminDb } from '@/app/lib/firebaseAdmin';
 
+// Ensure Node runtime (env + Admin SDK)
+export const runtime = 'nodejs';
+
 interface DraftDoc {
   status?: string;
   entitlement?: 'free' | 'premium';
-  intake?: unknown;
+  intake?: unknown;                 // raw intake stored in draft
   macro?: MacroAnswer[];
   riasec?: Answer[];
   progress?: { section?: string; page?: number };
@@ -28,7 +31,7 @@ interface CareerRow {
   [k: string]: any;
 }
 
-interface CareerProfile {
+interface CareerProfileOut {
   riasec: RIASECProfile;
   macroPreferences: Record<string, number>;
   dominantTraits: string[];
@@ -47,7 +50,6 @@ async function requireUidFromAuthHeader(request: Request): Promise<string> {
 
 /** ---------- RIASEC math (dynamic averaging; no hardcoded divisor) ---------- */
 function calculateRIASECProfileDynamic(answers: Answer[]): RIASECProfile {
-  // Totals & counts per key
   const totals: RIASECProfile = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
   const counts: Record<keyof RIASECProfile, number> = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
 
@@ -55,7 +57,6 @@ function calculateRIASECProfileDynamic(answers: Answer[]): RIASECProfile {
   console.log('Total answers received:', answers.length);
 
   for (const a of answers) {
-    // Your current IDs start with the category letter (e.g., "R12")
     const key = a.questionId.charAt(0).toUpperCase() as keyof RIASECProfile;
     if (key in totals) {
       totals[key] += Number(a.score) || 0;
@@ -115,50 +116,144 @@ function rankCareersByCosine(
     .slice(0, limit);
 }
 
-/** ---------- Your existing OpenAI call (kept as-is) ---------- */
-async function getChatGPTAnalysis(prompt: string): Promise<string> {
+/** ---------- JSON-first OpenAI call ---------- */
+type AnalysisJSON = {
+  summary: string;
+  strengths: string[];
+  growthAreas: string[];
+  topCareers: Array<{
+    title: string;
+    whyMatch: string;
+    successTraits: string[];
+    firstSteps: string[];
+  }>;
+  nextSteps: string[];
+};
+
+function toMarkdownFromJSON(j: AnalysisJSON, profile: RIASECProfile, dominantTraits: string[]) {
+  const lines: string[] = [];
+  lines.push(`## Summary`);
+  lines.push(j.summary || '—');
+  lines.push('');
+  lines.push(`## Profile Highlights`);
+  lines.push(
+    `RIASEC Averages — R:${profile.R.toFixed(2)} I:${profile.I.toFixed(2)} A:${profile.A.toFixed(2)} S:${profile.S.toFixed(2)} E:${profile.E.toFixed(2)} C:${profile.C.toFixed(2)}`
+  );
+  lines.push(`Dominant Traits — ${dominantTraits.join(', ') || '—'}`);
+  lines.push('');
+  if (j.strengths?.length) {
+    lines.push(`## Strengths`);
+    for (const s of j.strengths) lines.push(`- ${s}`);
+    lines.push('');
+  }
+  if (j.growthAreas?.length) {
+    lines.push(`## Growth Areas`);
+    for (const s of j.growthAreas) lines.push(`- ${s}`);
+    lines.push('');
+  }
+  if (j.topCareers?.length) {
+    lines.push(`## Top Career Matches`);
+    for (const c of j.topCareers) {
+      lines.push(`### ${c.title}`);
+      if (c.whyMatch) lines.push(`${c.whyMatch}`);
+      if (c.successTraits?.length) {
+        lines.push(`**Traits for success:**`);
+        for (const t of c.successTraits) lines.push(`- ${t}`);
+      }
+      if (c.firstSteps?.length) {
+        lines.push(`**First steps:**`);
+        for (const fs of c.firstSteps) lines.push(`- ${fs}`);
+      }
+      lines.push('');
+    }
+  }
+  if (j.nextSteps?.length) {
+    lines.push(`## Next Steps`);
+    for (const n of j.nextSteps) lines.push(`- ${n}`);
+  }
+  return lines.join('\n');
+}
+
+async function getChatGPTAnalysisJSON(params: {
+  profile: RIASECProfile;
+  dominantTraits: string[];
+  macroSummaryText: string;
+  intakeSummary: { summaryText: string; highlights: string[] };
+  topCareerTitles: string[];
+}): Promise<AnalysisJSON> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error('OpenAI API key not found in environment variables');
 
-  console.log('Calling OpenAI API...');
+  // Build a compact, deterministic system+user prompt
+  const system = `
+You are an expert career counselor. Respond ONLY with valid JSON matching the provided schema. 
+No markdown, no commentary—just a JSON object. Keep advice concrete and practical for an adult learner.
+`.trim();
+
+  const schemaExample: AnalysisJSON = {
+    summary: "One paragraph that ties RIASEC + intake into a coherent career theme.",
+    strengths: ["bullet 1", "bullet 2"],
+    growthAreas: ["bullet 1", "bullet 2"],
+    topCareers: [
+      {
+        title: "Career Title",
+        whyMatch: "1–3 sentences referencing RIASEC + intake/macro context.",
+        successTraits: ["trait 1", "trait 2"],
+        firstSteps: ["step 1", "step 2"]
+      }
+    ],
+    nextSteps: ["action 1", "action 2"]
+  };
+
+  const user = {
+    riasecProfile: params.profile,
+    dominantTraits: params.dominantTraits,
+    macroSummaryText: params.macroSummaryText,
+    intakeSummary: params.intakeSummary,   // <-- structured, schema-aware summary
+    datasetTopCareerTitles: params.topCareerTitles
+  };
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
       model: 'gpt-4-turbo-preview',
+      response_format: { type: "json_object" }, // <— enforce JSON
+      temperature: 0.4,
       messages: [
+        { role: 'system', content: system },
         {
-          role: 'system',
+          role: 'user',
           content:
-            'You are a career counselor with expertise in RIASEC personality types and career matching. Provide detailed, actionable career advice based on the provided profile and career matches.',
-        },
-        { role: 'user', content: prompt },
+            `Return a JSON object exactly matching this TypeScript shape:\n` +
+            `type AnalysisJSON = ${JSON.stringify(schemaExample, null, 2)}\n\n` +
+            `Here is the user's data (JSON):\n` +
+            JSON.stringify(user, null, 2)
+        }
       ],
-      temperature: 0.7,
-      max_tokens: 2000,
     }),
   });
 
-  console.log('OpenAI API response status:', response.status);
+  console.log('OpenAI JSON response status:', response.status);
 
   if (!response.ok) {
     const errorText = await response.text();
     console.error('OpenAI API error:', errorText);
-    throw new Error(`Failed to get analysis from ChatGPT: ${response.status} ${errorText}`);
+    throw new Error(`Failed to get analysis JSON from ChatGPT: ${response.status} ${errorText}`);
   }
 
   const data = await response.json();
-  return data.choices[0].message.content;
+  // The model must return valid JSON per response_format; still guard:
+  const content = data.choices?.[0]?.message?.content ?? '{}';
+  const parsed = JSON.parse(content);
+  return parsed as AnalysisJSON;
 }
 
-/** ---------- Route handler (minimal changes elsewhere) ---------- */
+/** ---------- POST: compute & save results ---------- */
 export async function POST(request: Request) {
   try {
-    // Auth → uid (Bearer ID token only)
     const uid = await requireUidFromAuthHeader(request);
 
-    // Body with rid + mode
     const body = (await request.json()) as { rid?: string; mode?: 'preview' | 'final' };
     const rid = body?.rid;
     const mode: 'preview' | 'final' = body?.mode ?? 'final';
@@ -168,11 +263,14 @@ export async function POST(request: Request) {
     const db = adminDb();
     const now = new Date();
 
-    // Load draft server-side
+    // Load draft server-side (includes intake, macro, riasec)
     const draftRef = db.collection('users').doc(uid).collection('drafts').doc(rid);
     const draftSnap = await draftRef.get();
     if (!draftSnap.exists) return NextResponse.json({ error: 'draft_not_found' }, { status: 404 });
     const draft = draftSnap.data() as DraftDoc;
+
+    // 🔎 interpret intake → concise summary for the LLM
+    const intakeSummary = summarizeIntake(draft.intake ?? null);
 
     const macroAnswers = draft.macro ?? [];
     const riaAnswers = draft.riasec ?? [];
@@ -182,6 +280,7 @@ export async function POST(request: Request) {
 
     // 1) Compute profile (dynamic averaging)
     const riasecProfile = calculateRIASECProfileDynamic(riaAnswers as Answer[]);
+    const dominantTraits = getDominantTraits(riasecProfile);
 
     // 2) Build macro summary text (unchanged behavior)
     const macroSummaryText = (macroAnswers as MacroAnswer[])
@@ -190,13 +289,13 @@ export async function POST(request: Request) {
       .join('\n');
 
     // 3) Rank careers via cosine similarity
-    const matchingCareers = rankCareersByCosine(riasecProfile, careers as CareerRow[], 3);
+    const rankedCareers = rankCareersByCosine(riasecProfile, careers as CareerRow[], 3);
 
-    // 4) Assemble profile object (unchanged shape)
-    const careerProfile: CareerProfile = {
+    // 4) Assemble profile object (unchanged outward shape)
+    const careerProfile: CareerProfileOut = {
       riasec: riasecProfile,
-      macroPreferences: {}, // keep placeholder for now
-      dominantTraits: getDominantTraits(riasecProfile),
+      macroPreferences: {}, // placeholder
+      dominantTraits,
     };
 
     // 5) Preview mode → write rolling snapshot to draft; no AI call
@@ -205,7 +304,7 @@ export async function POST(request: Request) {
         {
           preview: {
             profile: careerProfile,
-            matchingCareers,
+            matchingCareers: rankedCareers,
             at: now,
           },
           updatedAt: now,
@@ -217,13 +316,45 @@ export async function POST(request: Request) {
         success: true,
         mode: 'preview',
         profile: careerProfile,
-        matchingCareers,
+        matchingCareers: rankedCareers,
       });
     }
 
-    // 6) Final mode → ChatGPT analysis + persist result + mark draft done
-    const prompt = prepareCareerAnalysisPrompt(riasecProfile, macroSummaryText);
-    const analysis = await getChatGPTAnalysis(prompt);
+    // 6) Final mode → JSON-first ChatGPT analysis + persist result + mark draft done
+    const topTitles = rankedCareers.map((c) => c.title);
+    let analysisJson: AnalysisJSON;
+    let analysisMarkdown: string;
+
+    try {
+      analysisJson = await getChatGPTAnalysisJSON({
+        profile: riasecProfile,
+        dominantTraits,
+        macroSummaryText,
+        intakeSummary,                 // <-- use concise intake summary here
+        topCareerTitles: topTitles,
+      });
+      analysisMarkdown = toMarkdownFromJSON(analysisJson, riasecProfile, dominantTraits);
+    } catch (e) {
+      console.warn('Falling back to simple markdown analysis due to JSON error.', e);
+      // Fallback minimal content so the UI still works
+      analysisJson = {
+        summary: 'Automated analysis unavailable. Showing a minimal summary.',
+        strengths: [],
+        growthAreas: [],
+        topCareers: topTitles.map((t) => ({
+          title: t,
+          whyMatch: '',
+          successTraits: [],
+          firstSteps: []
+        })),
+        nextSteps: []
+      };
+      analysisMarkdown =
+        `## Summary\n` +
+        `RIASEC Averages — R:${riasecProfile.R.toFixed(2)} I:${riasecProfile.I.toFixed(2)} A:${riasecProfile.A.toFixed(2)} S:${riasecProfile.S.toFixed(2)} E:${riasecProfile.E.toFixed(2)} C:${riasecProfile.C.toFixed(2)}\n\n` +
+        `## Top Career Matches\n` +
+        (topTitles.map((t) => `- ${t}`).join('\n') || '_No matches found._');
+    }
 
     const resultRef = db.collection('users').doc(uid).collection('results').doc(rid);
 
@@ -231,8 +362,9 @@ export async function POST(request: Request) {
       type: draft.entitlement === 'premium' ? 'premium' : 'free',
       rid,
       profile: careerProfile,
-      matchingCareers,
-      analysis,
+      matchingCareers: rankedCareers,
+      analysisJson,                // <— structured
+      analysis: analysisMarkdown,  // <— markdown for current UI
       completedAt: now,
     });
 
@@ -246,7 +378,7 @@ export async function POST(request: Request) {
       { merge: true }
     );
 
-    // Optional: clear activeRid on user (kept from earlier suggestion)
+    // Optional: clear activeRid on user
     await db.collection('users').doc(uid).set({ activeRid: null }, { merge: true });
 
     return NextResponse.json({
@@ -254,8 +386,8 @@ export async function POST(request: Request) {
       mode: 'final',
       rid,
       profile: careerProfile,
-      matchingCareers,
-      analysis,
+      matchingCareers: rankedCareers,
+      analysisJson,
     });
   } catch (error: any) {
     console.error('Error in /api/results:', error);
@@ -271,13 +403,9 @@ export async function POST(request: Request) {
   }
 }
 
-// Ensure we’re on Node so process.env and Admin SDK are available
-export const runtime = "nodejs";
-
-// GET /api/results?rid=...
+/** ---------- GET: fetch saved results (no change to contract) ---------- */
 export async function GET(req: NextRequest) {
   try {
-    // Auth: Bearer ID token (same as POST)
     const authz = req.headers.get("authorization") || req.headers.get("Authorization");
     if (!authz || !authz.startsWith("Bearer ")) {
       return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
@@ -300,13 +428,7 @@ export async function GET(req: NextRequest) {
     }
 
     const data = snap.data() || {};
-
-    // Return exactly what the client needs
-    return NextResponse.json({
-      success: true,
-      rid,
-      result: data,
-    });
+    return NextResponse.json({ success: true, rid, result: data });
   } catch (err: any) {
     console.error("GET /api/results error:", err);
     const msg = typeof err?.message === "string" ? err.message : "internal_error";

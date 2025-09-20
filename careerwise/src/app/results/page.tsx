@@ -230,18 +230,65 @@ export default function ResultsPage() {
       </div>
 
       <div className="mt-8 flex justify-center gap-3">
-        <button
-          onClick={() => {
-            // start a fresh draft flow
-            router.push("/start");
-          }}
-          className="btn btn-primary"
-        >
-          Start a new quiz
-        </button>
-        <button onClick={() => window.print()} className="btn btn-outline">
-          Print
-        </button>
+  <button
+    onClick={async () => {
+      try {
+        const idToken = await getAuth().currentUser?.getIdToken();
+        if (!idToken) throw new Error("Not authenticated");
+        // Fire the recompute
+        const res = await fetch("/api/results", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({ rid, mode: "final" }),
+        });
+        if (!res.ok) {
+          const j = await res.json().catch(() => ({}));
+          alert(`Re-run failed: ${j?.error || res.status}`);
+          return;
+        }
+        // Reload the page data
+        window.location.reload();
+      } catch (e: any) {
+        alert(`Re-run failed: ${e?.message || "unknown error"}`);
+      }
+    }}
+    className="btn btn-secondary"
+  >
+    Re-run analysis
+  </button>
+
+  <button
+    onClick={() => {
+      // start a fresh draft flow (see Option 2 below for true "new rid")
+      // keeping this as "Start a new quiz" UI — wired in Option 2 changes
+      // If you don't implement Option 2, you can route to /start as-is:
+      // router.push("/start");
+      router.push("/start?new=1");
+    }}
+    className="btn btn-primary"
+  >
+    Start a new quiz
+  </button>
+
+  <button onClick={() => window.print()} className="btn btn-outline">
+    Print
+  </button>
+</div>
+      <div className="mt-4 text-center text-sm muted">
+        <p>
+          Note: This analysis is based on your responses to the career quiz and
+          is intended for informational purposes only. For personalized career
+          advice, consider consulting a career counselor or professional.
+        </p>
+      </div>
+
+      <div className="mt-10 text-center text-xs muted">
+        <p>
+          Results ID: <code>{rid}</code>
+        </p>
       </div>
     </div>
   );
