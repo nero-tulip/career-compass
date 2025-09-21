@@ -13,6 +13,7 @@ export function destinationForStatus(status: string, rid: string) {
       return `/riasec?rid=${rid}`;
     case "riasec_done":
     case "free_done":
+      return `/results?rid=${rid}`;
     case "premium_done":
       return `/results?rid=${rid}`;
     default:
