@@ -233,3 +233,7 @@ html, body {
 .underline-accent {
   background: linear-gradient(transparent 75%, rgba(123,195,255,0.35) 0);
 }
+
+.underline-accent-green {
+  background: linear-gradient(transparent 75%, rgba(123, 255, 167, 0.35) 0);
+}

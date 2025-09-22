@@ -19,11 +19,10 @@ export default function Home() {
         <div className="grid gap-10 md:grid-cols-[1.2fr_1fr] items-start">
           <div>
             <h1 className="text-balance text-4xl md:text-6xl font-semibold tracking-tight leading-tight glow">
-              Your personality, <span className="text-gradient">translated into career fit</span>.
+              Finding the perfect career, <span className="text-gradient">for you</span>.
             </h1>
             <p className="mt-6 text-lg text-[--text-dim] max-w-prose">
-              Most people pick jobs without knowing if they actually match. We combine
-              research-based psychology with job-market insight to help you find environments
+              We combine research-based psychology with job-market insight to help you find environments
               where you’ll thrive.
             </p>
 
@@ -33,7 +32,7 @@ export default function Home() {
             </div>
 
             <div className="mt-6 flex flex-wrap gap-3 text-sm text-[--text-dim]">
-              <span className="badge">Takes ~10–12 minutes</span>
+              <span className="badge">Psychological</span>
               <span className="badge">Save progress</span>
               <span className="badge">Evidence-based</span>
             </div>
@@ -53,19 +52,16 @@ export default function Home() {
       {/* PROBLEM → SOLUTION (no boxes, just type + soft divider) */}
       <section className="relative mx-auto max-w-5xl px-4 py-16">
         <div className="soft-divider mb-10" />
-        <div className="grid md:grid-cols-2 gap-12">
+        <div className="space-y-10">
           <div>
-            <h2 className="text-2xl md:text-3xl font-semibold">The problem</h2>
-            <p className="mt-4 text-[--text-dim]">
-              Building a fulfilling career is hard because of two gaps:
-            </p>
-            <ul className="mt-4 space-y-3 leading-relaxed text-[--text]">
-              <li><span className="underline-accent">Lack of self-awareness</span>: few people have a clear, research-based read on their strengths and preferences.</li>
-              <li><span className="underline-accent">Lack of market knowledge</span>: roles and paths change fast; it’s easy to feel lost or chase the wrong fit.</li>
+            <h2 className="text-2xl md:text-5xl font-semibold">The problem</h2>
+            <ul className="mt-4 space-y-3 leading-relaxed text-[--text] text-lg md:text-xl">
+              <li><span className="underline-accent">Lack of self-awareness</span>: few people have a clear, psychological understanding of <span className="underline-accent">who they are</span>.</li>
+              <li><span className="underline-accent-green">Lack of job-market knowledge</span>: even fewer people know what roles and paths are available or <span className="underline-accent-green">how to pursue them</span>.</li>
             </ul>
           </div>
           <div>
-            <h2 className="text-2xl md:text-3xl font-semibold">Our approach</h2>
+            <h2 className="text-2xl md:text-5xl font-semibold">Our approach</h2>
             <p className="mt-4 text-[--text-dim]">
               CareerCompass closes both gaps with a clean, rigorous flow:
             </p>
