@@ -1,6 +1,7 @@
 "use client";
 
 import StartQuizButton from "@/app/components/StartQuizButton";
+import Image from "next/image";
 
 export default function Home() {
   return (
@@ -42,8 +43,17 @@ export default function Home() {
             {/* abstract “diagram” without borders */}
             <div className="absolute inset-0 rounded-2xl backdrop-blur-md shadow-[var(--shadow-2)] bg-[color:rgba(255,255,255,0.55)]"></div>
             <div className="absolute inset-0 rounded-2xl bg-grid mix-blend-overlay opacity-[0.35]" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-[72%] aspect-square rounded-full bg-[radial-gradient(closest-side,rgba(123,195,255,0.35),transparent_70%)]" />
+            {/* image inside the square */}
+            <div className="absolute inset-0 p-4 md:p-6">
+              <div className="relative w-full h-full overflow-hidden rounded-xl">
+                <Image
+                  src="/hero-illustration.jpg"
+                  alt="Career search illustration"
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              </div>
             </div>
           </div>
         </div>
