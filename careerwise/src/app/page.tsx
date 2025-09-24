@@ -45,15 +45,15 @@ export default function Home() {
             <div className="absolute inset-0 rounded-2xl bg-grid mix-blend-overlay opacity-[0.35]" />
             {/* image inside the square */}
             <div className="absolute inset-0 p-4 md:p-6">
-              <div className="relative w-full h-full overflow-hidden rounded-xl">
+              {/* <div className="relative w-full h-full overflow-hidden rounded-xl"> */}
                 <Image
-                  src="/hero-illustration.jpg"
+                  src="/hero-illustration.png"
                   alt="Career search illustration"
                   fill
                   className="object-cover"
                   priority
                 />
-              </div>
+              {/* </div> */}
             </div>
           </div>
         </div>
