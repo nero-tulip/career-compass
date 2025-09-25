@@ -116,7 +116,7 @@ function rankCareersByCosine(
     .slice(0, limit);
 }
 
-/** ---------- JSON-first OpenAI call ---------- */
+/** ---------- JSON-first OpenAI call (Responses API + Structured Outputs) ---------- */
 type AnalysisJSON = {
   summary: string;
   strengths: string[];
@@ -174,6 +174,74 @@ function toMarkdownFromJSON(j: AnalysisJSON, profile: RIASECProfile, dominantTra
   return lines.join('\n');
 }
 
+function analysisJsonSchema(): any {
+  return {
+    name: "AnalysisJSON",
+    schema: {
+      type: "object",
+      additionalProperties: false,
+      required: ["summary", "strengths", "growthAreas", "topCareers", "nextSteps"],
+      properties: {
+        summary: { type: "string" },
+        strengths: {
+          type: "array",
+          items: { type: "string" }
+        },
+        growthAreas: {
+          type: "array",
+          items: { type: "string" }
+        },
+        topCareers: {
+          type: "array",
+          minItems: 1,
+          items: {
+            type: "object",
+            additionalProperties: false,
+            required: ["title", "whyMatch", "successTraits", "firstSteps"],
+            properties: {
+              title: { type: "string" },
+              whyMatch: { type: "string" },
+              successTraits: {
+                type: "array",
+                items: { type: "string" }
+              },
+              firstSteps: {
+                type: "array",
+                items: { type: "string" }
+              }
+            }
+          }
+        },
+        nextSteps: {
+          type: "array",
+          items: { type: "string" }
+        }
+      }
+    },
+    strict: true
+  };
+}
+
+// Robust extractor for Responses API JSON text payloads
+function extractResponsesTextPayload(data: any): string | null {
+  // Preferred shortcut (when provided by SDK/API)
+  if (typeof data?.output_text === 'string') return data.output_text;
+
+  // Fallback: walk the "output" array → first content item with a text field
+  if (Array.isArray(data?.output)) {
+    for (const item of data.output) {
+      if (Array.isArray(item?.content)) {
+        for (const c of item.content) {
+          if (typeof c?.text === 'string') return c.text;
+          // some SDKs return { type: 'output_text', text: '...' }
+          if (typeof c?.[ 'text' ] === 'string') return c.text;
+        }
+      }
+    }
+  }
+  return null;
+}
+
 async function getChatGPTAnalysisJSON(params: {
   profile: RIASECProfile;
   dominantTraits: string[];
@@ -184,68 +252,64 @@ async function getChatGPTAnalysisJSON(params: {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new Error('OpenAI API key not found in environment variables');
 
-  // Build a compact, deterministic system+user prompt
+  const model = process.env.OPENAI_MODEL || 'gpt-5-mini';
+
   const system = `
-You are an expert career counselor. Respond ONLY with valid JSON matching the provided schema. 
+You are an expert career counselor. Respond ONLY with valid JSON that matches the provided JSON Schema.
 No markdown, no commentary—just a JSON object. Keep advice concrete and practical for an adult learner.
 `.trim();
 
-  const schemaExample: AnalysisJSON = {
-    summary: "One paragraph that ties RIASEC + intake into a coherent career theme.",
-    strengths: ["bullet 1", "bullet 2"],
-    growthAreas: ["bullet 1", "bullet 2"],
-    topCareers: [
-      {
-        title: "Career Title",
-        whyMatch: "1–3 sentences referencing RIASEC + intake/macro context.",
-        successTraits: ["trait 1", "trait 2"],
-        firstSteps: ["step 1", "step 2"]
-      }
-    ],
-    nextSteps: ["action 1", "action 2"]
-  };
-
-  const user = {
+  const userPayload = {
     riasecProfile: params.profile,
     dominantTraits: params.dominantTraits,
     macroSummaryText: params.macroSummaryText,
-    intakeSummary: params.intakeSummary,   // <-- structured, schema-aware summary
+    intakeSummary: params.intakeSummary,
     datasetTopCareerTitles: params.topCareerTitles
   };
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const body = {
+    model,
+    response_format: {
+      type: "json_schema",
+      json_schema: analysisJsonSchema()
+    },
+    input: [
+      { role: 'system', content: system },
+      {
+        role: 'user',
+        content:
+          `Using the schema named "AnalysisJSON", return a JSON object ONLY.\n\n` +
+          `Context JSON:\n` +
+          JSON.stringify(userPayload, null, 2)
+      }
+    ],
+    temperature: 0.4
+  };
+
+  const response = await fetch('https://api.openai.com/v1/responses', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: 'gpt-4-turbo-preview',
-      response_format: { type: "json_object" }, // <— enforce JSON
-      temperature: 0.4,
-      messages: [
-        { role: 'system', content: system },
-        {
-          role: 'user',
-          content:
-            `Return a JSON object exactly matching this TypeScript shape:\n` +
-            `type AnalysisJSON = ${JSON.stringify(schemaExample, null, 2)}\n\n` +
-            `Here is the user's data (JSON):\n` +
-            JSON.stringify(user, null, 2)
-        }
-      ],
-    }),
+    body: JSON.stringify(body),
   });
 
-  console.log('OpenAI JSON response status:', response.status);
+  console.log('OpenAI Responses status:', response.status);
 
   if (!response.ok) {
     const errorText = await response.text();
     console.error('OpenAI API error:', errorText);
-    throw new Error(`Failed to get analysis JSON from ChatGPT: ${response.status} ${errorText}`);
+    throw new Error(`Failed to get analysis JSON from OpenAI Responses API: ${response.status} ${errorText}`);
   }
 
   const data = await response.json();
-  // The model must return valid JSON per response_format; still guard:
-  const content = data.choices?.[0]?.message?.content ?? '{}';
-  const parsed = JSON.parse(content);
+  const raw = extractResponsesTextPayload(data);
+
+  if (!raw) {
+    console.error('Unexpected Responses API payload shape:', JSON.stringify(data).slice(0, 2000));
+    throw new Error('invalid_openai_payload');
+  }
+
+  // Parse and return strictly-typed object
+  const parsed = JSON.parse(raw);
   return parsed as AnalysisJSON;
 }
 
@@ -320,7 +384,7 @@ export async function POST(request: Request) {
       });
     }
 
-    // 6) Final mode → JSON-first ChatGPT analysis + persist result + mark draft done
+    // 6) Final mode → JSON-first analysis via Responses API + persist result + mark draft done
     const topTitles = rankedCareers.map((c) => c.title);
     let analysisJson: AnalysisJSON;
     let analysisMarkdown: string;
@@ -330,7 +394,7 @@ export async function POST(request: Request) {
         profile: riasecProfile,
         dominantTraits,
         macroSummaryText,
-        intakeSummary,                 // <-- use concise intake summary here
+        intakeSummary,                 // <-- concise intake summary
         topCareerTitles: topTitles,
       });
       analysisMarkdown = toMarkdownFromJSON(analysisJson, riasecProfile, dominantTraits);
@@ -397,6 +461,7 @@ export async function POST(request: Request) {
       msg === 'missing_rid' ? 400 :
       msg === 'draft_not_found' ? 404 :
       msg === 'no_riasec_answers' ? 400 :
+      msg === 'invalid_openai_payload' ? 502 :
       500;
 
     return NextResponse.json({ error: msg }, { status });
