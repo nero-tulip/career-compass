@@ -2,6 +2,7 @@ export type DraftStatus =
   | "started"
   | "intake_done"
   | "macro_done"
+  | "riasec_in_progress"
   | "riasec_done"
   | "free_done"
   | "premium_done"
