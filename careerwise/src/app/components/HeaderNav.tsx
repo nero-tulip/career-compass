@@ -23,7 +23,7 @@ export default function HeaderNav() {
   return (
     <nav className="flex items-center gap-3 text-sm">
       <JoinPlatformButton 
-      label="CareerCompass Platform"
+      label="The Platform"
       />
       {!loading && !user && (
         <button
