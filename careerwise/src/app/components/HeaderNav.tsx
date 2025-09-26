@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { auth } from "@/app/lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import StartQuizButton from "./StartQuizButton";
+import JoinPlatformButton from "./JoinPlatformButton";
 
 export default function HeaderNav() {
   const [user, setUser] = useState<User | null>(null);
@@ -21,14 +22,15 @@ export default function HeaderNav() {
 
   return (
     <nav className="flex items-center gap-3 text-sm">
-      <StartQuizButton />
+      <JoinPlatformButton 
+      label="CareerCompass Platform"
+      />
       {!loading && !user && (
         <button
           onClick={() => router.push("/signup")}
           className="btn btn-primary"
-        >
-          Create account
-        </button>
+          
+        />
       )}
       {!loading && user && (
         <button

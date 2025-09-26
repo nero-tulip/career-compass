@@ -1,6 +1,6 @@
 "use client";
 
-import StartQuizButton from "@/app/components/StartQuizButton";
+import JoinPlatformButton from "./components/JoinPlatformButton";
 import Image from "next/image";
 
 export default function Home() {
@@ -28,7 +28,7 @@ export default function Home() {
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-4">
-              <StartQuizButton />
+              <JoinPlatformButton />
               <a href="#how-it-works" className="btn btn-ghost">How it works</a>
             </div>
 
@@ -138,7 +138,7 @@ export default function Home() {
           <h2 className="text-3xl font-semibold">Ready to find your fit?</h2>
           <p className="muted mt-2">Start now and get a research-based snapshot of where you’ll thrive.</p>
           <div className="mt-6 flex justify-center">
-            <StartQuizButton />
+            <JoinPlatformButton />
           </div>
         </div>
       </section>
