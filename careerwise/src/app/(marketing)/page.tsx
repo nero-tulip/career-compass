@@ -1,11 +1,11 @@
 "use client";
 
-import JoinPlatformButton from "./components/JoinPlatformButton";
+import JoinPlatformButton from "../components/JoinPlatformButton";
 import Image from "next/image";
 
 export default function Home() {
   return (
-    <main className="relative overflow-hidden">
+    <div className="relative overflow-hidden">
       {/* background textures */}
       <div aria-hidden className="bg-hero absolute inset-0" />
       <div aria-hidden className="bg-noise absolute inset-0 opacity-[0.06] pointer-events-none" />
@@ -142,6 +142,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }
