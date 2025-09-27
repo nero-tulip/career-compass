@@ -1,17 +1,15 @@
-// src/app/app/layout.tsx
 import { ReactNode } from "react";
 import Link from "next/link";
 import { AuthProvider } from "@/app/providers/AuthProvider";
-import RequireAuth from "@/app/components/RequireAuth";
+import RequireAuth from "@/app/components/auth/RequireAuth";
+import UserMenuClient from "@/app/components/auth/UserMenuClient"; // <-- client component
 
 export const metadata = {
   title: "CareerCompass — App",
 };
 
 export default function AppLayout({ children }: { children: ReactNode }) {
-  // NOTE:
-  // - No <html> or <body> here (only allowed in root layout).
-  // - Avoid <main> to prevent <main> inside <main> if your root layout already uses it.
+  // Server component: no hooks here.
   return (
     <AuthProvider>
       <RequireAuth>
@@ -34,29 +32,15 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               </nav>
             </div>
             <div className="text-sm">
-              <UserMenu />
+              <UserMenuClient />
             </div>
           </div>
         </div>
 
-        {/* Use a div instead of <main> to avoid nesting under root <main> */}
         <div role="main" className="mx-auto max-w-6xl px-4 py-6">
           {children}
         </div>
       </RequireAuth>
     </AuthProvider>
-  );
-}
-
-function UserMenu() {
-  return (
-    <div className="flex items-center gap-3">
-      <a href="/login" className="hover:underline">
-        Log in
-      </a>
-      <a href="/signup" className="bg-black text-white px-3 py-1.5 rounded-lg">
-        Sign up
-      </a>
-    </div>
   );
 }
