@@ -20,73 +20,19 @@ type ModuleDef = {
   subtitle?: string;
   kind: 'quiz' | 'output' | 'service';
   tier: 'free' | 'pro';
-  // Where the primary CTA should go (if quiz, we'll generally use /api/quiz/entry)
-  startPath?: string; // optional override for non-quiz modules
-  viewPath?: string;  // e.g., results view
-  icon?: string;      // simple emoji/icon placeholder
+  startPath?: string;
+  viewPath?: string;
+  icon?: string;
 };
 
 const MODULES: ModuleDef[] = [
-  {
-    key: 'profileBasics',
-    title: 'Profile Basics',
-    subtitle: 'Let’s get to know you',
-    kind: 'quiz',
-    tier: 'free',
-    icon: '👋',
-  },
-  {
-    key: 'careerPrefs',
-    title: 'Career Preferences',
-    subtitle: 'What work feels good?',
-    kind: 'quiz',
-    tier: 'free',
-    icon: '🎯',
-  },
-  {
-    key: 'riasec',
-    title: 'RIASEC Interests',
-    subtitle: 'What energizes you?',
-    kind: 'quiz',
-    tier: 'free',
-    icon: '🧩',
-  },
-  {
-    key: 'results',
-    title: 'Your Results (Wrapped)',
-    subtitle: 'See matches & insights',
-    kind: 'output',
-    tier: 'free',
-    viewPath: '/app/results', // we’ll plug an actual latest-[rid] route later
-    icon: '📊',
-  },
-  {
-    key: 'big5',
-    title: 'Big-5 Personality',
-    subtitle: 'Go deeper with PRO',
-    kind: 'quiz',
-    tier: 'pro',
-    startPath: '/app/quiz/big5', // placeholder
-    icon: '🧠',
-  },
-  {
-    key: 'mentors',
-    title: 'Mentor Matches',
-    subtitle: 'Guidance from pros',
-    kind: 'service',
-    tier: 'pro',
-    viewPath: '/app/mentors', // placeholder
-    icon: '🤝',
-  },
-  {
-    key: 'resources',
-    title: 'Resources',
-    subtitle: 'Learn & level up',
-    kind: 'service',
-    tier: 'free',
-    viewPath: '/app/resources', // placeholder
-    icon: '📚',
-  },
+  { key: 'profileBasics', title: 'Profile Basics', subtitle: 'Let’s get to know you', kind: 'quiz', tier: 'free', icon: '👋' },
+  { key: 'careerPrefs',   title: 'Career Preferences', subtitle: 'What work feels good?', kind: 'quiz', tier: 'free', icon: '🎯' },
+  { key: 'riasec',        title: 'RIASEC Interests', subtitle: 'What energizes you?', kind: 'quiz', tier: 'free', icon: '🧩' },
+  { key: 'results',       title: 'Your Results (Wrapped)', subtitle: 'See matches & insights', kind: 'output', tier: 'free', viewPath: '/app/results', icon: '📊' },
+  { key: 'big5',          title: 'Big-5 Personality', subtitle: 'Go deeper with PRO', kind: 'quiz', tier: 'pro', startPath: '/app/quiz/big5', icon: '🧠' },
+  { key: 'mentors',       title: 'Mentor Matches', subtitle: 'Guidance from pros', kind: 'service', tier: 'pro', viewPath: '/app/mentors', icon: '🤝' },
+  { key: 'resources',     title: 'Resources', subtitle: 'Learn & level up', kind: 'service', tier: 'free', viewPath: '/app/resources', icon: '📚' },
 ];
 
 export default function AppHome() {
@@ -98,39 +44,33 @@ export default function AppHome() {
     if (loading || busyKey) return;
     try {
       setBusyKey(mod.key);
+      if (!user) return router.push('/login?next=/app');
 
-      // For quiz modules that use your existing flow, call /api/quiz/entry
       if (mod.kind === 'quiz' && mod.tier === 'free') {
-        if (!user) return router.push('/login?next=/app');
         const token = await user.getIdToken?.();
+
+        // Map dashboard card -> section param for API
+        const section =
+          mod.key === 'profileBasics' ? 'intake' :
+          mod.key === 'careerPrefs'   ? 'macro'  :
+          mod.key === 'riasec'        ? 'riasec' : 'intake';
+
         const res = await fetch('/api/quiz/entry', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: 'Bearer ' + token,
-          },
-          body: JSON.stringify({}),
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+          body: JSON.stringify({ section }), // <-- step 3: section-aware
         });
         if (!res.ok) throw new Error(await res.text());
         const data = await res.json();
-        // Use destination from server (works with your current routing).
-        // If missing, fallback to current known paths (we'll move them under /app/quiz later).
-        const dest =
-          data?.destination ||
-          (mod.key === 'profileBasics'
-            ? '/intake'
-            : mod.key === 'careerPrefs'
-            ? '/macro'
-            : mod.key === 'riasec'
-            ? '/riasec'
-            : '/intake');
+
+        // Server returns rid-aware destination like /app/quiz/<section>?rid=...
+        const dest = data?.destination || `/app/quiz/${section}`;
         router.push(dest);
         return;
       }
 
-      // Non-quiz or custom routes:
-      const dest = mod.viewPath || mod.startPath || '/app';
-      router.push(dest);
+      // Non-quiz or custom
+      router.push(mod.viewPath || mod.startPath || '/app');
     } catch (e) {
       console.error(e);
       alert('Something went wrong. Please try again.');
@@ -140,32 +80,23 @@ export default function AppHome() {
   }
 
   function handleView(mod: ModuleDef) {
-    const dest = mod.viewPath || '/app';
-    router.push(dest);
+    router.push(mod.viewPath || '/app');
   }
 
-  // TODO: replace with real entitlement check (users/{uid}.entitlement) later
+  // TODO: read users/{uid}.entitlement to unlock PRO
   const isPro = false;
 
   return (
     <section className="space-y-6">
       <h1 className="text-2xl font-semibold">Your CareerCompass</h1>
-      <p className="text-gray-700">
-        Build your profile, explore insights, and go deeper with PRO.
-      </p>
+      <p className="text-gray-700">Build your profile, explore insights, and go deeper with PRO.</p>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {MODULES.map((m) => {
           const locked = m.tier === 'pro' && !isPro;
           const busy = busyKey === m.key;
           const primaryCta =
-            m.kind === 'quiz'
-              ? locked
-                ? 'Unlock PRO'
-                : 'Start / Continue'
-              : locked
-              ? 'Unlock PRO'
-              : 'View';
+            m.kind === 'quiz' ? (locked ? 'Unlock PRO' : 'Open') : (locked ? 'Unlock PRO' : 'View');
           const onPrimary =
             m.kind === 'quiz'
               ? () => (locked ? router.push('/app/pro') : handleStartOrResume(m))
@@ -182,7 +113,6 @@ export default function AppHome() {
               busy={busy}
               onPrimary={onPrimary}
               primaryLabel={busy ? 'Loading…' : primaryCta}
-              // Secondary actions: edit/recompute/etc. can be added later
             />
           );
         })}
@@ -204,12 +134,7 @@ function ModuleCard(props: {
   const { title, subtitle, icon, tier, locked, busy, primaryLabel, onPrimary } = props;
 
   return (
-    <div
-      className={[
-        'rounded-2xl border p-4 bg-white flex flex-col justify-between',
-        locked ? 'opacity-90 border-purple-300' : '',
-      ].join(' ')}
-    >
+    <div className={['rounded-2xl border p-4 bg-white flex flex-col justify-between', locked ? 'opacity-90 border-purple-300' : ''].join(' ')}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
           <div className="h-9 w-9 grid place-items-center text-lg">{icon ?? '🧭'}</div>
@@ -243,16 +168,10 @@ function ModuleCard(props: {
         <button
           onClick={onPrimary}
           disabled={busy}
-          className={[
-            'px-3 py-1.5 rounded-lg text-sm',
-            locked ? 'bg-purple-600 text-white' : 'bg-black text-white',
-          ].join(' ')}
+          className={['px-3 py-1.5 rounded-lg text-sm', locked ? 'bg-purple-600 text-white' : 'bg-black text-white'].join(' ')}
         >
           {primaryLabel}
         </button>
-
-        {/* Placeholder secondary action slots (e.g., Edit / Recompute) */}
-        {/* <button className="px-3 py-1.5 rounded-lg border text-sm">Edit</button> */}
       </div>
     </div>
   );

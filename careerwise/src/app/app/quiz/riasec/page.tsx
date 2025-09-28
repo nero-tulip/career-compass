@@ -1,3 +1,4 @@
+// src/app/app/quiz/riasec/page.tsx
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
@@ -8,7 +9,6 @@ import ProgressBar from "@/app/components/ProgressBar";
 import QuizOptionGrid from "@/app/components/QuizOptionGrid";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { ensureDraft, saveSection } from "@/app/lib/drafts";
-import { getAuth } from "firebase/auth";
 
 interface RiaQ {
   id: string;
@@ -29,12 +29,43 @@ export default function RIASECPage() {
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [page, setPage] = useState(0);
 
+  // NEW: prefill state
+  const [prefillLoading, setPrefillLoading] = useState<boolean>(!!ridParam);
+  const [prefillError, setPrefillError] = useState<string | null>(null);
+
   // Gate: require auth
   useEffect(() => {
     if (!loading && !user) {
-      router.replace("/start");
+      router.replace("/login?next=/app/quiz/riasec");
     }
   }, [loading, user, router]);
+
+  // Prefill from saved answers if rid is present
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        if (!user || !ridParam) {
+          if (active) setPrefillLoading(false);
+          return;
+        }
+        const token = await user.getIdToken?.();
+        const res = await fetch(
+          `/api/quiz/section?rid=${encodeURIComponent(ridParam)}&section=riasec`,
+          { headers: { Authorization: "Bearer " + token } }
+        );
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        const stored = Array.isArray(data?.data) ? (data.data as Answer[]) : [];
+        if (active) setAnswers(stored);
+      } catch (e: any) {
+        if (active) setPrefillError(e?.message || "Failed to load your previous answers.");
+      } finally {
+        if (active) setPrefillLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [user, ridParam]);
 
   // Scroll to top on page change
   useEffect(() => {
@@ -75,7 +106,6 @@ export default function RIASECPage() {
     answers.some((a) => a.questionId === q.id)
   );
 
-
   const next = async () => {
     if (!allOnPageAnswered) return;
 
@@ -87,43 +117,16 @@ export default function RIASECPage() {
 
     await saveSection(user!, rid, "riasec", answers, status, {
       progress: { section: "riasec", page: page + 1 },
-    } as any); // extraData arg if your saveSection supports it; safe to omit if not
+    } as any);
 
-    // 3) Advance or finalize
+    // 2) Advance or finalize
     if (!isLast) {
       setPage((p) => p + 1);
       return;
     }
 
-    // Final page: call results API (server/Admin SDK will read the draft by uid+rid)
-    try {
-      const idToken = await getAuth().currentUser?.getIdToken();
-      if (!idToken) {
-        console.error("Missing ID token for results submission");
-        return;
-      }
-
-      const res = await fetch("/api/results", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${idToken}`,
-        },
-        body: JSON.stringify({ rid, mode: "final" }),
-      });
-
-      if (!res.ok) {
-        console.error("Results API failed", await res.text());
-        // You can show a toast here
-        return;
-      }
-    } catch (e) {
-      console.error("Results API error", e);
-      // You can show a toast here
-      return;
-    }
-
-    router.push(`/results?rid=${rid}`);
+    // FINAL: return to dashboard instead of computing results immediately
+    router.push(`/app`);
   };
 
   const back = () => {
@@ -142,6 +145,13 @@ export default function RIASECPage() {
       <h2 className="text-2xl font-semibold tracking-tight mb-4">
         Career preferences
       </h2>
+
+      {prefillLoading && (
+        <div className="mb-4 text-sm text-gray-600">Loading your previous answers…</div>
+      )}
+      {prefillError && (
+        <div className="mb-4 text-sm text-red-600">{prefillError}</div>
+      )}
 
       {pageQs.map((q) => {
         const sel = answers.find((a) => a.questionId === q.id)?.score;
@@ -168,7 +178,7 @@ export default function RIASECPage() {
           disabled={!allOnPageAnswered}
           className="btn btn-primary disabled:opacity-50"
         >
-          {isLast ? "Submit" : "Next"}
+          {isLast ? "Save & Return" : "Next"}
         </button>
       </div>
     </div>

@@ -1,75 +1,94 @@
 import { NextResponse } from "next/server";
-import { v4 as uuid } from "uuid";
-import { destinationForStatus } from "@/app/lib/quizEntry";
-import type { DraftDoc } from "@/app/types/drafts";
-import { adminDb, adminAuth, AdminFieldValue } from "@/app/lib/firebaseAdmin";
+import { getAuth } from "firebase-admin/auth";
+import { adminDb } from "@/app/lib/firebaseAdmin";
 
-export const runtime = "nodejs";
+// Sections we support
+const VALID_SECTIONS = new Set(["intake", "macro", "riasec"] as const);
+type Section = "intake" | "macro" | "riasec";
 
-async function getUidFromAuthHeader(req: Request): Promise<string | null> {
-  const h = req.headers.get("authorization") || "";
-  const m = h.match(/^Bearer\s+(.+)$/i);
-  if (!m) return null;
+export async function POST(request: Request) {
   try {
-    const decoded = await adminAuth().verifyIdToken(m[1]);
-    return decoded.uid ?? null;
-  } catch {
-    return null;
-  }
-}
-
-export async function POST(req: Request) {
-  const db = adminDb();
-  try {
-    const uid = await getUidFromAuthHeader(req);
-    if (!uid) {
+    // ---- Auth
+    const authz = request.headers.get("authorization") || request.headers.get("Authorization");
+    if (!authz?.startsWith("Bearer ")) {
       return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
     }
+    const idToken = authz.slice("Bearer ".length).trim();
+    const decoded = await getAuth().verifyIdToken(idToken);
+    const uid = decoded.uid;
 
+    const { section }: { section?: Section } = await request.json().catch(() => ({}));
+    const targetSection: Section = VALID_SECTIONS.has(section as any) ? (section as Section) : "intake";
+
+    const db = adminDb();
     const userRef = db.collection("users").doc(uid);
 
-    const destination = await db.runTransaction(async (tx) => {
-      const userSnap = await tx.get(userRef);
-      const userData = userSnap.exists ? (userSnap.data() as any) : {};
+    // ---- Get or create active draft
+    const userSnap = await userRef.get();
+    const userData = userSnap.exists ? userSnap.data() || {} : {};
+    let rid: string | null = userData?.activeRid || null;
 
-      if (userData.activeRid) {
-        const rid = String(userData.activeRid);
-        const draftRef = userRef.collection("drafts").doc(rid);
-        const draftSnap = await tx.get(draftRef);
+    // Helper to seed a new draft from latest results if present
+    async function seedFromLatestResults(newRid: string) {
+      // Pull latest result (ordered by completedAt desc)
+      const resCol = userRef.collection("results").orderBy("completedAt", "desc").limit(1);
+      const latestResSnap = await resCol.get();
 
-        if (draftSnap.exists) {
-          const draft = draftSnap.data() as DraftDoc;
-          return destinationForStatus(draft.status, rid);
-        } else {
-          const newRid = uuid();
-          const newDraftRef = userRef.collection("drafts").doc(newRid);
-          tx.set(newDraftRef, {
-            status: "started",
-            entitlement: "free",
-            createdAt: AdminFieldValue.serverTimestamp(),
-            updatedAt: AdminFieldValue.serverTimestamp(),
-          } as DraftDoc);
-          tx.set(userRef, { activeRid: newRid }, { merge: true });
-          return `/intake?rid=${newRid}`;
-        }
+      if (!latestResSnap.empty) {
+        const latest = latestResSnap.docs[0].data();
+        // Copy any fields we care about into the draft
+        const payload: any = {
+          status: "in_progress",
+          entitlement: userData?.entitlement === "premium" ? "premium" : "free",
+          updatedAt: new Date(),
+        };
+        // If previous run stored source answers in result.profile or on draft (your app: results store the computed riasec only).
+        // We defensively copy what we can:
+        if (latest?.profile?.riasec) payload.riasec = payload.riasec ?? []; // keep array structure on draft if you store answers there later
+        // If you saved prior intake/macro in results (you likely didn't), copy them here; else leave blank.
+        // payload.intake = latest?.intake ?? null;
+        // payload.macro  = latest?.macro  ?? [];
+
+        await userRef.collection("drafts").doc(newRid).set(payload, { merge: true });
+      } else {
+        // No results yet → blank draft
+        await userRef.collection("drafts").doc(newRid).set(
+          {
+            status: "in_progress",
+            entitlement: userData?.entitlement === "premium" ? "premium" : "free",
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+          { merge: true }
+        );
       }
+    }
 
-      const rid = uuid();
+    if (!rid) {
+      // Create a new draft id (Firestore doc id)
+      const draftRef = userRef.collection("drafts").doc();
+      rid = draftRef.id;
+      // Seed from latest results if possible (or blank)
+      await seedFromLatestResults(rid);
+      // Save activeRid on user
+      await userRef.set({ activeRid: rid }, { merge: true });
+    } else {
+      // Ensure draft exists
       const draftRef = userRef.collection("drafts").doc(rid);
-      tx.set(draftRef, {
-        status: "started",
-        entitlement: "free",
-        createdAt: AdminFieldValue.serverTimestamp(),
-        updatedAt: AdminFieldValue.serverTimestamp(),
-      } as DraftDoc);
-      tx.set(userRef, { activeRid: rid }, { merge: true });
-      return `/intake?rid=${rid}`;
-    });
+      const draftSnap = await draftRef.get();
+      if (!draftSnap.exists) {
+        // If user.activeRid points to a non-existent draft, reseed a new one
+        const newRef = userRef.collection("drafts").doc();
+        rid = newRef.id;
+        await seedFromLatestResults(rid);
+        await userRef.set({ activeRid: rid }, { merge: true });
+      }
+    }
 
-    console.log("[/api/quiz/entry] uid:", uid, "→", destination);
-    return NextResponse.json({ destination }, { status: 200 });
+    const destination = `/app/quiz/${targetSection}?rid=${encodeURIComponent(rid)}`;
+    return NextResponse.json({ success: true, rid, destination });
   } catch (e: any) {
-    console.error("[/api/quiz/entry] error:", e);
-    return NextResponse.json({ error: "internal" }, { status: 500 });
+    console.error("POST /api/quiz/entry error:", e);
+    return NextResponse.json({ error: e?.message || "internal_error" }, { status: 500 });
   }
 }

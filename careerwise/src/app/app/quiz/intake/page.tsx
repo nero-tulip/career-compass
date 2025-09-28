@@ -1,3 +1,4 @@
+// src/app/app/quiz/intake/page.tsx
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
@@ -64,13 +65,48 @@ export default function IntakePage() {
 
   const { user, loading } = useAuth();
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
+  const [prefillLoading, setPrefillLoading] = useState<boolean>(!!ridParam);
+  const [prefillError, setPrefillError] = useState<string | null>(null);
+
   const questions: Q[] = useMemo(() => intakeConfig.questions as Q[], []);
 
   // redirect if not logged in
   useEffect(() => {
-    if (!loading && !user) router.replace("/start");
+    if (!loading && !user) router.replace("/login?next=/app/quiz/intake");
   }, [loading, user, router]);
   if (loading || !user) return null;
+
+  // NEW: prefill from saved answers if a rid is present
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        if (!ridParam) {
+          if (active) setPrefillLoading(false);
+          return;
+        }
+        const token = await user.getIdToken?.();
+        const res = await fetch(
+          `/api/quiz/section?rid=${encodeURIComponent(ridParam)}&section=intake`,
+          { headers: { Authorization: "Bearer " + token } }
+        );
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        // Expecting an object map of { [questionId]: value }
+        const stored = data?.data;
+        if (active && stored && typeof stored === "object") {
+          setAnswers(stored as Record<string, AnswerValue>);
+        }
+      } catch (e: any) {
+        if (active) setPrefillError(e?.message || "Failed to load previous answers.");
+      } finally {
+        if (active) setPrefillLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [ridParam, user]);
 
   const setVal = (id: string, v: AnswerValue) =>
     setAnswers((prev) => ({ ...prev, [id]: v }));
@@ -106,7 +142,7 @@ export default function IntakePage() {
     }
     const { id: rid } = await ensureDraft(user, ridParam);
     await saveSection(user, rid, "intake", answers, "intake_done");
-    router.push(`/macro?rid=${rid}`);
+    router.push(`/app`);
   };
 
   return (
@@ -117,8 +153,21 @@ export default function IntakePage() {
           label="Intro questions"
         />
       </div>
-      <h2 className="text-2xl font-semibold tracking-tight mb-4">{intakeConfig.meta?.title ?? "Tell us about you"}</h2>
-      <p className="muted mb-8">{intakeConfig.meta?.description ?? "A few quick questions to personalize your results."}</p>
+
+      <h2 className="text-2xl font-semibold tracking-tight mb-4">
+        {intakeConfig.meta?.title ?? "Tell us about you"}
+      </h2>
+      <p className="muted mb-8">
+        {intakeConfig.meta?.description ?? "A few quick questions to personalize your results."}
+      </p>
+
+      {/* Optional lightweight status */}
+      {prefillLoading && (
+        <div className="mb-4 text-sm text-gray-600">Loading your previous answers…</div>
+      )}
+      {prefillError && (
+        <div className="mb-4 text-sm text-red-600">{prefillError}</div>
+      )}
 
       {visibleQuestions.map((q) => (
         <QuestionBlock
@@ -130,7 +179,11 @@ export default function IntakePage() {
       ))}
 
       <div className="flex justify-end mt-8">
-        <button onClick={onNext} className="btn btn-primary disabled:opacity-50" disabled={requiredMissing}>
+        <button
+          onClick={onNext}
+          className="btn btn-primary disabled:opacity-50"
+          disabled={requiredMissing}
+        >
           Next
         </button>
       </div>
@@ -138,7 +191,15 @@ export default function IntakePage() {
   );
 }
 
-function QuestionBlock({ q, value, onChange }: { q: Q; value: AnswerValue | undefined; onChange: (v: AnswerValue) => void }) {
+function QuestionBlock({
+  q,
+  value,
+  onChange,
+}: {
+  q: Q;
+  value: AnswerValue | undefined;
+  onChange: (v: AnswerValue) => void;
+}) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState(false);
   useEffect(() => {
@@ -153,7 +214,11 @@ function QuestionBlock({ q, value, onChange }: { q: Q; value: AnswerValue | unde
   }, []);
 
   const labelEl = (
-    <p className={`mb-4 text-xl md:text-2xl font-semibold ${colorClassForId(q.id)} text-center reveal ${visible ? "is-visible" : ""}`}>
+    <p
+      className={`mb-4 text-xl md:text-2xl font-semibold ${colorClassForId(
+        q.id
+      )} text-center reveal ${visible ? "is-visible" : ""}`}
+    >
       {q.label}
       {q.required ? " *" : ""}
     </p>
@@ -195,7 +260,11 @@ function QuestionBlock({ q, value, onChange }: { q: Q; value: AnswerValue | unde
     return (
       <div ref={ref} className="mb-32">
         {labelEl}
-        <div className={`grid gap-3 sm:grid-cols-2 md:grid-cols-3 max-w-3xl mx-auto reveal ${visible ? "is-visible" : ""}`}>
+        <div
+          className={`grid gap-3 sm:grid-cols-2 md:grid-cols-3 max-w-3xl mx-auto reveal ${
+            visible ? "is-visible" : ""
+          }`}
+        >
           {(q.options ?? []).map((opt) => {
             const active = v === opt.value;
             return (
@@ -203,10 +272,14 @@ function QuestionBlock({ q, value, onChange }: { q: Q; value: AnswerValue | unde
                 key={opt.value}
                 type="button"
                 onClick={() => onChange(opt.value)}
-                className={`quiz-option w-full p-3 md:p-4 ${active ? "quiz-option-selected" : ""}`}
+                className={`quiz-option w-full p-3 md:p-4 ${
+                  active ? "quiz-option-selected" : ""
+                }`}
                 aria-pressed={active}
               >
-                <span className="font-medium text-base md:text-lg leading-snug text-center">{opt.label}</span>
+                <span className="font-medium text-base md:text-lg leading-snug text-center">
+                  {opt.label}
+                </span>
               </button>
             );
           })}
@@ -218,9 +291,13 @@ function QuestionBlock({ q, value, onChange }: { q: Q; value: AnswerValue | unde
     const current: string[] = Array.isArray(value) ? (value as string[]) : [];
     const max = q.ui?.maxSelect;
     return (
-  <div ref={ref} className="mb-32">
+      <div ref={ref} className="mb-32">
         {labelEl}
-        <div className={`grid gap-3 sm:grid-cols-2 md:grid-cols-3 max-w-3xl mx-auto reveal ${visible ? "is-visible" : ""}`}>
+        <div
+          className={`grid gap-3 sm:grid-cols-2 md:grid-cols-3 max-w-3xl mx-auto reveal ${
+            visible ? "is-visible" : ""
+          }`}
+        >
           {(q.options ?? []).map((opt) => {
             const active = current.includes(opt.value);
             return (
@@ -228,14 +305,21 @@ function QuestionBlock({ q, value, onChange }: { q: Q; value: AnswerValue | unde
                 key={opt.value}
                 type="button"
                 onClick={() => {
-                  let next = active ? current.filter((v) => v !== opt.value) : [...current, opt.value];
-                  if (typeof max === "number" && next.length > max) next = next.slice(0, max);
+                  let next = active
+                    ? current.filter((v) => v !== opt.value)
+                    : [...current, opt.value];
+                  if (typeof max === "number" && next.length > max)
+                    next = next.slice(0, max);
                   onChange(next);
                 }}
-                className={`quiz-option w-full p-3 md:p-4 ${active ? "quiz-option-selected" : ""}`}
+                className={`quiz-option w-full p-3 md:p-4 ${
+                  active ? "quiz-option-selected" : ""
+                }`}
                 aria-pressed={active}
               >
-                <span className="font-medium text-base md:text-lg leading-snug text-center">{opt.label}</span>
+                <span className="font-medium text-base md:text-lg leading-snug text-center">
+                  {opt.label}
+                </span>
               </button>
             );
           })}
