@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { getAuth } from "firebase-admin/auth";
-import { adminDb } from "@/app/lib/firebaseAdmin";
+import { adminAuth, adminDb } from "@/app/lib/firebaseAdmin";
 
 // Sections we support
 const VALID_SECTIONS = new Set(["intake", "macro", "riasec"] as const);
 type Section = "intake" | "macro" | "riasec";
+
+export const runtime = 'nodejs';
 
 export async function POST(request: Request) {
   try {
@@ -14,7 +16,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
     }
     const idToken = authz.slice("Bearer ".length).trim();
-    const decoded = await getAuth().verifyIdToken(idToken);
+    const decoded = await adminAuth().verifyIdToken(idToken);
     const uid = decoded.uid;
 
     const { section }: { section?: Section } = await request.json().catch(() => ({}));

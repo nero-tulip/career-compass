@@ -8,8 +8,7 @@ import careers from '@/app/data/careers.json';
 import { summarizeIntake } from "@/app/lib/intakeSummary";
 
 // 🔒 Admin Firestore (server-only)
-import { getAuth } from 'firebase-admin/auth';
-import { adminDb } from '@/app/lib/firebaseAdmin';
+import { adminDb, adminAuth } from '@/app/lib/firebaseAdmin';
 
 // Ensure Node runtime (env + Admin SDK)
 export const runtime = 'nodejs';
@@ -17,7 +16,7 @@ export const runtime = 'nodejs';
 interface DraftDoc {
   status?: string;
   entitlement?: 'free' | 'premium';
-  intake?: unknown;                 // raw intake stored in draft
+  intake?: unknown;
   macro?: MacroAnswer[];
   riasec?: Answer[];
   progress?: { section?: string; page?: number };
@@ -44,7 +43,7 @@ async function requireUidFromAuthHeader(request: Request): Promise<string> {
     throw new Error('unauthenticated');
   }
   const idToken = authz.slice('Bearer '.length).trim();
-  const decoded = await getAuth().verifyIdToken(idToken);
+  const decoded = await adminAuth().verifyIdToken(idToken);
   return decoded.uid;
 }
 
@@ -183,14 +182,8 @@ function analysisJsonSchema(): any {
       required: ["summary", "strengths", "growthAreas", "topCareers", "nextSteps"],
       properties: {
         summary: { type: "string" },
-        strengths: {
-          type: "array",
-          items: { type: "string" }
-        },
-        growthAreas: {
-          type: "array",
-          items: { type: "string" }
-        },
+        strengths: { type: "array", items: { type: "string" } },
+        growthAreas: { type: "array", items: { type: "string" } },
         topCareers: {
           type: "array",
           minItems: 1,
@@ -201,21 +194,12 @@ function analysisJsonSchema(): any {
             properties: {
               title: { type: "string" },
               whyMatch: { type: "string" },
-              successTraits: {
-                type: "array",
-                items: { type: "string" }
-              },
-              firstSteps: {
-                type: "array",
-                items: { type: "string" }
-              }
+              successTraits: { type: "array", items: { type: "string" } },
+              firstSteps: { type: "array", items: { type: "string" } }
             }
           }
         },
-        nextSteps: {
-          type: "array",
-          items: { type: "string" }
-        }
+        nextSteps: { type: "array", items: { type: "string" } }
       }
     },
     strict: true
@@ -224,17 +208,14 @@ function analysisJsonSchema(): any {
 
 // Robust extractor for Responses API JSON text payloads
 function extractResponsesTextPayload(data: any): string | null {
-  // Preferred shortcut (when provided by SDK/API)
   if (typeof data?.output_text === 'string') return data.output_text;
 
-  // Fallback: walk the "output" array → first content item with a text field
   if (Array.isArray(data?.output)) {
     for (const item of data.output) {
       if (Array.isArray(item?.content)) {
         for (const c of item.content) {
           if (typeof c?.text === 'string') return c.text;
-          // some SDKs return { type: 'output_text', text: '...' }
-          if (typeof c?.[ 'text' ] === 'string') return c.text;
+          if (typeof c?.['text'] === 'string') return c.text;
         }
       }
     }
@@ -308,7 +289,6 @@ No markdown, no commentary—just a JSON object. Keep advice concrete and practi
     throw new Error('invalid_openai_payload');
   }
 
-  // Parse and return strictly-typed object
   const parsed = JSON.parse(raw);
   return parsed as AnalysisJSON;
 }
@@ -327,13 +307,11 @@ export async function POST(request: Request) {
     const db = adminDb();
     const now = new Date();
 
-    // Load draft server-side (includes intake, macro, riasec)
     const draftRef = db.collection('users').doc(uid).collection('drafts').doc(rid);
     const draftSnap = await draftRef.get();
     if (!draftSnap.exists) return NextResponse.json({ error: 'draft_not_found' }, { status: 404 });
     const draft = draftSnap.data() as DraftDoc;
 
-    // 🔎 interpret intake → concise summary for the LLM
     const intakeSummary = summarizeIntake(draft.intake ?? null);
 
     const macroAnswers = draft.macro ?? [];
@@ -342,27 +320,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'no_riasec_answers' }, { status: 400 });
     }
 
-    // 1) Compute profile (dynamic averaging)
     const riasecProfile = calculateRIASECProfileDynamic(riaAnswers as Answer[]);
     const dominantTraits = getDominantTraits(riasecProfile);
 
-    // 2) Build macro summary text (unchanged behavior)
     const macroSummaryText = (macroAnswers as MacroAnswer[])
       .map((ans) => interpretMacroAnswer(ans.questionId, ans.score))
       .filter(Boolean)
       .join('\n');
 
-    // 3) Rank careers via cosine similarity
     const rankedCareers = rankCareersByCosine(riasecProfile, careers as CareerRow[], 3);
 
-    // 4) Assemble profile object (unchanged outward shape)
     const careerProfile: CareerProfileOut = {
       riasec: riasecProfile,
-      macroPreferences: {}, // placeholder
+      macroPreferences: {},
       dominantTraits,
     };
 
-    // 5) Preview mode → write rolling snapshot to draft; no AI call
     if (mode === 'preview') {
       await draftRef.set(
         {
@@ -384,7 +357,6 @@ export async function POST(request: Request) {
       });
     }
 
-    // 6) Final mode → JSON-first analysis via Responses API + persist result + mark draft done
     const topTitles = rankedCareers.map((c) => c.title);
     let analysisJson: AnalysisJSON;
     let analysisMarkdown: string;
@@ -394,13 +366,12 @@ export async function POST(request: Request) {
         profile: riasecProfile,
         dominantTraits,
         macroSummaryText,
-        intakeSummary,                 // <-- concise intake summary
+        intakeSummary,
         topCareerTitles: topTitles,
       });
       analysisMarkdown = toMarkdownFromJSON(analysisJson, riasecProfile, dominantTraits);
     } catch (e) {
       console.warn('Falling back to simple markdown analysis due to JSON error.', e);
-      // Fallback minimal content so the UI still works
       analysisJson = {
         summary: 'Automated analysis unavailable. Showing a minimal summary.',
         strengths: [],
@@ -427,12 +398,11 @@ export async function POST(request: Request) {
       rid,
       profile: careerProfile,
       matchingCareers: rankedCareers,
-      analysisJson,                // <— structured
-      analysis: analysisMarkdown,  // <— markdown for current UI
+      analysisJson,
+      analysis: analysisMarkdown,
       completedAt: now,
     });
 
-    // Mark draft finished and link result
     await draftRef.set(
       {
         status: draft.entitlement === 'premium' ? 'premium_done' : 'free_done',
@@ -442,7 +412,6 @@ export async function POST(request: Request) {
       { merge: true }
     );
 
-    // Optional: clear activeRid on user
     await db.collection('users').doc(uid).set({ activeRid: null }, { merge: true });
 
     return NextResponse.json({
@@ -476,7 +445,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
     }
     const idToken = authz.slice("Bearer ".length).trim();
-    const decoded = await getAuth().verifyIdToken(idToken);
+    const decoded = await adminAuth().verifyIdToken(idToken);
     const uid = decoded.uid;
 
     const rid = req.nextUrl.searchParams.get("rid");
