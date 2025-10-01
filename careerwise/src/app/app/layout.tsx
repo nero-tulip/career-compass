@@ -23,12 +23,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 <Link href="/app" className="hover:text-gray-900">
                   Dashboard
                 </Link>
-                <Link href="/app/quiz/intake" className="hover:text-gray-900">
-                  Profile Quiz
-                </Link>
-                <Link href="/app/pro" className="hover:text-gray-900">
-                  PRO
-                </Link>
               </nav>
             </div>
             <div className="text-sm">

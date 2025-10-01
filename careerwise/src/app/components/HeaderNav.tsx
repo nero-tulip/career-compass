@@ -6,6 +6,7 @@ import { auth } from "@/app/lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import StartQuizButton from "./StartQuizButton";
 import JoinPlatformButton from "./JoinPlatformButton";
+import UserMenuClient from "./auth/UserMenuClient";
 
 export default function HeaderNav() {
   const [user, setUser] = useState<User | null>(null);
@@ -27,18 +28,14 @@ export default function HeaderNav() {
       />
       {!loading && !user && (
         <button
-          onClick={() => router.push("/signup")}
-          className="btn btn-primary"
-          
-        />
-      )}
-      {!loading && user && (
-        <button
-          onClick={() => router.push("/account")}
+          onClick={() => router.push("/login")}
           className="btn btn-ghost"
         >
-          Account
+          Log in
         </button>
+      )}
+      {!loading && user && (
+        <UserMenuClient />
       )}
     </nav>
   );

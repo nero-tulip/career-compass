@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { auth } from "@/app/lib/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -80,6 +81,10 @@ export default function SignupPage() {
           {loading ? "Creating..." : "Create account"}
         </button>
         </form>
+        <p className="text-sm text-center text-gray-900 dark:text-gray-600 mt-6">
+          Already have an account?{" "}
+          <Link href="/login" className="underline">Log in</Link>
+        </p>
       </div>
     </div>
   );

@@ -19,7 +19,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email.trim(), password);
-      router.push("/account");
+      router.push("/app");
     } catch (err: unknown) {
       let msg = "Failed to log in";
       const code =
@@ -80,7 +80,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-sm text-center text-gray-600 dark:text-gray-300 mt-6">
+        <p className="text-sm text-center text-gray-900 dark:text-gray-600 mt-6">
           Don&apos;t have an account? {" "}
           <Link href="/signup" className="underline">Create one</Link>
         </p>
