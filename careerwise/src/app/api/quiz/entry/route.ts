@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
-import { getAuth } from "firebase-admin/auth";
 import { adminAuth, adminDb } from "@/app/lib/firebaseAdmin";
 
 // Sections we support
-const VALID_SECTIONS = new Set(["intake", "macro", "riasec"] as const);
-type Section = "intake" | "macro" | "riasec";
+const VALID_SECTIONS = new Set(["intake", "macro", "riasec", "big5"] as const);
+type Section = "intake" | "macro" | "riasec" | "big5";
 
 export const runtime = 'nodejs';
 

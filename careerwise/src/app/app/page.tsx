@@ -29,7 +29,7 @@ const MODULES: ModuleDef[] = [
   { key: 'profileBasics', title: 'Introduction', subtitle: 'Let’s get to know you', kind: 'quiz', tier: 'free', icon: '👋' },
   { key: 'careerPrefs',   title: 'Career Preferences', subtitle: 'What work feels good?', kind: 'quiz', tier: 'free', icon: '🎯' },
   { key: 'riasec',        title: 'RIASEC Analysis', subtitle: 'What energizes you?', kind: 'quiz', tier: 'free', icon: '🧩' },
-  { key: 'big5',          title: 'Big-5 Personality', subtitle: 'Go deeper with PRO', kind: 'quiz', tier: 'pro', startPath: '/app/quiz/big5', icon: '🧠' },
+  { key: 'big5',          title: 'Big-5 Personality', subtitle: 'Go deeper with PRO', kind: 'quiz', tier: 'free', startPath: '/app/quiz/big5', icon: '🧠' },
   { key: 'mentors',       title: 'Mentor Matches', subtitle: 'Guidance from pros', kind: 'service', tier: 'pro', viewPath: '/app/mentors', icon: '🤝' },
   { key: 'resources',     title: 'Resources', subtitle: 'Learn & level up', kind: 'service', tier: 'free', viewPath: '/app/resources', icon: '📚' },
   { key: 'results',       title: 'Your Results', subtitle: 'See matches & insights', kind: 'output', tier: 'free', viewPath: '/app/results', icon: '📊' },
@@ -53,7 +53,8 @@ export default function AppHome() {
         const section =
           mod.key === 'profileBasics' ? 'intake' :
           mod.key === 'careerPrefs'   ? 'macro'  :
-          mod.key === 'riasec'        ? 'riasec' : 'intake';
+          mod.key === 'riasec'        ? 'riasec' :
+          mod.key === 'big5'          ? 'big5'  : 'app';
 
         const res = await fetch('/api/quiz/entry', {
           method: 'POST',

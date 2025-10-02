@@ -4,7 +4,7 @@ import { doc, setDoc, updateDoc, serverTimestamp, getDoc } from "firebase/firest
 import { db } from "@/app/lib/firebase";
 import type { User } from "firebase/auth";
 
-export type SectionId = "intake" | "macro" | "riasec";
+export type SectionId = "intake" | "macro" | "riasec" | "big5" ;
 
 // Add any new coarse statuses you use here:
 export type DraftStatus =
