@@ -13,6 +13,8 @@ export type DraftStatus =
   | "macro_done"
   | "riasec_in_progress"
   | "riasec_done"
+  | "big5_in_progress"
+  | "big5_done"
   | "free_done"
   | "premium_done";
 

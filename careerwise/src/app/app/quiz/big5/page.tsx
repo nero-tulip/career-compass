@@ -1,187 +1,189 @@
-// src/app/app/quiz/big5/page.tsx
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/app/providers/AuthProvider';
-import { ensureDraft, saveSection } from '@/app/lib/drafts';
-import type { Big5Item, Big5Answer } from '@/app/types/big5';
+import ProgressBar from '@/app/components/ProgressBar';
+import QuizOptionGrid from '@/app/components/QuizOptionGrid';
+import big5Config from '@/app/data/big5Questions.json';
+import { ensureDraft, saveSection, loadSection } from '@/app/lib/drafts';
 
-// ⬅️ New path per your note
-import big5Data from '@/app/data/big5Questions.json';
+type ScaleLabel = string;
 
-const PER_PAGE = 10;
+type Big5Item = {
+  id: string;            // e.g., "E1", "A2R"
+  text: string;
+  trait: 'E' | 'A' | 'C' | 'N' | 'O';
+  reverse: boolean;
+};
 
-export default function Big5QuizPage() {
+type Big5Config = {
+  version: string;
+  meta: {
+    title: string;
+    description: string;
+    scaleLabels: ScaleLabel[]; // ["Very Inaccurate", ... , "Very Accurate"]
+  };
+  items: Big5Item[];
+};
+
+type Answer = { questionId: string; score: number };
+
+const QUESTIONS_PER_PAGE = 10;
+
+export default function Big5Page() {
   const router = useRouter();
   const sp = useSearchParams();
   const ridParam = sp.get('rid') || undefined;
 
   const { user, loading } = useAuth();
+  const cfg = big5Config as Big5Config;
 
-  const items = useMemo(() => (big5Data.items as Big5Item[]), []);
-  const totalPages = Math.ceil(items.length / PER_PAGE);
-
-  const [rid, setRid] = useState<string | null>(null);
+  const [answers, setAnswers] = useState<Answer[]>([]);
   const [page, setPage] = useState(0);
-  const [answers, setAnswers] = useState<Big5Answer[]>([]);
-  const [busy, setBusy] = useState(false);
+  const all = cfg.items;
 
-  // Require auth
+  // Auth gate
   useEffect(() => {
     if (!loading && !user) router.replace('/login?next=/app/quiz/big5');
   }, [loading, user, router]);
 
-  // Init: ensure draft only (no /api/quiz/entry prefill yet)
+  // Prefill from draft (if previously answered)
   useEffect(() => {
-    if (!user) return;
     let alive = true;
-
     (async () => {
+      if (loading || !user) return;
       try {
-        setBusy(true);
-        const { id } = await ensureDraft(user, ridParam);
+        const { id: rid } = await ensureDraft(user, ridParam);
+        // Load any previously saved section answers
+        // loadSection returns the raw persisted payload or null/undefined
+        const existing = (await loadSection(user, rid, 'big5')) as Answer[] | null | undefined;
         if (!alive) return;
-        setRid(id);
-
-        // (Optional) If you want immediate prefill later, read from your drafts collection here
-        // using your client Firestore helpers, or wait until we wire /api/quiz/entry to return it.
-      } finally {
-        if (!alive) return;
-        setBusy(false);
+        if (Array.isArray(existing) && existing.length) {
+          setAnswers(existing);
+        }
+      } catch (e) {
+        // non-fatal; start blank
+        console.warn('Big5 prefill failed:', e);
       }
     })();
+    return () => {
+      alive = false;
+    };
+  }, [loading, user, ridParam]);
 
-    return () => { alive = false; };
-  }, [user, ridParam]);
+  // Smooth scroll to top on page change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [page]);
 
   if (loading || !user) return null;
 
-  // Page window
-  const start = page * PER_PAGE;
-  const pageItems = items.slice(start, start + PER_PAGE);
-  const allOnPageAnswered = pageItems.every(it => answers.some(a => a.itemId === it.id));
+  // Pagination math
+  const start = page * QUESTIONS_PER_PAGE;
+  const pageQs = all.slice(start, start + QUESTIONS_PER_PAGE);
+  const isLast = start + QUESTIONS_PER_PAGE >= all.length;
+  const totalPages = Math.ceil(all.length / QUESTIONS_PER_PAGE);
 
-  const setAnswer = (itemId: string, value: number) => {
-    setAnswers(prev => {
-      const i = prev.findIndex(a => a.itemId === itemId);
+  const progress = useMemo(
+    () =>
+      (page * QUESTIONS_PER_PAGE +
+        pageQs.filter((q) => answers.some((a) => a.questionId === q.id)).length) /
+      (all.length || 1),
+    [page, pageQs, answers, all.length]
+  );
+
+  // Handlers
+  const onSelect = (questionId: string, score1to5: number) => {
+    setAnswers((prev) => {
+      const i = prev.findIndex((a) => a.questionId === questionId);
       if (i >= 0) {
         const next = [...prev];
-        next[i] = { ...next[i], value };
+        next[i] = { ...next[i], score: score1to5 };
         return next;
       }
-      return [...prev, { itemId, value }];
+      return [...prev, { questionId, score: score1to5 }];
     });
   };
 
-  const nextPage = async () => {
-    if (!rid || !allOnPageAnswered) return;
-    setBusy(true);
-    try {
-      // Save current progress (in-progress)
-      await saveSection(user, rid, 'big5', answers, 'big5_in_progress', {
-        progress: { section: 'big5', page: page + 1 },
-      } as any);
-      if (page < totalPages - 1) {
-        setPage(p => p + 1);
-      } else {
-        // Final submit → mark done and return to dashboard
-        await saveSection(user, rid, 'big5', answers, 'big5_done');
-        router.push('/app');
-      }
-    } finally {
-      setBusy(false);
+  const allOnPageAnswered = pageQs.every((q) =>
+    answers.some((a) => a.questionId === q.id)
+  );
+
+  const persistPage = async (asStatus: 'big5_in_progress' | 'big5_done') => {
+    const { id: rid } = await ensureDraft(user!, ridParam);
+    await saveSection(user!, rid, 'big5', answers, asStatus, {
+      progress: { section: 'big5', page: page + 1 },
+    } as any);
+    return rid;
+  };
+
+  const next = async () => {
+    if (!allOnPageAnswered) return;
+    if (!isLast) {
+      await persistPage('big5_in_progress');
+      setPage((p) => p + 1);
+      return;
     }
+    // Final submit
+    const rid = await persistPage('big5_done');
+    alert('Saved! You can revisit and edit anytime.');
+    router.push(`/app?rid=${rid}`);
   };
 
-  const prevPage = async () => {
-    if (page > 0) setPage(p => p - 1);
+  const back = async () => {
+    if (page === 0) return;
+    // optional: persist on back as well
+    await persistPage('big5_in_progress');
+    setPage((p) => p - 1);
   };
 
+  // UI (matches the RIASEC layout style: centered prompt + 1..5 grid, progress bar, nav)
   return (
     <div className="max-w-3xl mx-auto py-10 px-4">
-      <header className="mb-6">
-        <div className="text-sm text-gray-600">
-          Page {page + 1} of {totalPages}
-        </div>
-        <h1 className="text-2xl font-semibold tracking-tight">Big Five Personality Test</h1>
-        <p className="muted">
-          {big5Data.meta?.description || '100 statements that describe you. Indicate how accurately each describes you.'}
-        </p>
-      </header>
+      <div className="mb-6">
+        <ProgressBar value={progress} label={`Big Five • Page ${page + 1} of ${totalPages}`} />
+      </div>
 
-      <ol className="space-y-6">
-        {pageItems.map((it, idx) => {
-          const a = answers.find(x => x.itemId === it.id)?.value || 0;
-          return (
-            <li key={it.id} className="rounded-xl border p-4 bg-white">
-              <div className="font-medium mb-2">
-                {start + idx + 1}. {it.text}
-              </div>
-              <Likert
-                value={a}
-                onChange={(v) => setAnswer(it.id, v)}
-                labels={big5Data.meta?.scaleLabels || defaultScale}
-              />
-            </li>
-          );
-        })}
-      </ol>
+      <h2 className="text-2xl font-semibold tracking-tight mb-2">
+        {cfg.meta.title || 'Big Five Personality Test'}
+      </h2>
+      {cfg.meta.description ? (
+        <p className="muted mb-6">{cfg.meta.description}</p>
+      ) : null}
+
+      {pageQs.map((q) => {
+        const sel = answers.find((a) => a.questionId === q.id)?.score;
+        // We keep the scale rendered as numbers 1..5 (like RIASEC),
+        // and show labels for 1,3,5 to match that pattern. The text already implies meaning.
+        return (
+          <QuizOptionGrid
+            key={q.id}
+            question={{ id: q.id, text: q.text, scale: cfg.meta.scaleLabels }}
+            selected={sel}
+            onSelect={(id, score) => onSelect(id, score)}
+          />
+        );
+      })}
 
       <div className="flex justify-between mt-8">
-        <button onClick={prevPage} disabled={page === 0 || busy} className="btn btn-ghost disabled:opacity-50">
+        <button
+          onClick={back}
+          disabled={page === 0}
+          className="btn btn-ghost disabled:opacity-50"
+        >
           Back
         </button>
         <button
-          onClick={nextPage}
-          disabled={!allOnPageAnswered || busy}
+          onClick={next}
+          disabled={!allOnPageAnswered}
           className="btn btn-primary disabled:opacity-50"
         >
-          {page < totalPages - 1 ? 'Next' : 'Submit'}
+          {isLast ? 'Save & Return' : 'Next'}
         </button>
       </div>
-    </div>
-  );
-}
-
-const defaultScale = [
-  'Very Inaccurate',
-  'Moderately Inaccurate',
-  'Neither Inaccurate nor Accurate',
-  'Moderately Accurate',
-  'Very Accurate',
-];
-
-/** Simple 1..5 Likert */
-function Likert({
-  value,
-  onChange,
-  labels = defaultScale,
-}: {
-  value: number;
-  onChange: (v: number) => void;
-  labels?: string[];
-}) {
-  return (
-    <div className="grid sm:grid-cols-5 gap-2">
-      {([1,2,3,4,5] as const).map((v, i) => {
-        const active = value === v;
-        return (
-          <button
-            key={v}
-            type="button"
-            onClick={() => onChange(v)}
-            className={[
-              'w-full p-3 rounded-lg border text-sm',
-              active ? 'bg-black text-white border-black' : 'bg-white hover:bg-gray-50',
-            ].join(' ')}
-            aria-pressed={active}
-          >
-            <div className="font-medium">{v}</div>
-            <div className="text-[11px] text-gray-600 mt-1">{labels[i] || ''}</div>
-          </button>
-        );
-      })}
     </div>
   );
 }
