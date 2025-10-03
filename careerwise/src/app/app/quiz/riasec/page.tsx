@@ -126,7 +126,7 @@ export default function RIASECPage() {
     }
 
     // FINAL: return to dashboard instead of computing results immediately
-    router.push(`/app`);
+    router.push(`/app/results/riasec?rid=${rid}`);
   };
 
   const back = () => {
@@ -178,7 +178,7 @@ export default function RIASECPage() {
           disabled={!allOnPageAnswered}
           className="btn btn-primary disabled:opacity-50"
         >
-          {isLast ? "Save & Return" : "Next"}
+          {isLast ? "Complete" : "Next"}
         </button>
       </div>
     </div>

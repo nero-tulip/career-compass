@@ -130,7 +130,7 @@ export default function Big5Page() {
     // Final submit
     const rid = await persistPage('big5_done');
     alert('Saved! You can revisit and edit anytime.');
-    router.push(`/app?rid=${rid}`);
+    router.push(`/app/results/big5/?rid=${rid}`);
   };
 
   const back = async () => {
@@ -181,7 +181,7 @@ export default function Big5Page() {
           disabled={!allOnPageAnswered}
           className="btn btn-primary disabled:opacity-50"
         >
-          {isLast ? 'Save & Return' : 'Next'}
+          {isLast ? 'Complete' : 'Next'}
         </button>
       </div>
     </div>
