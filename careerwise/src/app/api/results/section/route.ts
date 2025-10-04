@@ -1,9 +1,11 @@
 // src/app/api/results/section/route.ts
 import { NextResponse, NextRequest } from 'next/server';
 import { adminDb, adminAuth } from '@/app/lib/firebaseAdmin';
+import { scoreBig5 } from '@/app/lib/big5';
+import type { Big5Item, Big5Answer } from '@/app/types/big5';
 
 type RIASEC = { R:number; I:number; A:number; S:number; E:number; C:number };
-type Big5 = { E:number; A:number; C:number; N:number; O:number };
+type Big5TraitsMean = { E:number; A:number; C:number; N:number; O:number };
 
 export const runtime = 'nodejs';
 
@@ -16,7 +18,9 @@ async function requireUid(req: Request) {
 }
 
 // --- RIASEC compute (average per letter, dynamic) ---
-function computeRiasec(answers: Array<{questionId:string; score:number}>): { profile: RIASEC; top3: string[] } {
+function computeRiasec(
+  answers: Array<{questionId:string; score:number}>
+): { profile: RIASEC; top3: string[] } {
   const totals: RIASEC = { R:0,I:0,A:0,S:0,E:0,C:0 };
   const counts = { R:0,I:0,A:0,S:0,E:0,C:0 };
   for (const a of answers) {
@@ -34,35 +38,16 @@ function computeRiasec(answers: Array<{questionId:string; score:number}>): { pro
   return { profile, top3 };
 }
 
-// --- Big-5 compute (reverse-aware; average 1..5 per trait) ---
-/** answers: [{ questionId:'E1'|'A2R'|..., score:1..5 }]
- * items: from /data/big5Questions.json → [{id, trait:'E'|'A'|'C'|'N'|'O', reverse:boolean}, ...]
+/**
+ * Read a section's answer array from the draft:
+ * - For "riasec" and "big5" we expect an array of { questionId, score }
  */
-function computeBig5(
-  items: Array<{id:string; trait:keyof Big5; reverse?:boolean}>,
-  answers: Array<{questionId:string; score:number}>
-): Big5 {
-  const sums: Big5 = { E:0, A:0, C:0, N:0, O:0 };
-  const counts: Record<keyof Big5, number> = { E:0, A:0, C:0, N:0, O:0 };
-
-  const lookup = new Map(items.map(i => [i.id, i]));
-  for (const a of answers) {
-    const meta = lookup.get(a.questionId);
-    if (!meta) continue;
-    let s = Number(a.score) || 0;
-    if (meta.reverse) s = 6 - s; // reverse-score on 1..5
-    sums[meta.trait] += s;
-    counts[meta.trait] += 1;
-  }
-
-  const out: Big5 = { E:0, A:0, C:0, N:0, O:0 };
-  (Object.keys(out) as (keyof Big5)[]).forEach(t => {
-    out[t] = counts[t] ? sums[t] / counts[t] : 0;
-  });
-  return out;
-}
-
-async function readDraftSection(db: FirebaseFirestore.Firestore, uid: string, rid: string, section: 'riasec'|'big5') {
+async function readDraftSection(
+  db: FirebaseFirestore.Firestore,
+  uid: string,
+  rid: string,
+  section: 'riasec'|'big5'
+) {
   const dref = db.collection('users').doc(uid).collection('drafts').doc(rid);
   const snap = await dref.get();
   if (!snap.exists) return null;
@@ -92,10 +77,27 @@ export async function POST(req: Request) {
       const { profile, top3 } = computeRiasec(answers);
       payload = { profile, top3, computedAt: new Date() };
     } else {
-      // Load items once (you can import JSON at top if preferred)
+      // BIG-5: reuse shared scorer
       const mod = await import('@/app/data/big5Questions.json');
-      const items = (mod.default?.items || mod.items) as Array<{id:string; trait:'E'|'A'|'C'|'N'|'O'; reverse?:boolean}>;
-      const traits = computeBig5(items, answers);
+      const items = (mod.default?.items || mod.items) as Big5Item[];
+
+      // map draft answers {questionId, score} -> scorer’s {itemId, value}
+      const mapped: Big5Answer[] = answers.map((a: any) => ({
+        itemId: String(a.questionId),
+        value: Number(a.score) || 0,
+      }));
+
+      const scored = scoreBig5(items, mapped);
+
+      // Your result page expects means (1..5) keyed E/A/C/N/O
+      const traits: Big5TraitsMean = {
+        E: scored.mean.E,
+        A: scored.mean.A,
+        C: scored.mean.C,
+        N: scored.mean.N,
+        O: scored.mean.O,
+      };
+
       payload = { traits, computedAt: new Date() };
     }
 
@@ -136,15 +138,29 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'no_answers' }, { status: 404 });
     }
 
-    // Reuse compute logic
     let payload: any;
     if (section === 'riasec') {
       const { profile, top3 } = computeRiasec(answers);
       payload = { profile, top3, computedAt: new Date() };
     } else {
       const mod = await import('@/app/data/big5Questions.json');
-      const items = (mod.default?.items || mod.items) as Array<{id:string; trait:'E'|'A'|'C'|'N'|'O'; reverse?:boolean}>;
-      const traits = computeBig5(items, answers);
+      const items = (mod.default?.items || mod.items) as Big5Item[];
+
+      const mapped: Big5Answer[] = answers.map((a: any) => ({
+        itemId: String(a.questionId),
+        value: Number(a.score) || 0,
+      }));
+
+      const scored = scoreBig5(items, mapped);
+
+      const traits: Big5TraitsMean = {
+        E: scored.mean.E,
+        A: scored.mean.A,
+        C: scored.mean.C,
+        N: scored.mean.N,
+        O: scored.mean.O,
+      };
+
       payload = { traits, computedAt: new Date() };
     }
 

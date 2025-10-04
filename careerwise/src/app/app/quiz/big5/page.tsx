@@ -1,3 +1,4 @@
+// src/app/app/quiz/big5/page.tsx
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -41,6 +42,7 @@ export default function Big5Page() {
 
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [page, setPage] = useState(0);
+  const [busy, setBusy] = useState(false);
   const all = cfg.items;
 
   // Auth gate
@@ -55,8 +57,6 @@ export default function Big5Page() {
       if (loading || !user) return;
       try {
         const { id: rid } = await ensureDraft(user, ridParam);
-        // Load any previously saved section answers
-        // loadSection returns the raw persisted payload or null/undefined
         const existing = (await loadSection(user, rid, 'big5')) as Answer[] | null | undefined;
         if (!alive) return;
         if (Array.isArray(existing) && existing.length) {
@@ -95,7 +95,7 @@ export default function Big5Page() {
     [page, pageQs, answers, all.length]
   );
 
-  // Handlers
+  // Answer handler
   const onSelect = (questionId: string, score1to5: number) => {
     setAnswers((prev) => {
       const i = prev.findIndex((a) => a.questionId === questionId);
@@ -112,6 +112,7 @@ export default function Big5Page() {
     answers.some((a) => a.questionId === q.id)
   );
 
+  // Persist current answers (and optional status), return rid
   const persistPage = async (asStatus: 'big5_in_progress' | 'big5_done') => {
     const { id: rid } = await ensureDraft(user!, ridParam);
     await saveSection(user!, rid, 'big5', answers, asStatus, {
@@ -121,26 +122,49 @@ export default function Big5Page() {
   };
 
   const next = async () => {
-    if (!allOnPageAnswered) return;
-    if (!isLast) {
-      await persistPage('big5_in_progress');
-      setPage((p) => p + 1);
-      return;
+    if (!allOnPageAnswered || busy) return;
+    try {
+      setBusy(true);
+
+      if (!isLast) {
+        await persistPage('big5_in_progress');
+        setPage((p) => p + 1);
+        return;
+      }
+
+      // Final submit: save + compute section result, then redirect to big5 results
+      const rid = await persistPage('big5_done');
+
+      try {
+        const token = await user!.getIdToken();
+        await fetch('/api/results/section', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+          body: JSON.stringify({ rid, section: 'big5', mode: 'final' }),
+        });
+        // If the compute fails, we'll still redirect—the GET page will lazy-compute
+      } catch (err) {
+        console.warn('Big5 compute on finalize failed (will lazy compute on GET):', err);
+      }
+
+      router.push(`/app/results/big5?rid=${encodeURIComponent(rid)}`);
+    } finally {
+      setBusy(false);
     }
-    // Final submit
-    const rid = await persistPage('big5_done');
-    alert('Saved! You can revisit and edit anytime.');
-    router.push(`/app/results/big5/?rid=${rid}`);
   };
 
   const back = async () => {
-    if (page === 0) return;
-    // optional: persist on back as well
-    await persistPage('big5_in_progress');
-    setPage((p) => p - 1);
+    if (page === 0 || busy) return;
+    try {
+      setBusy(true);
+      await persistPage('big5_in_progress');
+      setPage((p) => p - 1);
+    } finally {
+      setBusy(false);
+    }
   };
 
-  // UI (matches the RIASEC layout style: centered prompt + 1..5 grid, progress bar, nav)
+  // UI
   return (
     <div className="max-w-3xl mx-auto py-10 px-4">
       <div className="mb-6">
@@ -156,8 +180,6 @@ export default function Big5Page() {
 
       {pageQs.map((q) => {
         const sel = answers.find((a) => a.questionId === q.id)?.score;
-        // We keep the scale rendered as numbers 1..5 (like RIASEC),
-        // and show labels for 1,3,5 to match that pattern. The text already implies meaning.
         return (
           <QuizOptionGrid
             key={q.id}
@@ -171,17 +193,17 @@ export default function Big5Page() {
       <div className="flex justify-between mt-8">
         <button
           onClick={back}
-          disabled={page === 0}
+          disabled={page === 0 || busy}
           className="btn btn-ghost disabled:opacity-50"
         >
           Back
         </button>
         <button
           onClick={next}
-          disabled={!allOnPageAnswered}
+          disabled={!allOnPageAnswered || busy}
           className="btn btn-primary disabled:opacity-50"
         >
-          {isLast ? 'Complete' : 'Next'}
+          {isLast ? (busy ? 'Finishing…' : 'Complete') : (busy ? 'Saving…' : 'Next')}
         </button>
       </div>
     </div>
