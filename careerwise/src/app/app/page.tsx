@@ -298,7 +298,7 @@ export default function AppHome() {
             const locked = m.tier === 'pro' && !isPro;
             const busy = busyKey === m.key;
             const pct = progressForModule[m.key]?.pct ?? 0;
-            const primaryCta = locked ? 'Unlock PRO' : (pct > 0 ? 'Continue' : 'Start');
+            const primaryCta = locked ? 'Unlock PRO' : (pct>= 100 ? 'Review' : pct > 0 ? 'Continue' : 'Start');
             const onPrimary = locked
               ? () => router.push('/app/pro')
               : () => handleStartOrResume(m);
