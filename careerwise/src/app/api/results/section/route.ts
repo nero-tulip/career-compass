@@ -9,6 +9,10 @@ type Big5TraitsMean = { E:number; A:number; C:number; N:number; O:number };
 
 export const runtime = 'nodejs';
 
+// Allow-list
+const VALID_SECTIONS = new Set(['riasec','big5'] as const);
+type SectionId = 'riasec' | 'big5';
+
 async function requireUid(req: Request) {
   const authz = req.headers.get('authorization') || req.headers.get('Authorization');
   if (!authz?.startsWith('Bearer ')) throw new Error('unauthenticated');
@@ -38,35 +42,40 @@ function computeRiasec(
   return { profile, top3 };
 }
 
-/**
- * Read a section's answer array from the draft:
- * - For "riasec" and "big5" we expect an array of { questionId, score }
- */
+/** Draft read helper */
 async function readDraftSection(
   db: FirebaseFirestore.Firestore,
   uid: string,
   rid: string,
-  section: 'riasec'|'big5'
+  section: SectionId
 ) {
   const dref = db.collection('users').doc(uid).collection('drafts').doc(rid);
   const snap = await dref.get();
   if (!snap.exists) return null;
   const data = snap.data() || {};
-  return data[section] || null;
+  return (data as any)[section] || null;
+}
+
+/** Cached Big-5 item loader */
+let BIG5_ITEMS_CACHE: Big5Item[] | null = null;
+async function loadBig5Items(): Promise<Big5Item[]> {
+  if (BIG5_ITEMS_CACHE) return BIG5_ITEMS_CACHE;
+  const mod = await import('@/app/data/big5Questions.json');
+  BIG5_ITEMS_CACHE = (mod.default?.items || mod.items) as Big5Item[];
+  return BIG5_ITEMS_CACHE;
 }
 
 export async function POST(req: Request) {
   try {
     const uid = await requireUid(req);
     const db = adminDb();
-    const { rid, section, mode }: { rid?: string; section?: 'riasec'|'big5'; mode?: 'preview'|'final' } =
+    const { rid, section, mode }: { rid?: string; section?: SectionId; mode?: 'preview'|'final' } =
       await req.json().catch(()=> ({}));
 
-    if (!rid || (section !== 'riasec' && section !== 'big5')) {
+    if (!rid || !section || !VALID_SECTIONS.has(section)) {
       return NextResponse.json({ error: 'bad_request' }, { status: 400 });
     }
 
-    // Load answers from draft
     const answers = await readDraftSection(db, uid, rid, section);
     if (!Array.isArray(answers) || answers.length === 0) {
       return NextResponse.json({ error: 'no_answers' }, { status: 400 });
@@ -77,9 +86,7 @@ export async function POST(req: Request) {
       const { profile, top3 } = computeRiasec(answers);
       payload = { profile, top3, computedAt: new Date() };
     } else {
-      // BIG-5: reuse shared scorer
-      const mod = await import('@/app/data/big5Questions.json');
-      const items = (mod.default?.items || mod.items) as Big5Item[];
+      const items = await loadBig5Items();
 
       // map draft answers {questionId, score} -> scorer’s {itemId, value}
       const mapped: Big5Answer[] = answers.map((a: any) => ({
@@ -88,8 +95,6 @@ export async function POST(req: Request) {
       }));
 
       const scored = scoreBig5(items, mapped);
-
-      // Your result page expects means (1..5) keyed E/A/C/N/O
       const traits: Big5TraitsMean = {
         E: scored.mean.E,
         A: scored.mean.A,
@@ -97,11 +102,9 @@ export async function POST(req: Request) {
         N: scored.mean.N,
         O: scored.mean.O,
       };
-
       payload = { traits, computedAt: new Date() };
     }
 
-    // Upsert results doc and write the component
     const resRef = db.collection('users').doc(uid).collection('results').doc(rid);
     await resRef.set({ components: { [section]: payload }, updatedAt: new Date() }, { merge: true });
 
@@ -119,16 +122,18 @@ export async function GET(req: NextRequest) {
     const uid = await requireUid(req as any);
     const db = adminDb();
     const rid = req.nextUrl.searchParams.get('rid') || '';
-    const section = req.nextUrl.searchParams.get('section') as 'riasec'|'big5'|null;
+    const section = req.nextUrl.searchParams.get('section') as SectionId | null;
 
-    if (!rid || !section) return NextResponse.json({ error: 'bad_request' }, { status: 400 });
+    if (!rid || !section || !VALID_SECTIONS.has(section)) {
+      return NextResponse.json({ error: 'bad_request' }, { status: 400 });
+    }
 
     const resRef = db.collection('users').doc(uid).collection('results').doc(rid);
     const snap = await resRef.get();
 
     if (snap.exists) {
       const data = snap.data() || {};
-      const comp = data?.components?.[section];
+      const comp = (data as any)?.components?.[section];
       if (comp) return NextResponse.json({ success: true, rid, section, result: comp });
     }
 
@@ -143,8 +148,7 @@ export async function GET(req: NextRequest) {
       const { profile, top3 } = computeRiasec(answers);
       payload = { profile, top3, computedAt: new Date() };
     } else {
-      const mod = await import('@/app/data/big5Questions.json');
-      const items = (mod.default?.items || mod.items) as Big5Item[];
+      const items = await loadBig5Items();
 
       const mapped: Big5Answer[] = answers.map((a: any) => ({
         itemId: String(a.questionId),
@@ -152,7 +156,6 @@ export async function GET(req: NextRequest) {
       }));
 
       const scored = scoreBig5(items, mapped);
-
       const traits: Big5TraitsMean = {
         E: scored.mean.E,
         A: scored.mean.A,
@@ -160,7 +163,6 @@ export async function GET(req: NextRequest) {
         N: scored.mean.N,
         O: scored.mean.O,
       };
-
       payload = { traits, computedAt: new Date() };
     }
 

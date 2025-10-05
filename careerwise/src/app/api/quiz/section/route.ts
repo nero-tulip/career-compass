@@ -1,8 +1,11 @@
+// src/app/api/quiz/section/route.ts
 import { NextResponse } from "next/server";
 import { getAuth } from "firebase-admin/auth";
 import { adminDb } from "@/app/lib/firebaseAdmin";
 
-type Section = "intake" | "macro" | "riasec";
+export const runtime = "nodejs";
+
+type Section = "intake" | "macro" | "riasec" | "big5";
 
 export async function GET(request: Request) {
   try {
@@ -14,7 +17,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "missing_params" }, { status: 400 });
     }
 
-    const authz = request.headers.get("authorization") || request.headers.get("Authorization");
+    // ---- Auth
+    const authz =
+      request.headers.get("authorization") ||
+      request.headers.get("Authorization");
     if (!authz?.startsWith("Bearer ")) {
       return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
     }
@@ -22,24 +28,37 @@ export async function GET(request: Request) {
     const decoded = await getAuth().verifyIdToken(idToken);
     const uid = decoded.uid;
 
+    // ---- Load draft
     const db = adminDb();
-    const draftRef = db.collection("users").doc(uid).collection("drafts").doc(rid);
+    const draftRef = db
+      .collection("users")
+      .doc(uid)
+      .collection("drafts")
+      .doc(rid);
     const snap = await draftRef.get();
     if (!snap.exists) {
       return NextResponse.json({ error: "draft_not_found" }, { status: 404 });
     }
     const data = snap.data() || {};
 
-    // Return only the section slice
+    // ---- Return only the requested section slice
     const sectionData =
-      section === "intake" ? data.intake ?? null
-      : section === "macro"  ? data.macro  ?? []
-      : section === "riasec" ? data.riasec ?? []
-      : null;
+      section === "intake"
+        ? (data as any).intake ?? null
+        : section === "macro"
+        ? (data as any).macro ?? []
+        : section === "riasec"
+        ? (data as any).riasec ?? []
+        : section === "big5"
+        ? (data as any).big5 ?? []
+        : null;
 
     return NextResponse.json({ success: true, rid, section, data: sectionData });
   } catch (e: any) {
     console.error("GET /api/quiz/section error:", e);
-    return NextResponse.json({ error: e?.message || "internal_error" }, { status: 500 });
+    return NextResponse.json(
+      { error: e?.message || "internal_error" },
+      { status: 500 }
+    );
   }
 }
