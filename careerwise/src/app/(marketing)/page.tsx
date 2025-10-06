@@ -91,8 +91,8 @@ export default function Home() {
               Finding the perfect career, <span className="text-gradient">for you</span>.
             </h1>
             <Reveal as="p" className="mt-6 text-lg text-[--text-dim] max-w-prose" delay={0.15}>
-              We combine research-based psychology with job-market insight to help you find
-              environments where you’ll thrive.
+              We combine <span className="underline-accent-green">psychological assessments</span> with <span className="underline-accent">job-market insight</span> to help you find
+              career environments where you’ll thrive.
             </Reveal>
 
             <Reveal as="div" className="mt-8 flex flex-wrap items-center gap-4" delay={0.25}>
@@ -101,16 +101,16 @@ export default function Home() {
             </Reveal>
 
             <Reveal as="div" className="mt-6 flex flex-wrap gap-3 text-sm text-[--text-dim]" delay={0.35}>
-              <span className="badge">Psychological</span>
-              <span className="badge">Save progress</span>
-              <span className="badge">Evidence-based</span>
+              <span className="badge">Psychological analysis</span>
+              <span className="badge">Job market insight</span>
+              <span className="badge">Resources and mentorship</span>
             </Reveal>
           </Reveal>
 
           {/* image column — no white box, aligned with text, larger */}
-          <Reveal as="div" className="relative min-h-[420px] md:min-h-[620px]" direction="left" delay={0.15}>
+          <Reveal as="div" className="relative min-h-[420px] md:min-h-[520px]" direction="left" delay={0.15}>
             <Image
-              src="/hero-illustration.png"
+              src="/hero-illustration.svg"
               alt="Career search illustration"
               fill
               className="object-cover"
@@ -163,9 +163,9 @@ export default function Home() {
             delay={0.05}
           >
             <div className="text-sm uppercase tracking-wide text-gray-500 mb-2">Step 1</div>
-            <h3 className="font-medium mb-2">Personal context</h3>
+            <h3 className="font-medium mb-2">Data Collection</h3>
             <p className="text-[15px] text-[--text-dim]">
-              Map your stage of life and location so guidance fits your reality.
+              We'll get to know you through a number of psychometric assessments.
             </p>
           </Reveal>
 
@@ -174,9 +174,9 @@ export default function Home() {
             delay={0.15}
           >
             <div className="text-sm uppercase tracking-wide text-gray-500 mb-2">Step 2</div>
-            <h3 className="font-medium mb-2">Values & interests</h3>
+            <h3 className="font-medium mb-2">Mapping & Analysis</h3>
             <p className="text-[15px] text-[--text-dim]">
-              Research-backed questionnaires (RIASEC + macro) to understand your work style — not buzzwords.
+              Utilizing government-collected data, we map your RIASEC profile and personality traits to career environments where you’re most likely to thrive.
             </p>
           </Reveal>
 
@@ -185,9 +185,9 @@ export default function Home() {
             delay={0.25}
           >
             <div className="text-sm uppercase tracking-wide text-gray-500 mb-2">Step 3</div>
-            <h3 className="font-medium mb-2">Matches & next steps</h3>
+            <h3 className="font-medium mb-2">Kicking Goals</h3>
             <p className="text-[15px] text-[--text-dim]">
-              Clear career environments where you’ll thrive, with practical actions to move forward.
+              We'll provide you with personalized resources and mentor guidance to help you achieve your career goals.
             </p>
           </Reveal>
         </div>
