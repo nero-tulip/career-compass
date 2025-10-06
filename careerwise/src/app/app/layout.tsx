@@ -2,38 +2,53 @@ import { ReactNode } from "react";
 import Link from "next/link";
 import { AuthProvider } from "@/app/providers/AuthProvider";
 import RequireAuth from "@/app/components/auth/RequireAuth";
-import UserMenuClient from "@/app/components/auth/UserMenuClient"; // <-- client component
+import UserMenuClient from "@/app/components/auth/UserMenuClient";
 
 export const metadata = {
   title: "CareerCompass — App",
 };
 
 export default function AppLayout({ children }: { children: ReactNode }) {
-  // Server component: no hooks here.
   return (
     <AuthProvider>
       <RequireAuth>
+        {/* Top Nav */}
         <div className="border-b bg-white">
           <div className="mx-auto max-w-6xl px-4 h-14 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Link href="/" className="font-semibold">
+            {/* Left side: brand + nav */}
+            <div className="flex items-center gap-4">
+              {/* Logo / Home */}
+              <Link href="/" className="font-semibold text-lg tracking-tight">
                 CareerCompass
               </Link>
-              <nav className="hidden sm:flex items-center gap-4 text-sm text-gray-600">
-                <Link href="/app" className="hover:text-gray-900">
+
+              {/* Nav buttons */}
+              <nav className="flex items-center gap-2">
+                <Link
+                  href="/app"
+                  className="inline-flex items-center px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
+                >
                   Dashboard
+                </Link>
+
+                <Link
+                  href="/app/pro"
+                  className="inline-flex items-center px-3 py-1.5 rounded-lg bg-black text-white text-sm font-medium hover:opacity-90 transition"
+                >
+                  Go PRO
                 </Link>
               </nav>
             </div>
+
+            {/* Right side: user menu */}
             <div className="text-sm">
               <UserMenuClient />
             </div>
           </div>
         </div>
 
-        <div role="main" className="mx-auto max-w-6xl px-4 py-6">
-          {children}
-        </div>
+        {/* Page content */}
+        <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
       </RequireAuth>
     </AuthProvider>
   );
