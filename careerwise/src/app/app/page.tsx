@@ -292,7 +292,7 @@ export default function AppHome() {
 
       {/* Quizzes */}
       <div className="space-y-3">
-        <h2 className="text-sm font-semibold tracking-wide text-gray-600 uppercase">Quizzes</h2>
+        <h2 className="text-sm font-semibold tracking-wide text-gray-600 uppercase">Analysis</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {quizzes.map((m) => {
             const locked = m.tier === 'pro' && !isPro;
