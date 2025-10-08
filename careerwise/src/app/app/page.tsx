@@ -325,7 +325,7 @@ export default function AppHome() {
                 onSecondary={
                   // Only show for completed RIASEC / Big5
                   progressForModule[m.key]?.label === 'Completed' &&
-                  (m.key === 'riasec' || m.key === 'big5')
+                  (m.key === 'riasec' || m.key === 'big5') && latestRid
                     ? () => router.push(`/app/results/${m.key}?rid=${latestRid}`)
                     : undefined
                 }
