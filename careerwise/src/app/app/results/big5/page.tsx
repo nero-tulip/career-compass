@@ -73,6 +73,44 @@ function PercentileChip({ p }: { p:number }) {
   );
 }
 
+function TraitInfoBox({ traitKey }: { traitKey: keyof Big5 }) {
+  const info: Record<keyof Big5, { short: string; full: string }> = {
+    E: {
+      short: 'How outgoing & social you are.',
+      full: '\nHigher Extraversion often means energy from social settings and fast-paced environments. \nLower Extraversion means you recharge alone and think deeply before engaging.',
+    },
+    A: {
+      short: 'How compassionate & cooperative you are.',
+      full: '\nHigh Agreeableness shows warmth, empathy, and cooperation. \nLower Agreeableness brings a more direct, assertive, and independent style — useful when tough calls are needed.',
+    },
+    C: {
+      short: 'How organized & disciplined you are.',
+      full: '\nHigh Conscientiousness means reliability, planning, and persistence. \nLower Conscientiousness often signals flexibility, spontaneity, and comfort with uncertainty.',
+    },
+    N: {
+      short: 'How emotionally steady you are.',
+      full: '\nHigher Neuroticism reflects greater emotional sensitivity — you feel things deeply. \nLower Neuroticism reflects calm and emotional steadiness, even in stress.',
+    },
+    O: {
+      short: 'How curious & open-minded you are.',
+      full: '\nHigh Openness means creativity, imagination, and a hunger for new ideas. \nLower Openness often means groundedness, tradition, and comfort in what’s known.',
+    },
+  };
+
+  const copy = info[traitKey];
+
+  return (
+    <div className="absolute inset-0 hidden group-hover:flex items-center justify-center 
+                    bg-white/95 backdrop-blur-sm rounded-xl shadow-xl p-5 text-center 
+                    text-sm text-gray-700 transition-opacity duration-300">
+      <div>
+        <div className="font-semibold mb-1">{copy.short}</div>
+        <div className="text-xs leading-snug text-gray-600 whitespace-pre-line">{copy.full}</div>
+      </div>
+    </div>
+  );
+}
+
 function Bar({
   label,
   value,
@@ -216,7 +254,7 @@ export default function Big5ResultPage() {
       {/* Trait display */}
       <div className="grid gap-4">
         {metrics.map((m) => (
-          <div key={m.key} className="rounded-xl border p-4 bg-white">
+          <div key={m.key} className="group relative rounded-xl border p-4 bg-white hover:shadow-lg transition-all duration-300">
             <Bar
               label={`${m.label} (${m.key})`}
               value={m.value}
@@ -230,6 +268,9 @@ export default function Big5ResultPage() {
                 mean {m.mean.toFixed(2)} • sd {m.sd.toFixed(2)}
               </span>
             </div>
+
+            {/* Hover overlay */}
+            <TraitInfoBox traitKey={m.key} />
           </div>
         ))}
       </div>
