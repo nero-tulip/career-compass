@@ -180,9 +180,13 @@ export default function AppHome() {
     return { pct, label: pct >= 100 ? 'Completed' : pct > 0 ? 'In progress' : 'Not started' };
   }
 
+
+  const [latestRid, setLatestRid] = useState<string | null>(null);
+
   // ---------- Load latest draft & compute progress ----------
   useEffect(() => {
     if (loading || !user) return;
+    
 
     (async () => {
       try {
@@ -199,8 +203,10 @@ export default function AppHome() {
           });
           return;
         }
-
+        
+        
         const latest = snap.docs[0];
+        setLatestRid(latest.id);
         const draftRef = doc(db, 'users', user.uid, 'drafts', latest.id);
         const draftSnap = await getDoc(draftRef);
         const draft = (draftSnap.data() || {}) as DraftDoc;
@@ -316,7 +322,15 @@ export default function AppHome() {
                 primaryLabel={busy ? 'Loading…' : primaryCta}
                 progress={progressForModule[m.key]}
                 blurb={m.blurb}
-              />
+                onSecondary={
+                  // Only show for completed RIASEC / Big5
+                  progressForModule[m.key]?.label === 'Completed' &&
+                  (m.key === 'riasec' || m.key === 'big5')
+                    ? () => router.push(`/app/results/${m.key}?rid=${latestRid}`)
+                    : undefined
+                }
+                secondaryLabel="View Results"
+              />  
             );
           })}
         </div>
@@ -395,6 +409,8 @@ function ModuleCard(props: {
   onPrimary: () => void;
   progress?: Progress;
   blurb?: string;
+  secondaryLabel?: string;
+  onSecondary?: (() => void) | undefined;
 }) {
   const {
     title, subtitle, icon, tier, locked, busy, primaryLabel, onPrimary, progress, blurb
@@ -448,6 +464,16 @@ function ModuleCard(props: {
         >
           {primaryLabel}
         </button>
+
+        {props.onSecondary ? (
+          <button
+            onClick={props.onSecondary}
+            disabled={busy}
+            className="px-3 py-1.5 rounded-lg cursor-pointer text-sm border border-gray-300 text-gray-700 hover:bg-gray-50"
+          >
+            {props.secondaryLabel}
+          </button>
+        ) : null}
       </div>
 
       {/* Hover tooltip */}
