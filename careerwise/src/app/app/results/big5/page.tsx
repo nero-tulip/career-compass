@@ -25,6 +25,21 @@ const LABELS: Record<keyof Big5, string> = {
   N: 'Neuroticism',
 };
 
+// Per-trait UI colors (Tailwind utility classes)
+// Tweak any of these to match your globals.css palette.
+const TRAIT_UI: Record<keyof Big5, {
+  text: string;   // headers / labels
+  bar: string;    // filled bars
+  ring: string;   // light borders/backgrounds
+  axis: string;   // radar axis labels
+}> = {
+  O: { text: 'text-sky-700',       bar: 'bg-sky-500',       ring: 'border-sky-200',       axis: 'text-sky-600' },
+  C: { text: 'text-emerald-700',   bar: 'bg-emerald-500',   ring: 'border-emerald-200',   axis: 'text-emerald-600' },
+  E: { text: 'text-amber-700',     bar: 'bg-amber-500',     ring: 'border-amber-200',     axis: 'text-amber-600' },
+  A: { text: 'text-violet-700',    bar: 'bg-violet-500',    ring: 'border-violet-200',    axis: 'text-violet-600' },
+  N: { text: 'text-rose-700',      bar: 'bg-rose-500',      ring: 'border-rose-200',      axis: 'text-rose-600' },
+};
+
 // Plain-English trait definitions (what the trait *is*)
 const TRAIT_DEFS: Record<keyof Big5, string> = {
   O: `Openness captures curiosity, imagination, and the hunger to experience new ideas and perspectives. 
@@ -109,9 +124,9 @@ function PercentileChip({ p }: { p:number }) {
   );
 }
 
-function GraphCard({ children, title }: { children: React.ReactNode; title?: string }) {
+function GraphCard({ children, title, className }: { children: React.ReactNode; title?: string; className?: string }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+    <div className={`rounded-xl border bg-white p-4 shadow-sm border-gray-200 ${className || ''}`}>
       {title ? <div className="text-sm font-medium mb-2">{title}</div> : null}
       {children}
     </div>
@@ -121,10 +136,12 @@ function GraphCard({ children, title }: { children: React.ReactNode; title?: str
 function Bar({
   value,
   popMean,
+  color = 'bg-gray-800',
   highlight,
 }: {
   value: number;
   popMean: number;
+  color?: string;
   highlight?: boolean;
 }) {
   const pct = pctFrom1to5(value);
@@ -133,7 +150,7 @@ function Bar({
     <div className="space-y-1">
       <div className="relative h-2 w-full bg-gray-100 rounded-full overflow-hidden">
         <div
-          className={`h-full transition-all duration-500 ease-out ${highlight ? 'bg-gradient-to-r from-cyan-400 to-violet-500' : 'bg-gray-800'}`}
+          className={`h-full transition-all duration-500 ease-out ${highlight ? 'bg-gradient-to-r from-cyan-400 to-violet-500' : color}`}
           style={{ width: `${pct}%` }}
         />
         <div
@@ -144,7 +161,7 @@ function Bar({
       </div>
       <div className="flex items-center justify-between text-xs text-gray-600">
         <span className="inline-flex items-center gap-1">
-          <span className="inline-block h-2 w-2 rounded-full bg-gray-800" />
+          <span className={`inline-block h-2 w-2 rounded-full ${color}`} />
           Your score {value.toFixed(2)}
         </span>
         <span className="inline-flex items-center gap-1">
@@ -166,9 +183,9 @@ function MiniStackBars({ traits }: { traits: Big5 }) {
         const mean = POP_STATS[k].mean;
         return (
           <div key={k} className="flex items-center gap-3">
-            <div className="w-28 text-xs text-gray-600">{LABELS[k]} ({k})</div>
+            <div className={`w-28 text-xs ${TRAIT_UI[k].text}`}>{LABELS[k]} ({k})</div>
             <div className="flex-1">
-              <Bar value={v} popMean={mean} />
+              <Bar value={v} popMean={mean} color={TRAIT_UI[k].bar} />
             </div>
           </div>
         );
@@ -210,11 +227,18 @@ function RadarChart({ traits }: { traits: Big5 }) {
       })}
       {/* polygon */}
       <path d={pathD} fill="rgba(99,102,241,0.20)" stroke="rgba(99,102,241,0.8)" strokeWidth={2} />
-      {/* labels */}
+      {/* labels (colored per trait) */}
       {order.map((k, i) => {
         const [x, y] = [cx + (rMax + 14) * Math.cos(angleFor(i)), cy + (rMax + 14) * Math.sin(angleFor(i))];
         return (
-          <text key={k} x={x} y={y} textAnchor="middle" dominantBaseline="middle" className="fill-gray-700 text-[10px]">
+          <text
+            key={k}
+            x={x}
+            y={y}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            className={`text-[10px] ${TRAIT_UI[k].axis}`}
+          >
             {k}
           </text>
         );
@@ -326,20 +350,20 @@ export default function Big5ResultPage() {
       {/* Per-trait sections (OCEAN): title -> definition -> graph (bordered) -> interpretation line */}
       {metrics.map((m) => (
         <section key={m.key} className="space-y-3">
-          <h2 className="text-xl font-semibold">{m.label}</h2>
+          <h2 className={`text-xl font-semibold ${TRAIT_UI[m.key].text}`}>{m.label}</h2>
 
           {/* trait definition */}
           <p className="text-gray-800">
             {TRAIT_DEFS[m.key]}
           </p>
 
-          {/* graph card */}
-          <GraphCard title="Your result">
+          {/* graph card (with light per-trait ring color) */}
+          <GraphCard title="Your result" className={TRAIT_UI[m.key].ring}>
             <div className="flex items-center justify-between text-sm mb-2">
               <span className="text-gray-700">{m.label} ({m.key})</span>
               <span className="tabular-nums text-gray-600">{m.value.toFixed(2)}</span>
             </div>
-            <Bar value={m.value} popMean={m.mean} />
+            <Bar value={m.value} popMean={m.mean} color={TRAIT_UI[m.key].bar} />
           </GraphCard>
 
           {/* interpretation */}
