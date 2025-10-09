@@ -8,7 +8,7 @@ import { useAuth } from '@/app/providers/AuthProvider';
 type Big5 = { E:number; A:number; C:number; N:number; O:number };
 type Big5Result = { traits: Big5; computedAt: string };
 
-// --- Population reference (IPIP/BFI-aligned) ---
+// --- Population reference (IPIP/BFI-aligned; approximate) ---
 const POP_STATS: Record<keyof Big5, { mean:number; sd:number }> = {
   E: { mean: 3.20, sd: 0.75 },
   A: { mean: 3.60, sd: 0.60 },
@@ -18,11 +18,47 @@ const POP_STATS: Record<keyof Big5, { mean:number; sd:number }> = {
 };
 
 const LABELS: Record<keyof Big5, string> = {
+  O: 'Openness',
+  C: 'Conscientiousness',
   E: 'Extraversion',
   A: 'Agreeableness',
-  C: 'Conscientiousness',
   N: 'Neuroticism',
-  O: 'Openness',
+};
+
+// Plain-English trait definitions (what the trait *is*)
+const TRAIT_DEFS: Record<keyof Big5, string> = {
+  O: `Openness captures curiosity, imagination, and the hunger to experience new ideas and perspectives. 
+People high in Openness are often drawn to creative fields — design, writing, philosophy, or entrepreneurship — 
+where they can experiment and connect concepts in original ways. Think of people like Steve Jobs or Elon Musk, 
+who constantly reimagine what’s possible. Those lower in Openness tend to prefer structure, clarity, and familiarity — 
+they excel in stable environments that reward expertise and precision, like accounting, engineering, or law. 
+Neither is “better”; one explores new worlds, the other perfects the existing one.`,
+
+  C: `Conscientiousness is about self-discipline, organization, and reliability — the quiet engine behind consistency and follow-through. 
+Highly conscientious people are planners, finishers, and caretakers of detail. They often thrive in roles requiring trust and precision — 
+project management, medicine, finance, or leadership. You might picture someone like Tim Cook: dependable, meticulous, and calm under pressure. 
+Those lower in Conscientiousness often prefer freedom and adaptability; they can be innovators, artists, or problem-solvers who see 
+possibilities others miss because they’re not locked into rigid systems. High conscientiousness builds stability; low conscientiousness creates flexibility.`,
+
+  E: `Extraversion reflects social energy and stimulation-seeking — how much you recharge through people, excitement, and movement. 
+High extraverts tend to shine in visible or fast-paced environments like sales, events, media, or leadership — they thrive on interaction and momentum. 
+Someone like Richard Branson or Oprah Winfrey radiates this trait. Introverted types, on the other hand, draw energy from reflection and solitude. 
+They often excel in research, writing, programming, or strategy — work that rewards depth over breadth. 
+Neither side is superior: extraversion builds community and visibility, introversion builds focus and insight.`,
+
+  A: `Agreeableness measures empathy, cooperation, and the instinct to create harmony with others. 
+People high in Agreeableness are kind, collaborative, and trustworthy — the glue in teams and relationships. 
+They often succeed in helping professions like healthcare, education, therapy, or HR, where people skills are essential. 
+Think of Fred Rogers or Keanu Reeves — warm, patient, and quietly strong. 
+Those lower in Agreeableness tend to be more direct, assertive, and competitive — strengths in negotiation, law, politics, or leadership, 
+where tough decisions and firm boundaries are essential. High Agreeableness builds trust; low Agreeableness drives progress.`,
+
+  N: `Neuroticism reflects emotional sensitivity — how deeply you experience stress, mood changes, or worry. 
+It’s often misunderstood as “bad,” but it’s really about responsiveness to the emotional world. 
+People higher in Neuroticism often notice small shifts in tone, risk, or tension before others do — a gift in creative work, 
+crisis response, or any role needing emotional awareness. Many great artists and innovators channel this sensitivity into passion and empathy. 
+Lower-Neuroticism individuals are calm and steady under pressure, grounding others during chaos — traits valuable in leadership, 
+operations, or medicine. High emotional awareness creates connection; low emotional reactivity creates stability.` 
 };
 
 // --- Utility helpers ---
@@ -34,7 +70,7 @@ function toZ(score: number, mean: number, sd: number) {
   return (score - mean) / sd;
 }
 function zToPercentile(z: number) {
-  // Abramowitz-Stegun style approx
+  // Abramowitz–Stegun normal CDF approximation
   const t = 1 / (1 + 0.2316419 * Math.abs(z));
   const d = 0.3989423 * Math.exp((-z * z) / 2);
   let p =
@@ -49,7 +85,7 @@ function zToPercentile(z: number) {
   return Math.round(p * 100);
 }
 
-// --- Small UI atoms ---
+// --- UI atoms ---
 function TrendChip({ z }: { z: number }) {
   const abs = Math.abs(z);
   const sign = z >= 0 ? '+' : '−';
@@ -73,51 +109,20 @@ function PercentileChip({ p }: { p:number }) {
   );
 }
 
-function TraitInfoBox({ traitKey }: { traitKey: keyof Big5 }) {
-  const info: Record<keyof Big5, { short: string; full: string }> = {
-    E: {
-      short: 'How outgoing & social you are.',
-      full: '\nHigher Extraversion often means energy from social settings and fast-paced environments. \nLower Extraversion means you recharge alone and think deeply before engaging.',
-    },
-    A: {
-      short: 'How compassionate & cooperative you are.',
-      full: '\nHigh Agreeableness shows warmth, empathy, and cooperation. \nLower Agreeableness brings a more direct, assertive, and independent style — useful when tough calls are needed.',
-    },
-    C: {
-      short: 'How organized & disciplined you are.',
-      full: '\nHigh Conscientiousness means reliability, planning, and persistence. \nLower Conscientiousness often signals flexibility, spontaneity, and comfort with uncertainty.',
-    },
-    N: {
-      short: 'How emotionally steady you are.',
-      full: '\nHigher Neuroticism reflects greater emotional sensitivity — you feel things deeply. \nLower Neuroticism reflects calm and emotional steadiness, even in stress.',
-    },
-    O: {
-      short: 'How curious & open-minded you are.',
-      full: '\nHigh Openness means creativity, imagination, and a hunger for new ideas. \nLower Openness often means groundedness, tradition, and comfort in what’s known.',
-    },
-  };
-
-  const copy = info[traitKey];
-
+function GraphCard({ children, title }: { children: React.ReactNode; title?: string }) {
   return (
-    <div className="absolute inset-0 hidden group-hover:flex items-center justify-center 
-                    bg-white/95 backdrop-blur-sm rounded-xl shadow-xl p-5 text-center 
-                    text-sm text-gray-700 transition-opacity duration-300">
-      <div>
-        <div className="font-semibold mb-1">{copy.short}</div>
-        <div className="text-xs leading-snug text-gray-600 whitespace-pre-line">{copy.full}</div>
-      </div>
+    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+      {title ? <div className="text-sm font-medium mb-2">{title}</div> : null}
+      {children}
     </div>
   );
 }
 
 function Bar({
-  label,
   value,
   popMean,
   highlight,
 }: {
-  label: string;
   value: number;
   popMean: number;
   highlight?: boolean;
@@ -126,11 +131,7 @@ function Bar({
   const meanPct = pctFrom1to5(popMean);
   return (
     <div className="space-y-1">
-      <div className="flex items-center justify-between text-sm">
-        <span className={highlight ? 'font-semibold' : ''}>{label}</span>
-        <span className="tabular-nums text-gray-600">{value.toFixed(2)}</span>
-      </div>
-      <div className="relative h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+      <div className="relative h-2 w-full bg-gray-100 rounded-full overflow-hidden">
         <div
           className={`h-full transition-all duration-500 ease-out ${highlight ? 'bg-gradient-to-r from-cyan-400 to-violet-500' : 'bg-gray-800'}`}
           style={{ width: `${pct}%` }}
@@ -141,17 +142,84 @@ function Bar({
           title="Population average"
         />
       </div>
-      <div className="flex items-center gap-2 text-xs text-gray-600">
+      <div className="flex items-center justify-between text-xs text-gray-600">
         <span className="inline-flex items-center gap-1">
           <span className="inline-block h-2 w-2 rounded-full bg-gray-800" />
-          Your score
+          Your score {value.toFixed(2)}
         </span>
         <span className="inline-flex items-center gap-1">
           <span className="inline-block h-2 w-0.5 bg-gray-400" />
-          Avg ({popMean.toFixed(2)})
+          Avg {popMean.toFixed(2)}
         </span>
       </div>
     </div>
+  );
+}
+
+// Overall visuals
+function MiniStackBars({ traits }: { traits: Big5 }) {
+  const keys: (keyof Big5)[] = ['O','C','E','A','N'];
+  return (
+    <div className="grid gap-3">
+      {keys.map(k => {
+        const v = traits[k] ?? 0;
+        const mean = POP_STATS[k].mean;
+        return (
+          <div key={k} className="flex items-center gap-3">
+            <div className="w-28 text-xs text-gray-600">{LABELS[k]} ({k})</div>
+            <div className="flex-1">
+              <Bar value={v} popMean={mean} />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function RadarChart({ traits }: { traits: Big5 }) {
+  // OCEAN around the circle
+  const order: (keyof Big5)[] = ['O','C','E','A','N'];
+  const cx = 120, cy = 120, rMax = 90; // viewBox 240x240
+  const angleFor = (i: number) => (-Math.PI / 2) + (i * 2 * Math.PI / order.length);
+  const point = (i: number, val: number) => {
+    const ratio = Math.max(0, Math.min(1, val / 5));
+    const r = ratio * rMax;
+    const a = angleFor(i);
+    return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+  };
+
+  const pts = order.map((k, i) => point(i, traits[k] ?? 0));
+  const pathD = pts.map((p, i) => `${i===0 ? 'M' : 'L'} ${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' ') + ' Z';
+
+  const rings = [1,2,3,4,5].map(n => ({
+    r: (n/5)*rMax,
+    label: n
+  }));
+
+  return (
+    <svg viewBox="0 0 240 240" className="w-full h-auto">
+      {/* rings */}
+      {rings.map((g, idx) => (
+        <circle key={idx} cx={cx} cy={cy} r={g.r} fill="none" stroke="#E5E7EB" strokeWidth={1}/>
+      ))}
+      {/* spokes */}
+      {order.map((_, i) => {
+        const [x, y] = [cx + rMax * Math.cos(angleFor(i)), cy + rMax * Math.sin(angleFor(i))];
+        return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="#E5E7EB" strokeWidth={1} />
+      })}
+      {/* polygon */}
+      <path d={pathD} fill="rgba(99,102,241,0.20)" stroke="rgba(99,102,241,0.8)" strokeWidth={2} />
+      {/* labels */}
+      {order.map((k, i) => {
+        const [x, y] = [cx + (rMax + 14) * Math.cos(angleFor(i)), cy + (rMax + 14) * Math.sin(angleFor(i))];
+        return (
+          <text key={k} x={x} y={y} textAnchor="middle" dominantBaseline="middle" className="fill-gray-700 text-[10px]">
+            {k}
+          </text>
+        );
+      })}
+    </svg>
   );
 }
 
@@ -190,15 +258,15 @@ export default function Big5ResultPage() {
     })();
   }, [user, loading, rid, router]);
 
-  // ---- IMPORTANT: all hooks below are UNCONDITIONAL ----
-
-  // Use safe defaults so hooks run even before data arrives
+  // ---- Unconditional hooks below ----
   const traits: Big5 = result?.traits ?? { E:0, A:0, C:0, N:0, O:0 };
 
+  // Build per-trait metrics in OCEAN order
   const metrics = useMemo(() => {
-    return (Object.keys(traits) as (keyof Big5)[]).map((k) => {
+    const order: (keyof Big5)[] = ['O','C','E','A','N'];
+    return order.map((k) => {
       const { mean, sd } = POP_STATS[k];
-      const val = traits[k];
+      const val = traits[k] ?? 0;
       const z = toZ(val, mean, sd);
       const p = zToPercentile(z);
       const delta = val - mean;
@@ -206,36 +274,40 @@ export default function Big5ResultPage() {
     });
   }, [traits]);
 
-  const sortedByAbs = useMemo(() => {
-    return [...metrics].sort((a, b) => Math.abs(b.z) - Math.abs(a.z));
-  }, [metrics]);
+  // Friendly intro (no border; report-like)
+  const intro =
+    "The Big Five is a well-researched framework used by psychologists for decades. It looks at five broad tendencies — Openness, Conscientiousness, Extraversion, Agreeableness, and Neuroticism — to describe how people typically think, feel, and work. These aren’t boxes, just patterns; they help you notice strengths and likely blind spots so you can make better choices about your environment and habits.";
 
-  const topSignal = sortedByAbs[0] ?? null;
+  // Empathetic per-trait interpretation
+  const TRAIT_PARAS: Record<keyof Big5, (v:number)=>string> = {
+    O: (v) =>
+      v >= 3.5
+        ? "You likely enjoy new ideas, variety, and creative problem-solving. Curious minds like yours often thrive when you can explore and connect dots."
+        : "You probably value clarity, traditions, and tried-and-true approaches. That steadiness can be a strength—especially where reliability and consistency matter.",
+    C: (v) =>
+      v >= 3.5
+        ? "You tend to plan ahead, follow through, and keep things organized. People who score like you often feel best with clear goals and systems that support them."
+        : "You may prefer flexibility and room to move. Spontaneity can spark momentum—short, simple plans and gentle structure often work better than rigid routines.",
+    E: (v) =>
+      v >= 3.5
+        ? "You likely gain energy from people and fast-moving environments. Collaboration, talking ideas out, and visible progress can light you up."
+        : "You may recharge solo and think deeply before jumping in. Calm spaces, focus time, and written communication can help you do your best work.",
+    A: (v) =>
+      v >= 3.5
+        ? "You probably lead with warmth and empathy. People like you build trust quickly and smooth tensions, which is powerful on teams and with clients."
+        : "You may be more direct and independent. That clarity helps in tough decisions—pair it with curiosity and you’ll navigate disagreements well.",
+    N: (v) =>
+      v >= 3.5
+        ? "You might feel emotions strongly and notice stress signals sooner. That sensitivity can be a strength—pair it with grounding routines and clear boundaries."
+        : "You tend to stay steady under pressure. Your calm presence can stabilize projects and people, especially when things get messy.",
+  };
 
-  const summary = useMemo(() => {
-    if (!topSignal) {
-      return 'Here’s a concise snapshot of your Big-5 pattern compared to the general population.';
-    }
-    const dir = topSignal.z >= 0 ? 'above' : 'below';
-    const abs = Math.abs(topSignal.z).toFixed(2);
-    const pct = topSignal.p;
-    return `Your strongest signal is ${topSignal.label}, at about ${abs}σ ${dir} average (${pct}th percentile). The rest of your profile rounds out a balanced picture — use these as tendencies, not boxes.`;
-  }, [topSignal]);
-
-  // Now render conditionally (after hooks are declared)
-  if (loading || busy) {
-    return <div className="max-w-3xl mx-auto py-10 px-4">Loading…</div>;
-  }
-  if (err) {
-    return <div className="max-w-3xl mx-auto py-10 px-4 text-red-600">{err}</div>;
-  }
-  if (!result) {
-    // Show nothing if fetch hasn’t populated yet (shouldn’t hit because of busy flag, but safe)
-    return null;
-  }
+  if (loading || busy) return <div className="max-w-3xl mx-auto py-10 px-4">Loading…</div>;
+  if (err) return <div className="max-w-3xl mx-auto py-10 px-4 text-red-600">{err}</div>;
+  if (!result) return null;
 
   return (
-    <div className="max-w-3xl mx-auto py-10 px-4 space-y-8">
+    <div className="max-w-3xl mx-auto py-10 px-4 space-y-10">
       <header className="space-y-2">
         <h1 className="text-2xl font-semibold">Your Big-5 Personality</h1>
         <p className="text-sm text-gray-600">
@@ -243,44 +315,76 @@ export default function Big5ResultPage() {
         </p>
       </header>
 
-      {/* Summary */}
-      <div className="rounded-2xl border p-5 bg-white">
-        <p className="text-gray-800 leading-relaxed">{summary}</p>
-        <p className="text-xs text-gray-500 mt-2">
-          Scores: 1–5 scale. Marker shows population mean. σ = standard deviations from average; percentiles are approximate based on normal distribution.
+      {/* Intro (no border) */}
+      <section className="space-y-2">
+        <p className="text-gray-800 leading-relaxed">{intro}</p>
+        <p className="text-xs text-gray-500">
+          Scores use a 1–5 scale. The thin marker on each bar shows a typical population average.
         </p>
-      </div>
+      </section>
 
-      {/* Trait display */}
-      <div className="grid gap-4">
-        {metrics.map((m) => (
-          <div key={m.key} className="group relative rounded-xl border p-4 bg-white hover:shadow-lg transition-all duration-300">
-            <Bar
-              label={`${m.label} (${m.key})`}
-              value={m.value}
-              popMean={m.mean}
-              highlight={m.key === topSignal?.key}
-            />
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-gray-700">
+      {/* Per-trait sections (OCEAN): title -> definition -> graph (bordered) -> interpretation line */}
+      {metrics.map((m) => (
+        <section key={m.key} className="space-y-3">
+          <h2 className="text-xl font-semibold">{m.label}</h2>
+
+          {/* trait definition */}
+          <p className="text-gray-800">
+            {TRAIT_DEFS[m.key]}
+          </p>
+
+          {/* graph card */}
+          <GraphCard title="Your result">
+            <div className="flex items-center justify-between text-sm mb-2">
+              <span className="text-gray-700">{m.label} ({m.key})</span>
+              <span className="tabular-nums text-gray-600">{m.value.toFixed(2)}</span>
+            </div>
+            <Bar value={m.value} popMean={m.mean} />
+          </GraphCard>
+
+          {/* interpretation */}
+          <div className="text-sm text-gray-800">
+            {TRAIT_PARAS[m.key](m.value)}
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-gray-700">
               <TrendChip z={m.z} />
               <PercentileChip p={m.p} />
-              <span className="text-gray-500">
-                mean {m.mean.toFixed(2)} • sd {m.sd.toFixed(2)}
+              <span className="text-gray-600">
+                Your score {m.value.toFixed(2)} • Avg {m.mean.toFixed(2)} • SD {m.sd.toFixed(2)} — you’re
+                {m.z >= 0 ? ' above ' : ' below '}
+                about {m.p}% of people.
               </span>
             </div>
-
-            {/* Hover overlay */}
-            <TraitInfoBox traitKey={m.key} />
           </div>
-        ))}
-      </div>
+        </section>
+      ))}
+
+      {/* Overall summary visuals (graphs inside light cards) */}
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold">Overall picture</h2>
+        <div className="grid md:grid-cols-2 gap-6">
+          <GraphCard title="All traits at a glance">
+            <MiniStackBars traits={traits} />
+          </GraphCard>
+          <GraphCard title="Profile radar">
+            <RadarChart traits={traits} />
+            <p className="text-xs text-gray-500 mt-2">
+              Each point shows your score (1–5). Closer to the edge = higher on that trait.
+            </p>
+          </GraphCard>
+        </div>
+      </section>
+
+      {/* Gentle wrap-up (no border) */}
+      <section>
+        <p className="text-gray-800 leading-relaxed">
+          No single trait defines you. Think of this as your starting map: lean into the parts that help you
+          do your best work, and build small habits to balance the rest. You can revisit the Big-5 anytime.
+        </p>
+      </section>
 
       {/* Footer */}
       <div className="flex justify-between">
         <a href="/app" className="btn btn-ghost">Back to dashboard</a>
-        <a href={`/app/results?rid=${encodeURIComponent(sp.get('rid') || '')}`} className="btn btn-primary">
-          See full report
-        </a>
       </div>
     </div>
   );
