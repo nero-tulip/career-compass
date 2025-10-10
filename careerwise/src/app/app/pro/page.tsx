@@ -74,7 +74,7 @@ export default function ProPage() {
             ))}
           </ul>
 
-          <div className="rounded-lg bg-[--surface] p-4 text-sm text-gray-700 shadow-sm ring-1 ring-black/5">
+          <div className="rounded-lg bg-white p-4 text-sm text-gray-700 shadow-sm ring-1 ring-black/5">
             <div className="font-medium mb-1">Why now?</div>
             <p>
               We’re continuously adding features and so this price is likely the
