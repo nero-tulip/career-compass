@@ -417,7 +417,7 @@ function ModuleCard(props: {
   } = props;
 
   return (
-    <div className="group relative rounded-2xl border p-4 bg-white flex flex-col justify-between transition-all hover:shadow-[var(--shadow-2)] hover:-translate-y-0.5">
+    <div className="group relative rounded-2xl p-4 bg-white flex flex-col justify-between transition-all shadow-sm ring-1 ring-black/5 hover:shadow-md hover:-translate-y-0.5">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
           <div className="h-9 w-9 grid place-items-center text-lg">{icon ?? '🧭'}</div>
@@ -469,7 +469,7 @@ function ModuleCard(props: {
           <button
             onClick={props.onSecondary}
             disabled={busy}
-            className="px-3 py-1.5 rounded-lg cursor-pointer text-sm border border-gray-300 text-gray-700 hover:bg-gray-50"
+            className="px-3 py-1.5 rounded-lg cursor-pointer text-sm ring-1 ring-gray-200 text-gray-700 hover:bg-gray-50"
           >
             {props.secondaryLabel}
           </button>
@@ -482,7 +482,7 @@ function ModuleCard(props: {
           className="pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full opacity-0 group-hover:opacity-100 transition
                      w-[min(92vw,28rem)]"
         >
-          <div className="rounded-xl border bg-white shadow-md p-3 text-xs text-gray-700">
+          <div className="rounded-xl bg-white shadow-md ring-1 ring-black/5 p-3 text-xs text-gray-700">
             {blurb}
           </div>
         </div>

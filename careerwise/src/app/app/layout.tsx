@@ -33,7 +33,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
                 <Link
                   href="/app/pro"
-                  className="inline-flex items-center px-3 py-1.5 rounded-lg bg-black text-white text-sm font-medium hover:opacity-90 transition"
+                  className="inline-flex items-center px-3 py-1.5 rounded-lg bg-purple-600 text-white border font-medium hover:opacity-90 transition"
                 >
                   Go PRO
                 </Link>
