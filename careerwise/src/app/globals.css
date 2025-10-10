@@ -237,3 +237,30 @@ html, body {
 .underline-accent-green {
   background: linear-gradient(transparent 75%, rgba(123, 255, 167, 0.35) 0);
 }
+
+@keyframes scroll-x {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-scroll-x {
+  display: flex;
+  animation: scroll-x 35s linear infinite;
+}
+
+@keyframes marquee-x {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); } /* move exactly one sequence width */
+}
+
+.marquee {
+  display: flex;
+  width: max-content;           /* shrink to content width */
+  animation: marquee-x 55s linear infinite;
+  will-change: transform;
+}
+
+/* Optional: pause on hover for readability */
+.marquee:hover {
+  animation-play-state: paused;
+}
