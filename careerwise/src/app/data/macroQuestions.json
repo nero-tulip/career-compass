@@ -1,99 +1,195 @@
 [
-    {
-      "id": "m1",
-      "text": "How important is earning a high income to you?",
-      "dimension": "income",
-      "scale": [
-        "I genuinely don’t care, as long as I’m happy.",
-        "Nice to have, but not a priority.",
-        "I want to live comfortably, not lavishly.",
-        "It’s pretty important to me long-term.",
-        "Making serious money is a major goal for me."
-      ]
-    },
-    {
-      "id": "m2",
-      "text": "Would you ever want to start or run your own business?",
-      "dimension": "entrepreneurialDrive",
-      "scale": [
-        "No way. I want stability and predictability.",
-        "Only if I had no other choice.",
-        "Maybe, if the timing and idea felt right.",
-        "I’d love to try it at some point.",
-        "Yes. That’s absolutely the dream."
-      ]
-    },
-    {
-      "id": "m3",
-      "text": "How important is job security to you?",
-      "dimension": "jobSecurity",
-      "scale": [
-        "I don’t care — I’ll figure it out as I go.",
-        "Very important, but I can tolerate mild risk.",
-        "It matters, but I also want purpose.",
-        "I’d trade some security for meaning or freedom.",
-        "It’s my top priority. I need to feel safe."
-      ]
-    },
-    {
-      "id": "m4",
-      "text": "Do you enjoy leading others?",
-      "dimension": "leadership",
-      "scale": [
-        "Absolutely not. I’d rather follow directions.",
-        "Only if I have to.",
-        "I'm okay stepping up occasionally.",
-        "I enjoy leading when the opportunity arises.",
-        "I thrive when I’m in charge."
-      ]
-    },
-    {
-      "id": "m5",
-      "text": "How important is professional status or prestige to you?",
-      "dimension": "prestige",
-      "scale": [
-        "I don’t care at all about titles or image.",
-        "It’s not a focus, but recognition feels nice.",
-        "I like the idea of being respected.",
-        "I want to feel accomplished and admired.",
-        "I’m absolutely chasing prestige — unapologetically."
-      ]
-    },
-    {
-      "id": "m6",
-      "text": "How much social interaction do you want in your work?",
-      "dimension": "socialInteraction",
-      "scale": [
-        "As little as possible. Let me work alone.",
-        "Minimal — just enough to get by.",
-        "Balanced. Some solo, some people time.",
-        "I like being around others regularly.",
-        "I need constant interaction to stay energized."
-      ]
-    },
-    {
-      "id": "m7",
-      "text": "How important is it for your work to create a meaningful impact?",
-      "dimension": "impact",
-      "scale": [
-        "I just want a job — not everything has to mean something.",
-        "If it helps people, cool. Not a must.",
-        "I’d like to contribute in small ways.",
-        "It’s important that my work improves something.",
-        "I need my work to feel deeply purposeful."
-      ]
-    },
-    {
-      "id": "m8",
-      "text": "How much control do you want over your daily schedule?",
-      "dimension": "flexibility",
-      "scale": [
-        "I’m fine with a strict 9-to-5.",
-        "Some routine keeps me grounded.",
-        "Balance would be ideal.",
-        "I’d prefer flexibility when possible.",
-        "I want full control over my time."
-      ]
-    }
-  ]
-  
+  { "id": "industry",
+    "text": "Which industries are you most interested in right now?",
+    "dimension": "industry",
+    "type": "chips",
+    "options": [
+      { "value": "tech", "label": "Technology / Software 💻" },
+      { "value": "finance", "label": "Finance / Banking 💰" },
+      { "value": "healthcare", "label": "Healthcare / Medicine 🏥" },
+      { "value": "engineering", "label": "Engineering 🛠️" },
+      { "value": "education", "label": "Education 🎓" },
+      { "value": "arts_entertainment", "label": "Arts / Entertainment 🎭" },
+      { "value": "entrepreneur", "label": "Entrepreneurship / Business 💼" },
+      { "value": "government", "label": "Government / Public Sector 🏛️" },
+      { "value": "nonprofit", "label": "Non-profit / Social Impact 🤝" },
+      { "value": "science", "label": "Science / Research 🔬" },
+      { "value": "media", "label": "Media / Communications 📰" },
+      { "value": "hr", "label": "Human Resources / Recruiting 👥" },
+      { "value": "design", "label": "Design 🎨" },
+      { "value": "writing", "label": "Writing / Content Creation ✍️" },
+      { "value": "consulting", "label": "Consulting 🧠" },
+      { "value": "real_estate", "label": "Real Estate 🏠" },
+      { "value": "retail", "label": "Retail 🛍️" },
+      { "value": "logistics", "label": "Logistics / Supply Chain 🚚" },
+      { "value": "project_mgmt", "label": "Project Management 📋" },
+      { "value": "customer_svc", "label": "Customer Service 🎧" },
+      { "value": "admin", "label": "Administrative / Office Support 🗂️" },
+      { "value": "construction", "label": "Construction / Skilled Trades 🧱" },
+      { "value": "environment", "label": "Environment / Sustainability 🌿" },
+      { "value": "sports", "label": "Sports / Fitness 🏅" },
+      { "value": "travel", "label": "Travel / Hospitality ✈️" },
+      { "value": "beauty", "label": "Beauty / Fashion 💄" },
+      { "value": "agriculture", "label": "Agriculture / Farming 🌾" },
+      { "value": "security", "label": "Security / Defense 🛡️" },
+      { "value": "hospitality", "label": "Hospitality / Food Service 🍽️" },
+      { "value": "law", "label": "Law / Legal Services ⚖️" },
+      { "value": "marketing", "label": "Marketing 📣" },
+      { "value": "sales", "label": "Sales 💸" },
+      { "value": "other", "label": "Other / Not sure yet 🤔" }
+    ],
+    "mapTo": "prefs.industry"
+  },
+
+  { "id": "work_env",
+    "text": "What type of work environment do you think would suit you best?",
+    "dimension": "workEnvironment",
+    "type": "select",
+    "options": [
+      { "value": "startup", "label": "Startup (fast-paced)" },
+      { "value": "corporate", "label": "Corporate (structured)" },
+      { "value": "nonprofit", "label": "Non-profit (mission-driven)" },
+      { "value": "academic", "label": "Academic (research-focused)" },
+      { "value": "creative", "label": "Creative (artistic)" },
+      { "value": "small_business", "label": "Small business (family-owned)" },
+      { "value": "remote", "label": "Remote (distributed)" },
+      { "value": "entrepreneur", "label": "Entrepreneur (self-employed)" },
+      { "value": "freelance", "label": "Freelance (self-employed)" },
+      { "value": "other", "label": "Other (not sure yet)" }
+    ],
+    "mapTo": "prefs.workEnvironment"
+  },
+
+  { "id": "m6",
+    "text": "How much social interaction do you want in your work?",
+    "dimension": "socialInteraction",
+    "type": "likert",
+    "scale": [
+      "As little as possible. Let me work alone.",
+      "Minimal — just enough to get by.",
+      "Balanced. Some solo, some people time.",
+      "I like being around others regularly.",
+      "I need constant interaction to stay energized."
+    ]
+  },
+
+  { "id": "m4",
+    "text": "Do you enjoy leading others?",
+    "dimension": "leadership",
+    "type": "likert",
+    "scale": [
+      "Absolutely not. I’d rather follow directions.",
+      "Only if I have to.",
+      "I'm okay stepping up occasionally.",
+      "I enjoy leading when the opportunity arises.",
+      "I thrive when I’m in charge."
+    ]
+  },
+
+  { "id": "m1",
+    "text": "How important is earning a high income to you?",
+    "dimension": "income",
+    "type": "likert",
+    "scale": [
+      "I genuinely don’t care, as long as I’m happy.",
+      "Nice to have, but not a priority.",
+      "I want to live comfortably, not lavishly.",
+      "It’s pretty important to me long-term.",
+      "Making serious money is a major goal for me."
+    ]
+  },
+
+  { "id": "m3",
+    "text": "How important is job security to you?",
+    "dimension": "jobSecurity",
+    "type": "likert",
+    "scale": [
+      "I don’t care — I’ll figure it out as I go.",
+      "Very important, but I can tolerate mild risk.",
+      "It matters, but I also want purpose.",
+      "I’d trade some security for meaning or freedom.",
+      "It’s my top priority. I need to feel safe."
+    ]
+  },
+
+  { "id": "m7",
+    "text": "How important is it for your work to create a meaningful impact?",
+    "dimension": "impact",
+    "type": "likert",
+    "scale": [
+      "I just want a job — not everything has to mean something.",
+      "If it helps people, cool. Not a must.",
+      "I’d like to contribute in small ways.",
+      "It’s important that my work improves something.",
+      "I need my work to feel deeply purposeful."
+    ]
+  },
+
+  { "id": "m8",
+    "text": "How much control do you want over your daily schedule?",
+    "dimension": "flexibility",
+    "type": "likert",
+    "scale": [
+      "I’m fine with a strict 9-to-5.",
+      "Some routine keeps me grounded.",
+      "Balance would be ideal.",
+      "I’d prefer flexibility when possible.",
+      "I want full control over my time."
+    ]
+  },
+
+  { "id": "travel_appetite",
+    "text": "How do you feel about travel for work?",
+    "dimension": "travel",
+    "type": "select",
+    "options": [
+      { "value": "love_frequent", "label": "I'd love a job that allowed me to travel regularly." },
+      { "value": "occasional", "label": "Occasional travel is fine. Like a few times a year." },
+      { "value": "anchored", "label": "I'd much prefer a role that keeps me anchored in one place." }
+    ],
+    "mapTo": "prefs.travel"
+  },
+
+  { "id": "where_to_work",
+    "text": "Where do you want to work over the next few years?",
+    "dimension": "locationIntent",
+    "type": "select",
+    "options": [
+      { "value": "home_country", "label": "In my current country" },
+      { "value": "open_relocate", "label": "Open to relocate if the role fits" },
+      { "value": "specific", "label": "Specific country/countries" }, 
+      { "value": "remote", "label": "Remote / Work from anywhere" }
+    ],
+    "mapTo": "prefs.workLocationIntent"
+  },
+
+  { "id": "preferred_countries",
+    "text": "If specific, which country/countries?",
+    "dimension": "preferredCountries",
+    "type": "country-multi",
+    "conditional": { "dependsOn": "where_to_work", "showIf": ["specific"] },
+    "mapTo": "prefs.preferredCountries"
+  },
+
+  { "id": "m2",
+    "text": "Would you ever want to start or run your own business?",
+    "dimension": "entrepreneurialDrive",
+    "scale": [
+      "No way. I want stability and predictability.",
+      "Only if I had no other choice.",
+      "Maybe, if the timing and idea felt right.",
+      "I’d love to try it at some point.",
+      "Yes. That’s absolutely the dream."
+    ]
+  },
+
+  { "id": "dream_job",
+    "text": "Do you have a dream job? If so, why does it appeal to you?",
+    "dimension": "dreamJob",
+    "type": "textarea",
+    "placeholder": "Optional—share anything that excites you.",
+    "validation": { "maxLength": 400 },
+    "nlp": { "extractKeywords": true },
+    "mapTo": "prefs.dreamJob"
+  }
+]

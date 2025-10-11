@@ -1,9 +1,9 @@
 {
   "meta": {
-    "version": 2,
+    "version": 3,
     "title": "Tell us about you",
     "layout": "single-page",
-    "description": "A quick set of questions to personalize your results. Only a few are required."
+    "description": "A quick set of basics so we can personalize your experience."
   },
   "questions": [
     {
@@ -43,8 +43,9 @@
       "required": true,
       "options": [
         { "value": "high_school",    "label": "High school student" },
+        { "value": "finished_high_school", "label": "Finished High School" },
         { "value": "university",     "label": "College / University student" },
-        { "value": "bootcamp",       "label": "Bootcamp / Self-study" },
+        { "value": "graduated",      "label": "Graduated / Completed degree" },
         { "value": "work_part_time", "label": "Working part-time" },
         { "value": "work_full_time", "label": "Working full-time" },
         { "value": "unemployed",     "label": "Unemployed / Looking" }
@@ -52,92 +53,6 @@
       "ui": { "maxSelect": 4 },
       "mapTo": "profile.status",
       "weight": 0.0
-    },
-    {
-      "id": "creative_analytical",
-      "label": "Would you describe yourself as more creative or analytical?",
-      "type": "slider",
-      "required": true,
-      "min": 0,
-      "max": 100,
-      "default": 50,
-      "leftLabel": "Creative",
-      "rightLabel": "Analytical",
-      "mapTo": "prefs.creativeAnalytical",
-      "weight": 0.0
-    },
-    {
-      "id": "team_style",
-      "label": "Do you prefer working independently or in teams?",
-      "type": "slider",
-      "required": false,
-      "min": 0,
-      "max": 100,
-      "default": 50,
-      "leftLabel": "Independent",
-      "rightLabel": "Team-oriented",
-      "mapTo": "prefs.independentTeam",
-      "weight": 0.0
-    },
-    {
-      "id": "structure_style",
-      "label": "Do you prefer structure or flexibility in your work?",
-      "type": "slider",
-      "required": false,
-      "min": 0,
-      "max": 100,
-      "default": 50,
-      "leftLabel": "Structure",
-      "rightLabel": "Flexibility",
-      "mapTo": "prefs.structureFlex",
-      "weight": 0.0
-    },
-    {
-      "id": "travel_appetite",
-      "label": "How do you feel about travel for work?",
-      "type": "select",
-      "required": true,
-      "options": [
-        { "value": "love_frequent", "label": "Love frequent travel" },
-        { "value": "occasional",    "label": "Occasional is fine" },
-        { "value": "anchored",      "label": "Prefer an anchored role" }
-      ],
-      "mapTo": "prefs.travel",
-      "weight": 0.0
-    },
-    {
-      "id": "where_to_work",
-      "label": "Where do you want to work over the next few years?",
-      "type": "select",
-      "required": false,
-      "options": [
-        { "value": "home_country", "label": "In my current country" },
-        { "value": "open_relocate","label": "Open to relocate if the role fits" },
-        { "value": "specific",     "label": "Specific country/countries" }
-      ],
-      "mapTo": "prefs.workLocationIntent",
-      "weight": 0.0
-    },
-    {
-      "id": "preferred_countries",
-      "label": "If specific, which country/countries?",
-      "type": "country-multi",
-      "required": false,
-      "placeholder": "Add one or more countries",
-      "mapTo": "prefs.preferredCountries",
-      "weight": 0.0,
-      "conditional": { "dependsOn": "where_to_work", "showIf": ["specific"] }
-    },
-    {
-      "id": "dream_job",
-      "label": "Do you have a dream job? If so, why does it appeal to you?",
-      "type": "textarea",
-      "required": false,
-      "placeholder": "Optional—share anything that excites you.",
-      "validation": { "maxLength": 400 },
-      "mapTo": "prefs.dreamJob",
-      "weight": 0.0,
-      "nlp": { "extractKeywords": true }
     }
   ]
 }
