@@ -37,21 +37,70 @@
       "weight": 0.0
     },
     {
+      "id": "education_level",
+      "label": "What’s your highest level of education?",
+      "type": "select",
+      "required": false,
+      "options": [
+        { "value": "secondary", "label": "High school or equivalent" },
+        { "value": "some_college", "label": "Some college/undergrad" },
+        { "value": "bachelors", "label": "Bachelor’s" },
+        { "value": "masters", "label": "Master’s" },
+        { "value": "doctorate", "label": "Doctorate" },
+        { "value": "other", "label": "Other / trade / bootcamp" }
+      ],
+      "mapTo": "profile.educationLevel",
+      "weight": 0.0
+    },
+    {
       "id": "status",
       "label": "Which of these describe your current situation? (select all that apply)",
       "type": "chips",
       "required": true,
       "options": [
-        { "value": "high_school",    "label": "High school student" },
-        { "value": "finished_high_school", "label": "Finished High School" },
-        { "value": "university",     "label": "College / University student" },
-        { "value": "graduated",      "label": "Graduated / Completed degree" },
+        { "value": "high_school", "label": "High school student" },
+        { "value": "university", "label": "College / University student" },
         { "value": "work_part_time", "label": "Working part-time" },
         { "value": "work_full_time", "label": "Working full-time" },
-        { "value": "unemployed",     "label": "Unemployed / Looking" }
+        { "value": "self_employed", "label": "Self-employed / Freelancer" },
+        { "value": "unemployed", "label": "Unemployed / Looking" }
       ],
       "ui": { "maxSelect": 4 },
       "mapTo": "profile.status",
+      "weight": 0.0
+    },
+    {
+      "id": "stage_of_career",
+      "label": "What stage are you at in your career?",
+      "type": "select",
+      "required": true,
+      "options": [
+        { "value": "choosing_college", "label": "Ready to choose a college/uni course" },
+        { "value": "choosing_career_with_degree", "label": "What can I do with my degree?" },
+        { "value": "career_change", "label": "Want to change careers" },
+        { "value": "career_exploration", "label": "Just exploring career options" },
+        { "value": "career_growth", "label": "Want to grow in my current career" },
+        { "value": "entrepreneurship", "label": "Interested in entrepreneurship" }
+      ],
+      "mapTo": "profile.stageOfCareer",
+      "weight": 0.0
+    },
+    {
+      "id": "platform_goals",
+      "label": "What are you hoping to get from CareerCompass? (choose up to 3)",
+      "type": "chips",
+      "required": true,
+      "options": [
+        { "value": "clarity_direction", "label": "Clarity on career direction" },
+        { "value": "selfawareness", "label": "Increased self-awareness" },
+        { "value": "career_matches", "label": "Find matching careers" },
+        { "value": "action_plan", "label": "A concrete action plan" },
+        { "value": "mentor_support", "label": "Mentor guidance" },
+        { "value": "explore_fields", "label": "Explore new fields" },
+        { "value": "skills_development", "label": "Skills development" }
+      ],
+      "ui": { "maxSelect": 3 },
+      "mapTo": "prefs.goals",
       "weight": 0.0
     }
   ]

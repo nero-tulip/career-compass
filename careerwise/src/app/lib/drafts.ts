@@ -64,6 +64,54 @@ export async function ensureDraft(user: User, rid?: string) {
  * @param status  optional coarse status to set (e.g., "riasec_in_progress", "riasec_done")
  * @param extra   optional extra fields to merge (e.g., { progress: { section: "riasec", page: 3 } })
  */
+/** Remove any undefined values recursively so Firestore never sees them */
+function stripUndefined<T>(input: T): T {
+  if (Array.isArray(input)) {
+    return input
+      .map(stripUndefined)
+      .filter((v) => v !== undefined) as unknown as T;
+  }
+  if (input && typeof input === "object") {
+    const out: any = {};
+    for (const [k, v] of Object.entries(input as any)) {
+      const cleaned = stripUndefined(v as any);
+      if (cleaned !== undefined) out[k] = cleaned;
+    }
+    return out;
+  }
+  return (input === undefined ? (undefined as any) : input) as T;
+}
+
+/** Conservative “answered” counter that works for arrays or objects */
+function countAnswered(data: unknown): number {
+  if (Array.isArray(data)) {
+    // Handles mixed answer shapes: {score}, {value: string}, {value: string[]}
+    return data.filter((x) => {
+      if (!x || typeof x !== "object") return false;
+      const o = x as any;
+      if (typeof o.score === "number") return true;
+      if (typeof o.value === "string") return o.value.trim().length > 0;
+      if (Array.isArray(o.value)) return o.value.length > 0;
+      return false;
+    }).length;
+  }
+  if (data && typeof data === "object") {
+    // If you ever send an object map, count non-empty values
+    return Object.values(data).filter((v) => {
+      if (v === null || v === undefined) return false;
+      if (typeof v === "string") return v.trim().length > 0;
+      if (Array.isArray(v)) return v.length > 0;
+      if (typeof v === "object") return Object.keys(v as any).length > 0;
+      return true;
+    }).length;
+  }
+  return 0;
+}
+
+/**
+ * Save a quiz section to the user's draft.
+ * Ensures no `undefined` goes to Firestore and `answered` is always a number.
+ */
 export async function saveSection(
   user: User,
   rid: string,
@@ -75,28 +123,28 @@ export async function saveSection(
   const ref = doc(db, "users", user.uid, "drafts", rid);
 
   const now = serverTimestamp();
+  const answered = countAnswered(data); // ← always a number
 
   const payload: Record<string, unknown> = {
     [section]: data,
     updatedAt: now,
+    ...(status ? { status } : {}),
+    ...(extra || {}),
+    [`sections.${section}`]: {
+      status: status?.includes("done")
+        ? "done"
+        : status?.includes("progress")
+        ? "in_progress"
+        : "in_progress",
+      answered,     // ← never undefined now
+      updatedAt: now,
+    },
   };
 
-  // Legacy coarse status (still written so nothing breaks)
-  if (status) payload.status = status;
-  if (extra) Object.assign(payload, extra);
+  // strip any undefined nested values before send
+  const cleaned = stripUndefined(payload);
 
-  // New per-section checklist map
-  payload[`sections.${section}`] = {
-    status: status?.includes("done")
-      ? "done"
-      : status?.includes("progress")
-      ? "in_progress"
-      : "in_progress",
-    answered: Array.isArray(data) ? data.length : undefined,
-    updatedAt: now,
-  };
-
-  await updateDoc(ref, payload);
+  await updateDoc(ref, cleaned);
 }
 
 /**
