@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { useAuth } from "@/app/providers/AuthProvider";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 const FEATURES = [
@@ -37,6 +37,46 @@ export default function ProPage() {
   const router = useRouter();
   const sp = useSearchParams();
   const from = sp.get("from") || "";
+
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const startCheckout = async () => {
+    try {
+      setBusy(true);
+      setErr(null);
+
+      if (!user) {
+        router.replace("/login?next=/app/pro");
+        return;
+      }
+
+      const token = await user.getIdToken();
+
+      const res = await fetch("/api/stripe/create-checkout-session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        // body: JSON.stringify({ plan: 'lifetime' }) // if you add tiers later
+      });
+
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt || "Failed to create checkout session");
+      }
+
+      const data: { url?: string; error?: string } = await res.json();
+      if (!data.url) throw new Error(data.error || "No checkout URL returned");
+
+      window.location.href = data.url; // redirect to Stripe
+    } catch (e: any) {
+      console.error("[pro] checkout error", e);
+      setErr(e?.message || "Something went wrong starting checkout.");
+      setBusy(false);
+    }
+  };
 
   useEffect(() => {
     // (Optional) basic analytics stub
@@ -74,7 +114,7 @@ export default function ProPage() {
             ))}
           </ul>
 
-          <div className="rounded-lg bg-white p-4 text-sm text-gray-700 shadow-sm ring-1 ring-black/5">
+          <div className="rounded-lg p-4 text-sm text-gray-700 shadow-sm ring-1 ring-black/5">
             <div className="font-medium mb-1">Why now?</div>
             <p>
               We’re continuously adding features and so this price is likely the
@@ -104,17 +144,12 @@ export default function ProPage() {
               </div>
             </div>
 
-            <Link
-              href={`/app/pro/checkout${
-                from ? `?from=${encodeURIComponent(from)}` : ""
-              }`}
+            <button
               className="mt-6 block w-full text-center btn btn-primary"
-              onClick={() => {
-                // window.posthog?.capture('click_pro_cta', { from });
-              }}
+              onClick={startCheckout}
             >
               Join CareerCompass Pro - $39
-            </Link>
+            </button>
 
             {!user ? (
               <p className="text-xs text-gray-600 mt-3 text-center">
