@@ -30,10 +30,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 >
                   Dashboard
                 </Link>
-
+                <Link href="/app/account"
+                className="inline-flex items-center px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-100 transition">
+                  Account
+                </Link>
                 <Link
                   href="/app/pro"
-                  className="inline-flex items-center px-3 py-1.5 rounded-lg bg-purple-600 text-white border font-medium hover:opacity-90 transition"
+                  className="inline-flex items-center px-3 py-1.5 rounded-lg border bg-purple-600 text-sm font-medium text-white hover:opacity-90 transition"
                 >
                   Go PRO
                 </Link>
