@@ -125,7 +125,6 @@ export default function RIASECPage() {
       return;
     }
 
-    // FINAL: return to dashboard instead of computing results immediately
     router.push(`/app/results/riasec?rid=${rid}`);
   };
 
