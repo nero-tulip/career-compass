@@ -1,0 +1,79 @@
+// Shared types for the unified results pipeline
+
+export type LabeledValue<T = string | number | boolean> = {
+  /** The raw value we store (id / code / number / boolean) */
+  value: T;
+  /** Human-readable label shown to the user (what they clicked or how we describe it) */
+  label: string;
+  /** Optional “scale context” that explains the meaning of a numeric choice */
+  scaleContext?: {
+    /** e.g. "How important is earning a high income?" */
+    prompt: string;
+    /** e.g. ["don't care", "nice to have", ..., "major goal"] */
+    scale: string[];
+    /** 1-based index into the scale OR numeric 1..5 */
+    choiceIndex?: number;
+  };
+};
+
+export type IntakeSummary = {
+  name?: string;
+  ageBand?: number; // slider (13..80)
+  country?: LabeledValue<string>; // country code + label
+  educationLevel?: LabeledValue<string>;
+  status?: LabeledValue<string>[]; // chips, multi
+  stageOfCareer?: LabeledValue<string>;
+  goals?: LabeledValue<string>[]; // chips, multi
+  workEnvironment?: LabeledValue<string>;
+  travelAppetite?: LabeledValue<string>;
+  workLocationIntent?: LabeledValue<string>;
+  preferredCountries?: LabeledValue<string>[]; // raw strings
+  interestedIndustries?: LabeledValue<string>[]; // chips, multi
+};
+
+export type MacroLikert = {
+  id: string;
+  prompt: string;
+  score: number; // 1..5
+  choiceLabel: string; // resolved from scale
+  scale: string[];
+};
+
+export type MacroSelect = {
+  id: string;
+  prompt: string;
+  value: string;
+  label: string;
+};
+
+export type MacroChips = {
+  id: string;
+  prompt: string;
+  values: string[];
+  labels: string[];
+};
+
+export type MacroTextarea = {
+  id: string;
+  prompt: string;
+  text: string;
+};
+
+export type MacroSummary = {
+  // Likert set (present if configured in JSON)
+  likert: Record<string, MacroLikert>;
+  // Non-likert
+  selects: Record<string, MacroSelect>;
+  chips: Record<string, MacroChips>;
+  textareas: Record<string, MacroTextarea>;
+};
+
+export type RiasecProfile = { R: number; I: number; A: number; S: number; E: number; C: number };
+export type Big5Profile = { O: number; C: number; E: number; A: number; N: number };
+
+export type UserSignals = {
+  intake?: IntakeSummary;
+  macro?: MacroSummary;
+  riasec?: RiasecProfile;
+  big5?: Big5Profile;
+};
