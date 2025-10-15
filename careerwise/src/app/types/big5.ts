@@ -18,7 +18,7 @@ export type Big5Answer = {
 export type Big5Scores = {
   // 20–100 raw sum per trait (each trait has 20 items scored 1..5 with reverse where needed)
   raw: Record<Big5Trait, number>;
-  // Mean per trait (1..5)
+  // Mean per trait (1..5)s
   mean: Record<Big5Trait, number>;
   // 0..100 scale normalized from raw (20..100 → 0..100)
   pct: Record<Big5Trait, number>;
