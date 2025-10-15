@@ -1,58 +1,74 @@
 // src/app/app/report/riasec/page.tsx
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { loadRiasecSummary } from "@/app/lib/results/loaders/map-riasec";
-import type { RIASECResult } from "@/app/lib/results/loaders/map-riasec";
-import type { RIASECProfile } from "@/app/lib/results/types";
+import type { RIASECSummary, RIASECKey } from "@/app/lib/results/loaders/map-riasec";
 
-type RIASECKey = keyof RIASECProfile; // 'R' | 'I' | 'A' | 'S' | 'E' | 'C'
-
+// Core RIASEC labels and color codes
 const LABELS: Record<RIASECKey, string> = {
-  R: "Realistic (R)",
-  I: "Investigative (I)",
-  A: "Artistic (A)",
-  S: "Social (S)",
-  E: "Enterprising (E)",
-  C: "Conventional (C)",
+  R: "Realistic",
+  I: "Investigative",
+  A: "Artistic",
+  S: "Social",
+  E: "Enterprising",
+  C: "Conventional",
 };
 
-/** Quick fade-in */
+const TRAIT_COLORS: Record<RIASECKey, string> = {
+  R: "bg-amber-500",
+  I: "bg-sky-500",
+  A: "bg-violet-500",
+  S: "bg-emerald-500",
+  E: "bg-rose-500",
+  C: "bg-indigo-500",
+};
+
+const TRAIT_DESC: Record<RIASECKey, string> = {
+  R: "Hands-on, practical, and tactile. You enjoy working with tools, materials, or physical results.",
+  I: "Curious, analytical, and systems-minded. You like solving problems and understanding how things work.",
+  A: "Creative, expressive, and original. You value design, writing, and imagination.",
+  S: "Supportive and collaborative. You enjoy helping others learn and grow.",
+  E: "Dynamic and opportunity-seeking. You like leading, persuading, and taking initiative.",
+  C: "Organized, structured, and detail-oriented. You like making systems run efficiently.",
+};
+
+// Smooth fade-in
 function useReveal() {
-  const [v, setV] = useState(false);
+  const [shown, setShown] = useState(false);
   useEffect(() => {
-    const t = setTimeout(() => setV(true), 20);
+    const t = setTimeout(() => setShown(true), 20);
     return () => clearTimeout(t);
   }, []);
-  return v ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3";
+  return shown ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3";
 }
 
-/** Bar for each dimension */
-function RIASECBar({
+function TraitBar({
   label,
   value,
+  color,
   highlight,
 }: {
   label: string;
-  value: number;
+  value: number; // 1–5
+  color: string;
   highlight?: boolean;
 }) {
-  // assuming 60 is your current max after aggregation
-  const pct = Math.min(100, (value / 60) * 100);
+  const pct = Math.min(100, (value / 5) * 100);
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-sm">
         <span className={highlight ? "font-semibold" : ""}>{label}</span>
-        <span className="tabular-nums text-gray-600">{value.toFixed(0)}</span>
+        <span className="tabular-nums text-gray-600">{value.toFixed(2)}</span>
       </div>
-      <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+      <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
         <div
-          className={`h-full ${
+          className={`h-full transition-all duration-500 ease-out ${
             highlight
               ? "bg-gradient-to-r from-cyan-400 to-violet-500"
-              : "bg-gray-700"
+              : color
           }`}
           style={{ width: `${pct}%` }}
         />
@@ -61,15 +77,15 @@ function RIASECBar({
   );
 }
 
-export default function RiasecResultsPage() {
+export default function RiasecReportPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const sp = useSearchParams();
   const rid = sp.get("rid") ?? "";
 
-  const [data, setData] = useState<RIASECResult | null>(null);
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<RIASECSummary | null>(null);
   const reveal = useReveal();
 
   useEffect(() => {
@@ -87,34 +103,12 @@ export default function RiasecResultsPage() {
     })();
   }, [user, rid, loading]);
 
-  /** --------- IMPORTANT: Hooks must be unconditional ---------- */
-  // Safe fallbacks so hooks (useMemo below) run on every render.
-  const safeTopKeys: RIASECKey[] = (data?.top3 ?? []).map((t) => t.key as RIASECKey);
+  // Always safe hooks first
+  const scores = data?.scores ?? [];
+  const topKeys = data?.top3 ?? ([] as RIASECKey[]);
+  const topString = useMemo(() => topKeys.join(" - "), [topKeys]);
 
-
-  // TODO! Replace with real data-driven clusters
-  // Map top RIASEC type to some example industries
-  const matchingIndustries = useMemo(() => {
-    const first = safeTopKeys[0];
-    switch (first) {
-      case "A":
-        return ["Arts & Media", "Design", "Writing"];
-      case "I":
-        return ["Science", "Research", "Engineering"];
-      case "S":
-        return ["Education", "Counselling", "Healthcare"];
-      case "E":
-        return ["Entrepreneurship", "Sales", "Management"];
-      case "R":
-        return ["Trades", "Mechanics", "Outdoors"];
-      case "C":
-        return ["Finance", "Administration", "Operations"];
-      default:
-        return ["General exploration"];
-    }
-  }, [safeTopKeys]);
-
-  // Early returns (AFTER all hooks above)
+  // UI states
   if (loading || busy)
     return (
       <div className="max-w-3xl mx-auto py-12 px-4 text-sm text-gray-600">
@@ -129,56 +123,56 @@ export default function RiasecResultsPage() {
 
   if (!data) return null;
 
-  const { scores, top3 } = data;
-  const topKeys = top3.map((t) => t.key);
-  const topString = top3.map((t) => t.key).join(" - ");
-
   return (
     <div
-      className={`max-w-3xl mx-auto px-4 py-12 space-y-8 transition-all ${reveal}`}
+      className={`max-w-3xl mx-auto px-4 py-12 space-y-10 transition-all ${reveal}`}
     >
-      <header className="text-center space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">
-          Your RIASEC Profile
-        </h1>
+      <header className="space-y-2 text-center">
+        <h1 className="text-3xl font-semibold">Your RIASEC Profile</h1>
         <p className="text-gray-600">
-          Your pattern of interests shows where you feel most energized.
+          A snapshot of where your interests and motivation tend to peak.
         </p>
       </header>
 
+      {/* Overview */}
       <section className="rounded-2xl border p-6 bg-white shadow-sm">
-        <h2 className="text-xl font-semibold mb-3">Overview</h2>
+        <h2 className="text-xl font-semibold mb-2">Overview</h2>
         <p className="text-sm text-gray-700">
-          Your top areas are <strong>{topString}</strong>. These represent the
-          core themes in how you approach work, learning, and creativity.
+          Your top areas are <strong>{topString}</strong>. These patterns
+          reflect the kinds of work and environments that naturally energize
+          you.
         </p>
       </section>
 
-      <section className="rounded-2xl border p-6 bg-white shadow-sm space-y-3">
-        <h2 className="text-xl font-semibold">Scores</h2>
-        <div className="grid grid-cols-1 gap-3">
-          {scores.map((s) => (
-            <RIASECBar
-              key={s.key}
+      {/* Per-trait summary */}
+      <section className="space-y-5">
+        {scores.map((s) => (
+          <div key={s.key} className="space-y-2">
+            <h3 className="text-lg font-semibold text-gray-800">
+              {LABELS[s.key]} ({s.key})
+            </h3>
+            <p className="text-sm text-gray-700">{TRAIT_DESC[s.key]}</p>
+            <TraitBar
               label={LABELS[s.key]}
-              value={s.value}
+              value={s.avg}
+              color={TRAIT_COLORS[s.key]}
               highlight={topKeys.includes(s.key)}
             />
-          ))}
-        </div>
+          </div>
+        ))}
       </section>
 
+      {/* Top-3 summary */}
       <section className="rounded-2xl border p-6 bg-white shadow-sm">
-        <h2 className="text-xl font-semibold mb-3">Best-fit Clusters</h2>
-        <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1">
-          {matchingIndustries.map((ind) => (
-            <li key={ind}>{ind}</li>
+        <h2 className="text-xl font-semibold mb-3">Top Interests</h2>
+        <ul className="grid sm:grid-cols-3 gap-3 text-sm text-gray-700">
+          {topKeys.map((k) => (
+            <li key={k} className="rounded-lg border p-3 bg-[--surface]">
+              <div className="font-medium mb-1">{LABELS[k]}</div>
+              <div className="text-gray-600">{TRAIT_DESC[k]}</div>
+            </li>
           ))}
         </ul>
-        <p className="text-xs text-gray-500 mt-2">
-          (These will later be replaced by LLM-driven, data-grounded
-          recommendations.)
-        </p>
       </section>
 
       <div className="text-center">

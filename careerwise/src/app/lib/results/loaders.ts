@@ -4,7 +4,7 @@
  */
 import type { User } from "firebase/auth";
 import { loadSection } from "@/app/lib/drafts";
-import type { Big5Profile, RiasecProfile, IntakeSummary, MacroSummary } from "./types";
+import type { Big5Profile, RIASECProfile, IntakeSummary, MacroSummary } from "./types";
 import { mapIntake } from "./map-intake";
 import { mapMacro } from "./map-macro";
 
@@ -18,11 +18,11 @@ export async function loadMacroSummary(user: User, rid: string): Promise<MacroSu
   return mapMacro(raw);
 }
 
-export async function loadRiasecProfile(user: User, rid: string): Promise<RiasecProfile | undefined> {
+export async function loadRiasecProfile(user: User, rid: string): Promise<RIASECProfile | undefined> {
   const raw = await loadSection(user, rid, "riasec");
   // Raw is usually an array of {questionId, score} OR a computed profile {R,I,A,S,E,C}
   if (raw && typeof raw === "object" && "R" in raw) {
-    return raw as RiasecProfile;
+    return raw as RIASECProfile;
   }
   // fallback: compute averages if needed (optional)
   return undefined;
