@@ -1,6 +1,6 @@
 // src/app/api/quiz/section/route.ts
 import { NextResponse } from "next/server";
-import { getAuth } from "firebase-admin/auth";
+import { adminAuth } from "@/app/lib/firebaseAdmin";
 import { adminDb } from "@/app/lib/firebaseAdmin";
 
 export const runtime = "nodejs";
@@ -25,7 +25,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
     }
     const idToken = authz.slice("Bearer ".length).trim();
-    const decoded = await getAuth().verifyIdToken(idToken);
+    const decoded = await adminAuth().verifyIdToken(idToken);
     const uid = decoded.uid;
 
     // ---- Load draft

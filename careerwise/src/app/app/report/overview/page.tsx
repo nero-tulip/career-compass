@@ -209,7 +209,7 @@ export default function OverviewResultsPage() {
       {/* Navigation */}
       <div className="text-center">
         <button
-          onClick={() => router.push(`/app/results/riasec?rid=${rid}`)}
+          onClick={() => router.push(`/app/report/riasec?rid=${rid}`)}
           className="btn btn-primary"
         >
           Next: RIASEC Profile →

@@ -68,12 +68,12 @@ export type MacroSummary = {
   textareas: Record<string, MacroTextarea>;
 };
 
-export type RiasecProfile = { R: number; I: number; A: number; S: number; E: number; C: number };
+export type RIASECProfile = { R: number; I: number; A: number; S: number; E: number; C: number };
 export type Big5Profile = { O: number; C: number; E: number; A: number; N: number };
 
 export type UserSignals = {
   intake?: IntakeSummary;
   macro?: MacroSummary;
-  riasec?: RiasecProfile;
+  riasec?: RIASECProfile;
   big5?: Big5Profile;
 };
