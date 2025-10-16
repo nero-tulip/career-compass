@@ -86,7 +86,7 @@ export default function WorkValuesPage() {
           ← Back: Big-5
         </button>
         <button
-          onClick={() => router.push(`/app/report/team?rid=${rid}`)}
+          onClick={() => router.push(`/app/report/team-role?rid=${rid}`)}
           className="btn btn-primary"
         >
           Next: Team Role & Collaboration →
