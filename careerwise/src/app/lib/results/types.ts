@@ -77,3 +77,26 @@ export type UserSignals = {
   riasec?: RIASECProfile;
   big5?: Big5Profile;
 };
+
+
+export type MotivatorKey =
+  | "mastery"         // growth, learning, craftsmanship
+  | "impact"          // helping people / meaningful outcomes
+  | "autonomy"        // independence, ownership, flexibility
+  | "stability"       // security, predictability
+  | "recognition"     // status, influence, visibility
+  | "creativity"      // originality, self-expression
+  | "service"         // care, mentorship, community
+  | "adventure"       // novelty, challenge, variety
+  | "structure"       // order, systems, process
+
+export type Motivator = {
+  key: MotivatorKey;
+  label: string;
+  rationale: string;           // short 1–2 sentence “why this fits you”
+  sources: Array<{
+    from: "intake" | "macro" | "riasec" | "big5";
+    signal: string;            // e.g. "income_priority: High" or "RIASEC: A high"
+  }>;
+  confidence: "low" | "medium" | "high";
+};

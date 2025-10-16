@@ -157,10 +157,10 @@ export default function Big5ResultsPage() {
 
       <div className="text-center">
         <button
-          onClick={() => router.push(`/app/report/overview?rid=${rid}`)}
+          onClick={() => router.push(`/app/report/values?rid=${rid}`)}
           className="btn btn-primary"
         >
-          Next: Integrated Overview →
+          Next: Work Values →
         </button>
       </div>
     </div>
