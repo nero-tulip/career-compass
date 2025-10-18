@@ -37,7 +37,7 @@ type ModuleKey =
   | 'profileBasics'   // intake
   | 'careerPrefs'     // macro
   | 'riasec'          // riasec
-  | 'results'         // wrapped results
+  | 'report'         // wrapped results
   | 'big5'            // big five
   | 'mentors'         // service
   | 'resources';      // service
@@ -92,7 +92,7 @@ const MODULES: ModuleDef[] = [
     subtitle: 'What type of work resonates with you?',
     kind: 'quiz',
     tier: 'free',
-    icon: '🧩',
+    icon: '⚙️',
     blurb: 'Utilizes Holland’s interests model (R-I-A-S-E-C) and government-collected data to understand the kinds of work activities most aligned to you.',
   },
   {
@@ -106,12 +106,12 @@ const MODULES: ModuleDef[] = [
     blurb: 'A thorough psychological assessment providing depth of self-understanding, utilized by trained psychologists for decades.',
   },
   {
-    key: 'results',
-    title: 'Your Results',
+    key: 'report',
+    title: 'Integrated Report',
     subtitle: 'See matches & insights',
     kind: 'output',
     tier: 'free',
-    viewPath: '/app/results',
+    viewPath: '/app/report/overview?rid=${rid}',
     icon: '📊',
     blurb: 'A holistic report that synthesizes all your data into a comprehensive overview.',
   },
@@ -230,7 +230,7 @@ export default function AppHome() {
       careerPrefs:   progressBySection.macro,
       riasec:        progressBySection.riasec,
       big5:          progressBySection.big5,
-      results:       undefined,
+      report:       undefined,
       mentors:       undefined,
       resources:     undefined,
     }),
@@ -278,15 +278,24 @@ export default function AppHome() {
   }
 
   function handleView(mod: ModuleDef) {
-    router.push(mod.viewPath || '/app');
+  if (!latestRid) {
+    alert("Please complete at least one quiz first!");
+    return;
   }
+
+  // Replace `${rid}` in the path with the actual latestRid
+  let path = mod.viewPath || mod.startPath || '/app';
+  path = path.replace('${rid}', latestRid);
+
+  router.push(path);
+}
 
   // TODO: read users/{uid}.entitlement to unlock PRO
   const isPro = false;
 
   // Grouped sections
   const quizzes = MODULES.filter((m) => m.kind === 'quiz');
-  const results = MODULES.filter((m) => m.key === 'results');
+  const report = MODULES.filter((m) => m.key === 'report');
   const services = MODULES.filter((m) => m.kind === 'service');
 
   return (
@@ -336,11 +345,11 @@ export default function AppHome() {
         </div>
       </div>
 
-      {/* Results (standalone) */}
+      {/* Report (standalone) */}
       <div className="space-y-3">
-        <h2 className="text-sm font-semibold tracking-wide text-gray-600 uppercase">Results</h2>
+        <h2 className="text-sm font-semibold tracking-wide text-gray-600 uppercase">Report</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {results.map((m) => {
+          {report.map((m) => {
             const locked = m.tier === 'pro' && !isPro;
             const busy = busyKey === m.key;
             const onPrimary = locked
