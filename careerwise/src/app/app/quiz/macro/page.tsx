@@ -2,13 +2,12 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import macroQuestions from "@/app/data/macroQuestions.json";
 import ProgressBar from "@/app/components/ProgressBar";
 import QuizOptionGrid from "@/app/components/QuizOptionGrid";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { ensureDraft, saveSection } from "@/app/lib/drafts";
-import { useRef } from "react";
 
 // ----- Types -----
 type QType = "likert" | "select" | "chips" | "textarea" | "country-multi";
@@ -18,20 +17,11 @@ type MacroQuestion = {
   text: string;
   dimension?: string;
 
-  // Type controls which UI to render
   type?: QType;
-
-  // Likert only
-  scale?: string[];
-
-  // Select / Chips
-  options?: Array<{ value: string; label: string }>;
-
-  // Textarea
-  placeholder?: string;
-  validation?: { maxLength?: number };
-
-  // (Optional) conditional rendering if you later add dependencies
+  scale?: string[]; // likert only
+  options?: Array<{ value: string; label: string }>; // select/chips
+  placeholder?: string; // textarea
+  validation?: { maxLength?: number }; // textarea
   conditional?: { dependsOn: string; showIf: string[] };
 };
 
@@ -49,16 +39,11 @@ function isAnswered(q: MacroQuestion, ans?: MacroAnswer) {
     case "likert":
       return typeof (ans as any).score === "number";
     case "select":
-      return (
-        typeof (ans as any).value === "string" && (ans as any).value.length > 0
-      );
+      return typeof (ans as any).value === "string" && (ans as any).value.length > 0;
     case "chips":
       return Array.isArray((ans as any).value) && (ans as any).value.length > 0;
     case "textarea":
-      return (
-        typeof (ans as any).value === "string" &&
-        (ans as any).value.trim().length > 0
-      );
+      return typeof (ans as any).value === "string" && (ans as any).value.trim().length > 0;
     case "country-multi":
       return Array.isArray((ans as any).value) && (ans as any).value.length > 0;
     default:
@@ -67,14 +52,7 @@ function isAnswered(q: MacroQuestion, ans?: MacroAnswer) {
 }
 
 // --- Shared helpers to match QuizOptionGrid reveal & color logic ---
-const COLOR_CLASSES = [
-  "text-mint-600",
-  "text-sky-600",
-  "text-blush-600",
-  "text-lav-600",
-  "text-sand-600",
-];
-
+const COLOR_CLASSES = ["text-mint-600", "text-sky-600", "text-blush-600", "text-lav-600", "text-sand-600"];
 function colorClassForId(seed: string): string {
   let hash = 0;
   for (let i = 0; i < seed.length; i++) {
@@ -90,10 +68,9 @@ function useReveal() {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const io = new IntersectionObserver(
-      (entries) => entries.forEach((e) => setVisible(e.isIntersecting)),
-      { threshold: 0.6 }
-    );
+    const io = new IntersectionObserver((entries) => entries.forEach((e) => setVisible(e.isIntersecting)), {
+      threshold: 0.6,
+    });
     io.observe(el);
     return () => io.disconnect();
   }, []);
@@ -109,31 +86,19 @@ function SelectQuestion({
   value?: string;
   onChange: (v: string) => void;
 }) {
-  // Single-select buttons (chip style), matching QuizOptionGrid reveal/spacing/colors
   const { ref, visible } = useReveal();
   const color = colorClassForId(q.id);
-
   const cols = q.options?.some((o) => (o.label?.length ?? 0) > 24)
     ? "grid-cols-1"
     : q.options!.length >= 6
     ? "grid-cols-2 md:grid-cols-3"
     : "grid-cols-2 md:grid-cols-2";
-
   return (
     <div ref={ref} className="mb-24 min-h-[60vh] flex flex-col justify-center">
-      <p
-        className={`mb-6 text-2xl md:text-3xl font-semibold text-center reveal ${
-          visible ? "is-visible" : ""
-        } ${color}`}
-      >
+      <p className={`mb-6 text-2xl md:text-3xl font-semibold text-center reveal ${visible ? "is-visible" : ""} ${color}`}>
         {q.text}
       </p>
-
-      <div
-        className={`grid gap-4 ${cols} max-w-3xl mx-auto w-full reveal ${
-          visible ? "is-visible" : ""
-        }`}
-      >
+      <div className={`grid gap-4 ${cols} max-w-3xl mx-auto w-full reveal ${visible ? "is-visible" : ""}`}>
         {(q.options ?? []).map((opt) => {
           const active = value === opt.value;
           return (
@@ -141,14 +106,10 @@ function SelectQuestion({
               key={opt.value}
               type="button"
               onClick={() => onChange(opt.value)}
-              className={`flex items-center justify-center p-3 md:p-4 quiz-option ${
-                active ? "quiz-option-selected" : ""
-              }`}
+              className={`flex items-center justify-center p-3 md:p-4 quiz-option ${active ? "quiz-option-selected" : ""}`}
               aria-pressed={active}
             >
-              <span className="text-sm md:text-base font-medium text-center leading-snug">
-                {opt.label}
-              </span>
+              <span className="text-sm md:text-base font-medium text-center leading-snug">{opt.label}</span>
             </button>
           );
         })}
@@ -169,34 +130,19 @@ function ChipsQuestion({
   const { ref, visible } = useReveal();
   const color = colorClassForId(q.id);
   const chosen = new Set(value ?? []);
-
   const toggle = (val: string) => {
     const next = new Set(chosen);
     if (next.has(val)) next.delete(val);
     else next.add(val);
     onChange(Array.from(next));
   };
-
-  const cols =
-    (q.options?.length ?? 0) >= 6
-      ? "grid-cols-2 md:grid-cols-3"
-      : "grid-cols-2 md:grid-cols-2";
-
+  const cols = (q.options?.length ?? 0) >= 6 ? "grid-cols-2 md:grid-cols-3" : "grid-cols-2 md:grid-cols-2";
   return (
     <div ref={ref} className="mb-24 min-h-[60vh] flex flex-col justify-center">
-      <p
-        className={`mb-6 text-2xl md:text-3xl font-semibold text-center reveal ${
-          visible ? "is-visible" : ""
-        } ${color}`}
-      >
+      <p className={`mb-6 text-2xl md:text-3xl font-semibold text-center reveal ${visible ? "is-visible" : ""} ${color}`}>
         {q.text}
       </p>
-
-      <div
-        className={`grid gap-4 ${cols} max-w-3xl mx-auto w-full reveal ${
-          visible ? "is-visible" : ""
-        }`}
-      >
+      <div className={`grid gap-4 ${cols} max-w-3xl mx-auto w-full reveal ${visible ? "is-visible" : ""}`}>
         {(q.options ?? []).map((opt) => {
           const active = chosen.has(opt.value);
           return (
@@ -204,14 +150,10 @@ function ChipsQuestion({
               key={opt.value}
               type="button"
               onClick={() => toggle(opt.value)}
-              className={`flex items-center justify-center p-3 md:p-4 quiz-option ${
-                active ? "quiz-option-selected" : ""
-              }`}
+              className={`flex items-center justify-center p-3 md:p-4 quiz-option ${active ? "quiz-option-selected" : ""}`}
               aria-pressed={active}
             >
-              <span className="text-sm md:text-base font-medium text-center leading-snug">
-                {opt.label}
-              </span>
+              <span className="text-sm md:text-base font-medium text-center leading-snug">{opt.label}</span>
             </button>
           );
         })}
@@ -232,22 +174,12 @@ function TextareaQuestion({
   const { ref, visible } = useReveal();
   const color = colorClassForId(q.id);
   const max = q.validation?.maxLength ?? 600;
-
   return (
     <div ref={ref} className="mb-24 min-h-[60vh] flex flex-col justify-center">
-      <p
-        className={`mb-6 text-2xl md:text-3xl font-semibold text-center reveal ${
-          visible ? "is-visible" : ""
-        } ${color}`}
-      >
+      <p className={`mb-6 text-2xl md:text-3xl font-semibold text-center reveal ${visible ? "is-visible" : ""} ${color}`}>
         {q.text}
       </p>
-
-      <div
-        className={`reveal ${
-          visible ? "is-visible" : ""
-        } max-w-2xl mx-auto w-full`}
-      >
+      <div className={`reveal ${visible ? "is-visible" : ""} max-w-2xl mx-auto w-full`}>
         <textarea
           className="form-field w-full rounded-xl text-sm md:text-base min-h-[160px]"
           placeholder={q.placeholder ?? "Type your response…"}
@@ -255,9 +187,7 @@ function TextareaQuestion({
           maxLength={max}
           onChange={(e) => onChange(e.target.value)}
         />
-        <div className="mt-1 text-[11px] text-gray-500 text-right">
-          {value?.length ?? 0}/{max}
-        </div>
+        <div className="mt-1 text-[11px] text-gray-500 text-right">{value?.length ?? 0}/{max}</div>
       </div>
     </div>
   );
@@ -273,7 +203,6 @@ function CountryMultiQuestion({
   onChange: (v: string[]) => void;
 }) {
   const [draft, setDraft] = useState("");
-
   const addOne = () => {
     const v = draft.trim();
     if (!v) return;
@@ -281,11 +210,7 @@ function CountryMultiQuestion({
     onChange(next);
     setDraft("");
   };
-
-  const removeOne = (val: string) => {
-    onChange((value ?? []).filter((x) => x !== val));
-  };
-
+  const removeOne = (val: string) => onChange((value ?? []).filter((x) => x !== val));
   return (
     <div className="space-y-2">
       <div className="text-sm font-medium">{q.text}</div>
@@ -302,23 +227,14 @@ function CountryMultiQuestion({
             }
           }}
         />
-        <button type="button" className="btn btn-outline" onClick={addOne}>
-          Add
-        </button>
+        <button type="button" className="btn btn-outline" onClick={addOne}>Add</button>
       </div>
       {!!value?.length && (
         <div className="flex flex-wrap gap-2">
           {value!.map((c) => (
             <span key={c} className="badge">
               {c}
-              <button
-                type="button"
-                className="ml-1 text-[11px] text-gray-500 hover:text-gray-800"
-                onClick={() => removeOne(c)}
-                aria-label={`Remove ${c}`}
-              >
-                ×
-              </button>
+              <button type="button" className="ml-1 text-[11px] text-gray-500 hover:text-gray-800" onClick={() => removeOne(c)} aria-label={`Remove ${c}`}>×</button>
             </span>
           ))}
         </div>
@@ -331,9 +247,11 @@ export default function MacroPage() {
   const router = useRouter();
   const sp = useSearchParams();
   const ridParam = sp.get("rid") || undefined;
+  const skipIntro = sp.get("skipIntro") === "1";
 
   const { user, loading } = useAuth();
 
+  const [page, setPage] = useState<number>(skipIntro ? 0 : -1); // -1 = intro
   const [answers, setAnswers] = useState<MacroAnswer[]>([]);
   const [prefillLoading, setPrefillLoading] = useState<boolean>(!!ridParam);
   const [prefillError, setPrefillError] = useState<string | null>(null);
@@ -343,17 +261,15 @@ export default function MacroPage() {
     if (!loading && !user) router.replace("/login?next=/app/quiz/macro");
   }, [loading, user, router]);
 
-  // Load questions (typed)
+  // Load questions (typed + normalized + ordered)
   const questions = useMemo(() => {
     const raw = macroQuestions as unknown as MacroQuestion[];
 
-    // Normalize type
     const normalized = raw.map((q) => ({
       ...q,
       type: q.type ?? (Array.isArray(q.scale) ? "likert" : "select"),
     })) as MacroQuestion[];
 
-    // Base order: likert first, then select/chips/textarea/country-multi
     const baseOrder: Record<QType, number> = {
       likert: 1,
       select: 2,
@@ -368,7 +284,7 @@ export default function MacroPage() {
       return pa - pb;
     });
 
-    // Force preferred_countries to sit right after where_to_work
+    // Force preferred_countries right after where_to_work
     const iWhere = sorted.findIndex((q) => q.id === "where_to_work");
     const iPref = sorted.findIndex((q) => q.id === "preferred_countries");
     if (iWhere !== -1 && iPref !== -1 && iPref !== iWhere + 1) {
@@ -379,7 +295,7 @@ export default function MacroPage() {
     return sorted;
   }, []);
 
-  // Prefill from saved answers if rid is present
+  // Prefill from saved answers if rid is present (don’t create a draft on intro)
   useEffect(() => {
     let active = true;
     (async () => {
@@ -389,56 +305,27 @@ export default function MacroPage() {
           return;
         }
         const token = await user.getIdToken?.();
-        const res = await fetch(
-          `/api/quiz/section?rid=${encodeURIComponent(ridParam)}&section=macro`,
-          { headers: { Authorization: "Bearer " + token } }
-        );
+        const res = await fetch(`/api/quiz/section?rid=${encodeURIComponent(ridParam)}&section=macro`, {
+          headers: { Authorization: "Bearer " + token },
+        });
         if (!res.ok) throw new Error(await res.text());
         const data = await res.json();
 
-        // Accept legacy [{questionId, score}] by lifting them into MacroAnswer
         const stored = Array.isArray(data?.data) ? (data.data as any[]) : [];
         const normalized: MacroAnswer[] = stored.map((a) => {
           const q = questions.find((qq) => qq.id === a.questionId);
           const t = q?.type ?? "likert";
-          if (t === "likert")
-            return {
-              questionId: a.questionId,
-              type: "likert",
-              score: Number(a.score) || 0,
-            };
-          if (t === "select")
-            return {
-              questionId: a.questionId,
-              type: "select",
-              value: String(a.value ?? ""),
-            };
-          if (t === "chips")
-            return {
-              questionId: a.questionId,
-              type: "chips",
-              value: Array.isArray(a.value) ? a.value : [],
-            };
-          if (t === "country-multi") {
-            return {
-              questionId: a.questionId,
-              type: "country-multi",
-              value: Array.isArray(a.value) ? a.value : [],
-            };
-          }
-          return {
-            questionId: a.questionId,
-            type: "textarea",
-            value: String(a.value ?? ""),
-          };
+          if (t === "likert") return { questionId: a.questionId, type: "likert", score: Number(a.score) || 0 };
+          if (t === "select") return { questionId: a.questionId, type: "select", value: String(a.value ?? "") };
+          if (t === "chips") return { questionId: a.questionId, type: "chips", value: Array.isArray(a.value) ? a.value : [] };
+          if (t === "country-multi")
+            return { questionId: a.questionId, type: "country-multi", value: Array.isArray(a.value) ? a.value : [] };
+          return { questionId: a.questionId, type: "textarea", value: String(a.value ?? "") };
         });
 
         if (active) setAnswers(normalized);
       } catch (e: any) {
-        if (active)
-          setPrefillError(
-            e?.message || "Failed to load your previous answers."
-          );
+        if (active) setPrefillError(e?.message || "Failed to load your previous answers.");
       } finally {
         if (active) setPrefillLoading(false);
       }
@@ -452,7 +339,6 @@ export default function MacroPage() {
 
   // Helpers to read/update a single answer
   const getAnswer = (qid: string) => answers.find((a) => a.questionId === qid);
-
   const upsertAnswer = (next: MacroAnswer) => {
     setAnswers((prev) => {
       const i = prev.findIndex((a) => a.questionId === next.questionId);
@@ -482,15 +368,20 @@ export default function MacroPage() {
     }
     return false;
   };
-  
-  // Only count questions that are actually visible (meet condition)
-  const visibleQuestions = questions.filter(meetsCondition);
 
+  const visibleQuestions = questions.filter(meetsCondition);
   const total = visibleQuestions.length;
-  const answeredCount = visibleQuestions.filter((q) =>
-    isAnswered(q, getAnswer(q.id))
-  ).length;
+  const answeredCount = visibleQuestions.filter((q) => isAnswered(q, getAnswer(q.id))).length;
   const allAnswered = answeredCount === total;
+
+  // Intro → start
+  const startMacro = async () => {
+    const { id: rid } = await ensureDraft(user!, ridParam);
+    await saveSection(user!, rid, "macro", answers, "macro_intro_seen" as any, {
+      progress: { section: "macro", page: 0 },
+    } as any);
+    setPage(0);
+  };
 
   const onSaveAndExit = async () => {
     const { id: rid } = await ensureDraft(user!, ridParam);
@@ -498,134 +389,120 @@ export default function MacroPage() {
     router.push(`/app`);
   };
 
-
   return (
     <div className="max-w-3xl mx-auto py-10 px-4">
       <div className="mb-6">
-        <ProgressBar
-          value={total ? answeredCount / total : 0}
-          label="Career preferences"
-        />
+        <ProgressBar value={page < 0 ? 0 : total ? answeredCount / total : 0} label={page < 0 ? "Intro" : "Career preferences"} />
       </div>
 
-      <h2 className="text-2xl font-semibold tracking-tight mb-4">
-        Big picture
-      </h2>
+      {page < 0 ? (
+        // ----------------------- INTRO STEP -----------------------
+        <div className="space-y-6">
+          <header className="text-center space-y-2">
+            <h1 className="text-3xl font-semibold tracking-tight">Career Preferences</h1>
+            <p className="text-gray-600">
+              These questions capture the big-picture drivers behind your career decisions — things like{" "}
+              <em>income, impact, autonomy, stability</em>, and where you’d like to work.
+            </p>
+          </header>
 
-      {prefillLoading && (
-        <div className="mb-4 text-sm text-gray-600">
-          Loading your previous answers…
+          <section className="rounded-2xl border bg-white p-6 shadow-sm space-y-3">
+            <h2 className="text-xl font-semibold">What we’ll learn</h2>
+            <ul className="list-disc pl-5 text-gray-700 space-y-1">
+              <li>What outcomes matter most to you (purpose, pay, security, freedom).</li>
+              <li>Preferred environments (startup vs corporate, remote vs on-site, etc.).</li>
+              <li>How much social interaction, leadership, and flexibility you want day to day.</li>
+            </ul>
+            <p className="text-xs text-gray-500 mt-1">
+              We use this to tailor your report and later map you to clusters and roles that fit.
+            </p>
+          </section>
+
+          <section className="rounded-2xl border bg-white p-6 shadow-sm space-y-3">
+            <h2 className="text-xl font-semibold">Tips</h2>
+            <ul className="list-disc pl-5 text-gray-700 space-y-1">
+              <li>Answer based on what would keep you motivated <em>for months</em>, not just today.</li>
+              <li>There are no right answers — honesty beats “ideal” answers.</li>
+              <li>Unsure? Choose the option that feels true most of the time.</li>
+            </ul>
+          </section>
+
+          <section className="rounded-2xl border bg-white p-6 shadow-sm space-y-3">
+            <h2 className="text-xl font-semibold">Privacy</h2>
+            <p className="text-gray-700">
+              Your responses stay with your account and drive your personalized report. You can edit them anytime.
+            </p>
+          </section>
+
+          <div className="flex items-center justify-between">
+            <button className="btn btn-ghost" onClick={() => router.push("/app")}>
+              Back to dashboard
+            </button>
+            <button onClick={startMacro} className="btn btn-primary">
+              Start
+            </button>
+          </div>
         </div>
-      )}
-      {prefillError && (
-        <div className="mb-4 text-sm text-red-600">{prefillError}</div>
-      )}
+      ) : (
+        // ----------------------- QUESTIONS -----------------------
+        <>
+          <h2 className="text-2xl font-semibold tracking-tight mb-4">Big picture</h2>
 
-      <div className="space-y-6">
-        {questions.map((q) => {
-          // Hide if its condition is not met
-          if (!meetsCondition(q)) return null;
+          {prefillLoading && <div className="mb-4 text-sm text-gray-600">Loading your previous answers…</div>}
+          {prefillError && <div className="mb-4 text-sm text-red-600">{prefillError}</div>}
 
-          const t = q.type ?? "likert";
+          <div className="space-y-6">
+            {questions.map((q) => {
+              if (!meetsCondition(q)) return null;
+              const t = q.type ?? "likert";
 
-          if (t === "likert") {
-            const sel = (
-              getAnswer(q.id) as Extract<MacroAnswer, { type: "likert" }>
-            )?.score;
-            return (
-              <QuizOptionGrid
-                key={q.id}
-                question={{
-                  id: q.id,
-                  text: q.text,
-                  scale: q.scale ?? ["1", "2", "3", "4", "5"],
-                }}
-                selected={sel}
-                onSelect={(id, score) =>
-                  upsertAnswer({ questionId: id, type: "likert", score })
-                }
-              />
-            );
-          }
-
-          if (t === "select") {
-            const val = (
-              getAnswer(q.id) as Extract<MacroAnswer, { type: "select" }>
-            )?.value;
-            return (
-              <SelectQuestion
-                key={q.id}
-                q={q}
-                value={val}
-                onChange={(v) =>
-                  upsertAnswer({ questionId: q.id, type: "select", value: v })
-                }
-              />
-            );
-          }
-
-          if (t === "chips") {
-            const val = (
-              getAnswer(q.id) as Extract<MacroAnswer, { type: "chips" }>
-            )?.value;
-            return (
-              <ChipsQuestion
-                key={q.id}
-                q={q}
-                value={val}
-                onChange={(v) =>
-                  upsertAnswer({ questionId: q.id, type: "chips", value: v })
-                }
-              />
-            );
-          }
-
-          if (t === "country-multi") {
-            const val = (
-              getAnswer(q.id) as Extract<MacroAnswer, { type: "country-multi" }>
-            )?.value;
-            return (
-              <CountryMultiQuestion
-                key={q.id}
-                q={q}
-                value={val}
-                onChange={(v) =>
-                  upsertAnswer({
-                    questionId: q.id,
-                    type: "country-multi",
-                    value: v,
-                  })
-                }
-              />
-            );
-          }
-
-          // textarea
-          const val = (
-            getAnswer(q.id) as Extract<MacroAnswer, { type: "textarea" }>
-          )?.value;
-          return (
-            <TextareaQuestion
-              key={q.id}
-              q={q}
-              value={val}
-              onChange={(v) =>
-                upsertAnswer({ questionId: q.id, type: "textarea", value: v })
+              if (t === "likert") {
+                const sel = (getAnswer(q.id) as Extract<MacroAnswer, { type: "likert" }>)?.score;
+                return (
+                  <QuizOptionGrid
+                    key={q.id}
+                    question={{ id: q.id, text: q.text, scale: q.scale ?? ["1", "2", "3", "4", "5"] }}
+                    selected={sel}
+                    onSelect={(id, score) => upsertAnswer({ questionId: id, type: "likert", score })}
+                  />
+                );
               }
-            />
-          );
-        })}
-      </div>
 
-      <div className="flex justify-end mt-8">
-        <button
-          onClick={onSaveAndExit}
-          disabled={!allAnswered}
-          className="btn btn-primary disabled:opacity-50"
-        >
-          Save & Return
-        </button>
-      </div>
+              if (t === "select") {
+                const val = (getAnswer(q.id) as Extract<MacroAnswer, { type: "select" }>)?.value;
+                return <SelectQuestion key={q.id} q={q} value={val} onChange={(v) => upsertAnswer({ questionId: q.id, type: "select", value: v })} />;
+              }
+
+              if (t === "chips") {
+                const val = (getAnswer(q.id) as Extract<MacroAnswer, { type: "chips" }>)?.value;
+                return <ChipsQuestion key={q.id} q={q} value={val} onChange={(v) => upsertAnswer({ questionId: q.id, type: "chips", value: v })} />;
+              }
+
+              if (t === "country-multi") {
+                const val = (getAnswer(q.id) as Extract<MacroAnswer, { type: "country-multi" }>)?.value;
+                return (
+                  <CountryMultiQuestion
+                    key={q.id}
+                    q={q}
+                    value={val}
+                    onChange={(v) => upsertAnswer({ questionId: q.id, type: "country-multi", value: v })}
+                  />
+                );
+              }
+
+              // textarea
+              const val = (getAnswer(q.id) as Extract<MacroAnswer, { type: "textarea" }>)?.value;
+              return <TextareaQuestion key={q.id} q={q} value={val} onChange={(v) => upsertAnswer({ questionId: q.id, type: "textarea", value: v })} />;
+            })}
+          </div>
+
+          <div className="flex justify-end mt-8">
+            <button onClick={onSaveAndExit} disabled={!allAnswered} className="btn btn-primary disabled:opacity-50">
+              Save & Return
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
