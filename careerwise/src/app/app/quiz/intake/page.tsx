@@ -16,7 +16,14 @@ type Conditional = { dependsOn: string; showIf: string[] } | undefined;
 type BaseQuestion = {
   id: string;
   label: string;
-  type: "text" | "textarea" | "select" | "chips" | "slider" | "country" | "country-multi";
+  type:
+    | "text"
+    | "textarea"
+    | "select"
+    | "chips"
+    | "slider"
+    | "country"
+    | "country-multi";
   required?: boolean;
   placeholder?: string;
   mapTo?: string;
@@ -62,8 +69,13 @@ export default function IntakePage() {
   const router = useRouter();
   const sp = useSearchParams();
   const ridParam = sp.get("rid") || undefined;
+  const skipIntroParam = sp.get("skipIntro") === "1";
 
   const { user, loading } = useAuth();
+
+  // Intro step = -1; questions = 0
+  const [page, setPage] = useState<number>(skipIntroParam ? 0 : -1);
+
   const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
   const [prefillLoading, setPrefillLoading] = useState<boolean>(!!ridParam);
   const [prefillError, setPrefillError] = useState<string | null>(null);
@@ -76,7 +88,7 @@ export default function IntakePage() {
   }, [loading, user, router]);
   if (loading || !user) return null;
 
-  // NEW: prefill from saved answers if a rid is present
+  // Prefill from saved answers if a rid is present (do not ensure draft yet on intro)
   useEffect(() => {
     let active = true;
     (async () => {
@@ -92,7 +104,6 @@ export default function IntakePage() {
         );
         if (!res.ok) throw new Error(await res.text());
         const data = await res.json();
-        // Expecting an object map of { [questionId]: value }
         const stored = data?.data;
         if (active && stored && typeof stored === "object") {
           setAnswers(stored as Record<string, AnswerValue>);
@@ -117,31 +128,48 @@ export default function IntakePage() {
     return typeof dep === "string" && q.conditional.showIf.includes(dep);
   });
 
-  const requiredMissing = visibleQuestions
-    .filter((q) => q.required)
-    .some((q) => {
-      const v = answers[q.id];
-      if (v == null) return true;
-      if (Array.isArray(v)) return v.length === 0;
-      if (typeof v === "string") return v.trim().length === 0;
-      return false;
-    });
+  const requiredMissing =
+    page >= 0 &&
+    visibleQuestions
+      .filter((q) => q.required)
+      .some((q) => {
+        const v = answers[q.id];
+        if (v == null) return true;
+        if (Array.isArray(v)) return v.length === 0;
+        if (typeof v === "string") return v.trim().length === 0;
+        return false;
+      });
 
-  const answeredCount = visibleQuestions.filter((q) => {
-    const v = answers[q.id];
-    if (v == null) return false;
-    if (Array.isArray(v)) return v.length > 0;
-    if (typeof v === "string") return v.trim().length > 0;
-    return true;
-  }).length;
+  const answeredCount =
+    page >= 0
+      ? visibleQuestions.filter((q) => {
+          const v = answers[q.id];
+          if (v == null) return false;
+          if (Array.isArray(v)) return v.length > 0;
+          if (typeof v === "string") return v.trim().length > 0;
+          return true;
+        }).length
+      : 0;
+
+  // Start / Next handlers
+  const startIntake = async () => {
+    // Ensure a draft record exists; we don't need the id here immediately
+    const { id: rid } = await ensureDraft(user!, ridParam);
+    // mark intro seen (lightweight)
+    await saveSection(user!, rid, "intake", answers, "intake_intro_seen" as any, {
+      progress: { section: "intake", page: 0 },
+    } as any);
+    setPage(0);
+  };
 
   const onNext = async () => {
+    if (page < 0) return startIntake();
     if (requiredMissing) {
       alert("Please fill the required fields.");
       return;
     }
-    const { id: rid } = await ensureDraft(user, ridParam);
-    await saveSection(user, rid, "intake", answers, "intake_done");
+    const { id: rid } = await ensureDraft(user!, ridParam);
+    await saveSection(user!, rid, "intake", answers, "intake_done");
     router.push(`/app`);
   };
 
@@ -149,44 +177,109 @@ export default function IntakePage() {
     <div className="max-w-3xl mx-auto py-10 px-4">
       <div className="mb-6">
         <ProgressBar
-          value={visibleQuestions.length ? answeredCount / visibleQuestions.length : 0}
-          label="Intro questions"
+          value={
+            page < 0
+              ? 0
+              : visibleQuestions.length
+              ? answeredCount / visibleQuestions.length
+              : 0
+          }
+          label={page < 0 ? "Intro" : "Intro questions"}
         />
       </div>
 
-      <h2 className="text-2xl font-semibold tracking-tight mb-4">
-        {intakeConfig.meta?.title ?? "Tell us about you"}
-      </h2>
-      <p className="muted mb-8">
-        {intakeConfig.meta?.description ?? "A few quick questions to personalize your results."}
-      </p>
+      {/* ----------------------- INTRO STEP ----------------------- */}
+      {page < 0 ? (
+        <div className="space-y-6">
+          <header className="text-center space-y-2">
+            <h1 className="text-3xl font-semibold tracking-tight">
+              {intakeConfig.meta?.title ?? "Tell us about you"}
+            </h1>
+            <p className="text-gray-600">
+              {intakeConfig.meta?.description ??
+                "We ask a few basics so the rest of your report reflects your real context."}
+            </p>
+          </header>
 
-      {/* Optional lightweight status */}
-      {prefillLoading && (
-        <div className="mb-4 text-sm text-gray-600">Loading your previous answers…</div>
+          <section className="rounded-2xl border bg-white p-6 shadow-sm space-y-3">
+            <h2 className="text-xl font-semibold">What we’ll ask</h2>
+            <ul className="list-disc pl-5 text-gray-700 space-y-1">
+              <li>Background: where you are in life/study/work.</li>
+              <li>Context: location, education, preferred environments.</li>
+              <li>Focus: what you want to explore or achieve.</li>
+            </ul>
+            <p className="text-xs text-gray-500 mt-1">
+              These answers help personalize your results and recommendations.
+            </p>
+          </section>
+
+          <section className="rounded-2xl border bg-white p-6 shadow-sm space-y-3">
+            <h2 className="text-xl font-semibold">Tips</h2>
+            <ul className="list-disc pl-5 text-gray-700 space-y-1">
+              <li>Answer as you are today, not who you think you “should” be.</li>
+              <li>Short, honest inputs beat long, perfect ones.</li>
+              <li>Skip anything that isn’t relevant — you can refine later.</li>
+            </ul>
+          </section>
+
+          <section className="rounded-2xl border bg-white p-6 shadow-sm space-y-3">
+            <h2 className="text-xl font-semibold">Privacy</h2>
+            <p className="text-gray-700">
+              Your information is used to generate your report. You’re always in
+              control — you can review and edit answers later.
+            </p>
+          </section>
+
+          <div className="flex items-center justify-between">
+            <button className="btn btn-ghost" onClick={() => router.push("/app")}>
+              Back to dashboard
+            </button>
+            <button onClick={startIntake} className="btn btn-primary">
+              Start
+            </button>
+          </div>
+        </div>
+      ) : (
+        /* ----------------------- QUESTIONS ----------------------- */
+        <>
+          <h2 className="text-2xl font-semibold tracking-tight mb-4">
+            {intakeConfig.meta?.title ?? "Tell us about you"}
+          </h2>
+          <p className="muted mb-8">
+            {intakeConfig.meta?.description ??
+              "A few quick questions to personalize your results."}
+          </p>
+
+          {/* Optional lightweight status */}
+          {prefillLoading && (
+            <div className="mb-4 text-sm text-gray-600">
+              Loading your previous answers…
+            </div>
+          )}
+          {prefillError && (
+            <div className="mb-4 text-sm text-red-600">{prefillError}</div>
+          )}
+
+          {visibleQuestions.map((q) => (
+            <QuestionBlock
+              key={q.id}
+              q={q}
+              value={answers[q.id]}
+              onChange={(v) => setVal(q.id, v)}
+            />
+          ))}
+
+          <div className="flex justify-end mt-8">
+            <button
+              onClick={onNext}
+              className="btn btn-primary disabled:opacity-50"
+              disabled={!!requiredMissing}
+            >
+              Next
+            </button>
+          </div>
+        </>
       )}
-      {prefillError && (
-        <div className="mb-4 text-sm text-red-600">{prefillError}</div>
-      )}
-
-      {visibleQuestions.map((q) => (
-        <QuestionBlock
-          key={q.id}
-          q={q}
-          value={answers[q.id]}
-          onChange={(v) => setVal(q.id, v)}
-        />
-      ))}
-
-      <div className="flex justify-end mt-8">
-        <button
-          onClick={onNext}
-          className="btn btn-primary disabled:opacity-50"
-          disabled={requiredMissing}
-        >
-          Next
-        </button>
-      </div>
     </div>
   );
 }
@@ -384,7 +477,10 @@ function QuestionBlock({
                 .split(",")
                 .map((s) => s.trim())
                 .filter((s) => s.length > 0)
-                .map<Country>((s) => ({ code: s.toUpperCase().slice(0, 2), name: s }));
+                .map<Country>((s) => ({
+                  code: s.toUpperCase().slice(0, 2),
+                  name: s,
+                }));
               onChange(items);
             }}
           />
