@@ -264,3 +264,39 @@ html, body {
 .marquee:hover {
   animation-play-state: paused;
 }
+
+/* --- pastel highlight utilities --- */
+.highlight-mint {
+  background-color: color-mix(in srgb, var(--mint-200) 45%, white 55%);
+  color: var(--text);
+  border-radius: 0.4rem;
+  padding: 0.15em 0.35em;
+}
+
+.highlight-sand {
+  background-color: color-mix(in srgb, var(--sand-200) 45%, white 55%);
+  color: var(--text);
+  border-radius: 0.4rem;
+  padding: 0.15em 0.35em;
+}
+
+.highlight-sky {
+  background-color: color-mix(in srgb, var(--sky-200) 45%, white 55%);
+  color: var(--text);
+  border-radius: 0.4rem;
+  padding: 0.15em 0.35em;
+}
+
+.highlight-blush {
+  background-color: color-mix(in srgb, var(--blush-200) 45%, white 55%);
+  color: var(--text);
+  border-radius: 0.4rem;
+  padding: 0.15em 0.35em;
+}
+
+.highlight-lav {
+  background-color: color-mix(in srgb, var(--lav-200) 45%, white 55%);
+  color: var(--text);
+  border-radius: 0.4rem;
+  padding: 0.15em 0.35em;
+}

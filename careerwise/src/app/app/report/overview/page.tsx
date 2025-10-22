@@ -1,4 +1,3 @@
-// src/app/app/report/overview/page.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -6,93 +5,46 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { loadIntakeSummary } from "@/app/lib/results/loaders";
 import type { IntakeSummary } from "@/app/lib/results/types";
-import { generateOverviewIntro } from "@/app/lib/results/generators/generate-overview-intro";
+import {
+  generateOverviewIntro,
+  type IntroSegment,
+  type HighlightTag,
+} from "@/app/lib/results/generators/generate-overview-intro";
 
-/** Tiny fade-in helper */
-function useReveal(delay = 20) {
+/** Pastel background highlight mapping */
+const HI_STYLE: Record<HighlightTag, string> = {
+  name: "highlight-mint",
+  age: "highlight-sand",
+  country: "highlight-sky",
+  education: "highlight-lav",
+  status: "highlight-blush",
+  stage: "highlight-mint",
+  goal: "highlight-sky",
+};
+
+/** Fade & slide animation when in view */
+function FadeLine({
+  children,
+  index,
+}: {
+  children: React.ReactNode;
+  index: number;
+}) {
   const [visible, setVisible] = useState(false);
   useEffect(() => {
-    const t = setTimeout(() => setVisible(true), delay);
-    return () => clearTimeout(t);
-  }, [delay]);
-  return visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3";
-}
-
-/** Gradient hero with animated intro lines */
-function IntroHero({ intake, rid }: { intake: IntakeSummary; rid: string }) {
-  const cls = useReveal(40);
-  const intro = useMemo(() => generateOverviewIntro(intake), [intake]);
-
-  const lines = useMemo(
-    () => intro.text.split("\n").filter((l) => l.trim().length > 0),
-    [intro.text]
-  );
+    const timer = setTimeout(() => setVisible(true), 250 + index * 300);
+    return () => clearTimeout(timer);
+  }, [index]);
 
   return (
-    <section
-      className={`relative overflow-hidden rounded-3xl border shadow-sm transition-all ${cls}`}
-      style={{
-        background:
-          "linear-gradient(135deg, rgba(34,211,238,0.08), rgba(168,85,247,0.08))",
-      }}
+    <p
+      className={`transition-all duration-700 ease-out text-center text-[1.25rem] md:text-[1.35rem] leading-relaxed font-medium ${
+        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+      }`}
+      style={{ transitionDelay: `${index * 100}ms` }}
     >
-      {/* soft corner glow */}
-      <div
-        className="pointer-events-none absolute -top-24 -left-24 h-64 w-64 rounded-full blur-3xl opacity-40"
-        style={{ background: "radial-gradient(circle, #22d3ee 0%, transparent 70%)" }}
-      />
-      <div
-        className="pointer-events-none absolute -bottom-24 -right-24 h-64 w-64 rounded-full blur-3xl opacity-40"
-        style={{ background: "radial-gradient(circle, #a855f7 0%, transparent 70%)" }}
-      />
-
-      <div className="relative p-6 sm:p-8">
-        <div className="mx-auto max-w-2xl text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium bg-white/80 backdrop-blur">
-            <span>CareerCompass Report</span>
-            <span className="h-1 w-1 rounded-full bg-gray-400" />
-            <span className="text-gray-600">Overview</span>
-          </div>
-
-          <h1 className="mt-4 text-3xl font-semibold tracking-tight text-gray-900">
-            Nice to meet you 👋
-          </h1>
-
-          <div className="mt-4 space-y-2">
-            {lines.map((line, i) => (
-              <p
-                key={i}
-                className="text-gray-800 leading-relaxed opacity-0 translate-y-2 transition-all"
-                style={{
-                  transitionDuration: "500ms",
-                  transitionDelay: `${120 + i * 90}ms`,
-                  opacity: 1,
-                  transform: "translateY(0)",
-                }}
-              >
-                {line}
-              </p>
-            ))}
-          </div>
-
-          <div className="mt-6 flex items-center justify-center gap-3">
-            <a
-              href={`/app/quiz/intake?rid=${encodeURIComponent(rid)}`}
-              className="px-3 py-1.5 rounded-lg text-sm ring-1 ring-gray-200 text-gray-700 hover:bg-white/70 backdrop-blur"
-            >
-              Edit details
-            </a>
-            <a
-              href={`/app/report/riasec?rid=${encodeURIComponent(rid)}`}
-              className="px-3 py-1.5 rounded-lg text-sm text-white"
-              style={{ background: "linear-gradient(90deg,#22d3ee,#a855f7)" }}
-            >
-              Looks right →
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
+      {children}
+    </p>
   );
 }
 
@@ -122,56 +74,86 @@ export default function OverviewResultsPage() {
     })();
   }, [user, rid, loading]);
 
-  if (loading || busy) {
+  if (loading || busy)
     return (
-      <div className="max-w-3xl mx-auto py-12 px-4 text-sm text-gray-600">
-        Loading your results…
+      <div className="max-w-3xl mx-auto py-24 px-4 text-center text-gray-600 text-lg">
+        Loading your results...
       </div>
     );
-  }
 
-  if (error) {
+  if (error)
     return (
-      <div className="max-w-3xl mx-auto py-12 px-4">
-        <div className="rounded-xl border p-4 bg-red-50 text-red-700">{error}</div>
+      <div className="max-w-3xl mx-auto py-24 px-4 text-center text-red-700">
+        {error}
       </div>
     );
-  }
 
   if (!user) {
     router.replace("/login?next=/app/report/overview");
     return null;
   }
 
-  return (
-    <div className="max-w-3xl mx-auto px-4 py-12 space-y-8">
-      {intake ? <IntroHero intake={intake} rid={rid} /> : null}
+  const intro = intake ? generateOverviewIntro(intake) : null;
 
-      {/* Fallback if intake is missing */}
-      {!intake ? (
-        <div className="rounded-2xl border p-6 bg-white shadow-sm text-center">
-          <p className="text-gray-800">
-            We don’t have your intro details yet. Start with the intake and come back!
-          </p>
-          <a
-            className="inline-block mt-4 px-3 py-1.5 rounded-lg text-sm text-white"
-            style={{ background: "linear-gradient(90deg,#22d3ee,#a855f7)" }}
-            href={`/app/quiz/intake?rid=${encodeURIComponent(rid)}`}
-          >
-            Complete intake →
-          </a>
+  return (
+    <div className="max-w-3xl mx-auto px-6 py-20 space-y-14">
+      <header className="text-center space-y-2">
+        <h1 className="text-4xl font-semibold tracking-tight text-gray-900">
+          Nice to meet you 👋
+        </h1>
+        <p className="text-gray-600 text-lg">
+          We’ve been paying attention. Here’s what we know so far.
+        </p>
+      </header>
+
+      {/* Sentence-by-sentence reveal with pastel highlights */}
+      {intro ? (
+        <div className="flex flex-col items-center space-y-5">
+          {intro.lines.map((segments, i) => (
+            <FadeLine key={i} index={i}>
+              {segments.map((s: IntroSegment, j: number) =>
+                s.hi ? (
+                  <span
+                    key={j}
+                    className={`${
+                      HI_STYLE[s.hi]
+                    } rounded-lg px-1.5 py-0.5 transition-colors duration-300`}
+                  >
+                    {s.text}
+                  </span>
+                ) : (
+                  <span key={j}>{s.text}</span>
+                )
+              )}
+            </FadeLine>
+          ))}
         </div>
       ) : null}
 
-      {/* Next button (mirrors “Looks right →” for clarity) */}
-      <div className="text-center">
+      {/* Navigation */}
+      <div className="pt-10 flex items-center justify-center gap-3 flex-wrap">
+          <button
+            onClick={() =>
+              router.push(`/app/quiz/intake?rid=${encodeURIComponent(rid)}`)
+            }
+            className="btn btn-ghost text-lg font-semibold"
+          >
+            No, I need to edit something
+          </button>
         <button
-          onClick={() => router.push(`/app/report/riasec?rid=${encodeURIComponent(rid)}`)}
-          className="btn btn-primary"
-          style={{ background: "linear-gradient(90deg,#22d3ee,#a855f7)", border: "none" }}
+          onClick={() =>
+            router.push(`/app/report/riasec?rid=${encodeURIComponent(rid)}`)
+          }
+          className="btn btn-primary text-lg font-semibold"
+          style={{
+            background: "linear-gradient(90deg,var(--mint-400),var(--sky-400))",
+            border: "none",
+            boxShadow: "0 3px 8px rgba(0,0,0,0.06)",
+          }}
         >
-          Next: RIASEC Profile →
+          Sounds great!
         </button>
+
       </div>
     </div>
   );
