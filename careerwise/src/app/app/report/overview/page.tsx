@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/app/providers/AuthProvider";
-import { loadIntakeSummary } from "@/app/lib/results/loaders";
-import type { IntakeSummary } from "@/app/lib/results/types";
+import { loadIntakeSummary, loadMacroSummary } from "@/app/lib/results/loaders";
+import type { IntakeSummary, MacroSummary } from "@/app/lib/results/types";
 import {
   generateOverviewIntro,
   type IntroSegment,
@@ -13,6 +13,7 @@ import {
 
 /** Pastel background highlight mapping */
 const HI_STYLE: Record<HighlightTag, string> = {
+  // intake
   name: "highlight-mint",
   age: "highlight-sand",
   country: "highlight-sky",
@@ -20,6 +21,17 @@ const HI_STYLE: Record<HighlightTag, string> = {
   status: "highlight-blush",
   stage: "highlight-mint",
   goal: "highlight-sky",
+
+  // granular macro (multi-color!)
+  macroIndustry: "highlight-sky",
+  macroEnv: "highlight-mint",
+  macroLeadership: "highlight-blush",
+  macroIncome: "highlight-sand",
+  macroImpact: "highlight-lav",
+  macroFlex: "highlight-sky",
+  macroSecurity: "highlight-sand",
+  macroTravel: "highlight-mint",
+  macroLocation: "highlight-lav",
 };
 
 /** Fade & slide animation when in view */
@@ -55,6 +67,7 @@ export default function OverviewResultsPage() {
   const rid = sp.get("rid") ?? "";
 
   const [intake, setIntake] = useState<IntakeSummary | undefined>();
+  const [macro, setMacro] = useState<MacroSummary | undefined>();
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -64,8 +77,12 @@ export default function OverviewResultsPage() {
       try {
         setBusy(true);
         setError(null);
-        const i = await loadIntakeSummary(user, rid);
+        const [i, m] = await Promise.all([
+          loadIntakeSummary(user, rid),
+          loadMacroSummary(user, rid).catch(() => undefined), // ok if not finished yet
+        ]);
         setIntake(i);
+        setMacro(m);
       } catch (err: any) {
         setError(err?.message ?? "Failed to load your data");
       } finally {
@@ -93,7 +110,7 @@ export default function OverviewResultsPage() {
     return null;
   }
 
-  const intro = intake ? generateOverviewIntro(intake) : null;
+  const intro = intake ? generateOverviewIntro(intake, macro) : null;
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-20 space-y-14">
