@@ -76,6 +76,34 @@ function TraitBar({
   );
 }
 
+/** Sequential fade/slide animation like Overview but for full blocks */
+function FadeBlock({
+  children,
+  index,
+  delayPerItem = 200,
+}: {
+  children: React.ReactNode;
+  index: number;
+  delayPerItem?: number;
+}) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), 250 + index * delayPerItem);
+    return () => clearTimeout(t);
+  }, [index, delayPerItem]);
+
+  return (
+    <div
+      className={`transition-all duration-700 ease-out text-[1.05rem] leading-relaxed ${
+        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+      }`}
+      style={{ transitionDelay: `${index * 100}ms` }}
+    >
+      {children}
+    </div>
+  );
+}
+
 /* -------------------- Page -------------------- */
 export default function RiasecReportPage() {
   const { user, loading } = useAuth();
@@ -110,8 +138,8 @@ export default function RiasecReportPage() {
 }, [user, rid, loading]);
 
   const section: RiasecSection | null = useMemo(
-    () => (data ? generateRiasecSection(data) : null),
-    [data]
+    () => (data ? generateRiasecSection(data, `${user!.uid}|${rid}`) : null),
+    [data, user, rid]
   );
 
   const scores = data?.scores ?? [];
@@ -137,38 +165,46 @@ export default function RiasecReportPage() {
   /* -------------------- Render -------------------- */
   return (
     <div
-      className={`max-w-3xl mx-auto px-4 py-16 space-y-12 transition-all ${reveal}`}
+      className={`max-w-3xl mx-auto py-16 px-4 space-y-12 ${reveal}`}
     >
-      <header className="space-y-3 text-center">
+   {/* INTRO HEADER */}
+    <div className="flex flex-col items-center space-y-6 text-center">
+      <FadeBlock index={0}>
         <h1 className="text-4xl font-semibold text-gray-900">
           So, {(intake?.name) || "".trim()}...
         </h1>
-        <p className="text-[1.15rem] md:text-[1.25rem] leading-relaxed text-gray-700 max-w-2xl mx-auto">
+      </FadeBlock>
+      <FadeBlock index={1}>
+        <p className="text-[1.35rem] md:text-[1.25rem] leading-relaxed text-gray-700">
           Now it’s time to dive a little deeper into your{" "}
           <span className="text-gradient font-semibold">RIASEC Profile</span>.
         </p>
-      </header>
+      </FadeBlock>
+    </div>
 
-      <section className="text-center space-y-4">
-        <p className="text-gray-700 text-[1.05rem] leading-relaxed max-w-2xl mx-auto">
+    {/* INTRO PARAGRAPHS */}
+    <div className="flex flex-col items-center space-y-5">
+      <FadeBlock index={2}>
+        <p className="text-gray-700 text-[1.15rem] leading-relaxed max-w-3xl text-center">
           Just a quick refresher — your RIASEC profile explores six key
           dimensions of career interests:
-          <strong>
-            {" "}
-            Realistic, Investigative, Artistic, Social, Enterprising,{" "}
-          </strong>
+          <strong> Realistic, Investigative, Artistic, Social, Enterprising, </strong>
           and <strong>Conventional</strong>.
         </p>
-        <p className="text-gray-700 text-[1.05rem] leading-relaxed max-w-2xl mx-auto">
+      </FadeBlock>
+      <FadeBlock index={3}>
+        <p className="text-gray-700 text-[1.15rem] leading-relaxed max-w-3xl text-center">
           Think of it as a snapshot of your natural work style — what energizes
           you, what environments you thrive in, and how you like to bring ideas
           to life.
         </p>
-      </section>
+      </FadeBlock>
+    </div>
 
       {/* 2) Trait breakdowns */}
       <section className="space-y-10">
-        {section.traits.map((t) => (
+        {section.traits.map((t, i) => (
+        <FadeBlock key={t.key} index={i + 4}>
           <div
             key={t.key}
             className="space-y-3 border-b border-gray-200 pb-8 last:border-none"
@@ -188,34 +224,39 @@ export default function RiasecReportPage() {
               {t.paragraph}
             </p>
           </div>
-        ))}
-      </section>
+        </FadeBlock>
+      ))}
+    </section>
 
       {/* 3) Combined insight */}
-      <section className="space-y-4 pt-4 text-center">
+      <FadeBlock index={12}>
+      <section className="space-y-4 pt-4 text-justify">
         <h2 className="text-2xl font-semibold text-gray-900">
           Putting it all together
         </h2>
-        <p className="text-gray-700 text-[1.1rem] leading-relaxed max-w-2xl mx-auto">
+        <p className="text-gray-700 text-[1.1rem] leading-relaxed max-w-2xl text-justify">
           {section.combinedInsight}
         </p>
       </section>
+      </FadeBlock>
 
       {/* 4) Environments & activities */}
-      <section className="space-y-4 text-center">
+      <FadeBlock index={13}>
+      <section className="space-y-4 text-justify">
         <h2 className="text-2xl font-semibold text-gray-900">
           Where you'll thrive
         </h2>
-        <p className="text-gray-700 text-[1.05rem] leading-relaxed max-w-2xl mx-auto">
+        <p className="text-gray-700 text-[1.05rem] leading-relaxed max-w-2xl text-justify">
           {section.environments.paragraph}
         </p>
 
-        <ul className="max-w-md mx-auto text-gray-700 list-disc list-inside space-y-2 text-left">
+        <ul className="max-w-md text-gray-700 list-disc list-inside space-y-2 text-justify">
           {section.environments.examples.map((ex, i) => (
             <li key={i}>{ex}</li>
           ))}
         </ul>
       </section>
+      </FadeBlock>
 
       {/* Nav */}
       <div className="text-center pt-10">
