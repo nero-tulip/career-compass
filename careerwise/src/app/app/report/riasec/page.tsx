@@ -5,9 +5,18 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { loadRiasecSummary } from "@/app/lib/results/loaders/map-riasec";
-import type { RIASECSummary, RIASECKey } from "@/app/lib/results/loaders/map-riasec";
+import type {
+  RIASECSummary,
+  RIASECKey,
+} from "@/app/lib/results/loaders/map-riasec";
+import {
+  generateRiasecSection,
+  type RiasecSection,
+} from "@/app/lib/results/generators/generate-riasec-section";
+import { loadIntakeSummary } from "@/app/lib/results/loaders";
+import type { IntakeSummary } from "@/app/lib/results/types";
 
-// Core RIASEC labels and color codes
+/* -------------------- Core labels & colors -------------------- */
 const LABELS: Record<RIASECKey, string> = {
   R: "Realistic",
   I: "Investigative",
@@ -26,25 +35,17 @@ const TRAIT_COLORS: Record<RIASECKey, string> = {
   C: "bg-indigo-500",
 };
 
-const TRAIT_DESC: Record<RIASECKey, string> = {
-  R: "Hands-on, practical, and tactile. You enjoy working with tools, materials, or physical results.",
-  I: "Curious, analytical, and systems-minded. You like solving problems and understanding how things work.",
-  A: "Creative, expressive, and original. You value design, writing, and imagination.",
-  S: "Supportive and collaborative. You enjoy helping others learn and grow.",
-  E: "Dynamic and opportunity-seeking. You like leading, persuading, and taking initiative.",
-  C: "Organized, structured, and detail-oriented. You like making systems run efficiently.",
-};
-
-// Smooth fade-in
+/* -------------------- Animations -------------------- */
 function useReveal() {
   const [shown, setShown] = useState(false);
   useEffect(() => {
-    const t = setTimeout(() => setShown(true), 20);
+    const t = setTimeout(() => setShown(true), 30);
     return () => clearTimeout(t);
   }, []);
   return shown ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3";
 }
 
+/* -------------------- Trait Bar -------------------- */
 function TraitBar({
   label,
   value,
@@ -66,9 +67,7 @@ function TraitBar({
       <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
         <div
           className={`h-full transition-all duration-500 ease-out ${
-            highlight
-              ? "bg-gradient-to-r from-cyan-400 to-violet-500"
-              : color
+            highlight ? "bg-gradient-to-r from-cyan-400 to-violet-500" : color
           }`}
           style={{ width: `${pct}%` }}
         />
@@ -77,6 +76,7 @@ function TraitBar({
   );
 }
 
+/* -------------------- Page -------------------- */
 export default function RiasecReportPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -87,98 +87,146 @@ export default function RiasecReportPage() {
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<RIASECSummary | null>(null);
   const reveal = useReveal();
+  const [intake, setIntake] = useState<IntakeSummary | null>(null);
 
   useEffect(() => {
-    if (!user || loading) return;
-    (async () => {
-      try {
-        setBusy(true);
-        const res = await loadRiasecSummary(user, rid);
-        setData(res);
-      } catch (e: any) {
-        setError(e?.message ?? "Failed to load RIASEC results");
-      } finally {
-        setBusy(false);
-      }
-    })();
-  }, [user, rid, loading]);
+  if (!user || loading) return;
+  (async () => {
+    try {
+      setBusy(true);
+      // Load both RIASEC and Intake in parallel
+      const [riasec, intakeSum] = await Promise.all([
+        loadRiasecSummary(user, rid),
+        loadIntakeSummary(user, rid),
+      ]);
+      setData(riasec);
+      setIntake(intakeSum ?? null);
+    } catch (e: any) {
+      setError(e?.message ?? "Failed to load RIASEC results");
+    } finally {
+      setBusy(false);
+    }
+  })();
+}, [user, rid, loading]);
 
-  // Always safe hooks first
+  const section: RiasecSection | null = useMemo(
+    () => (data ? generateRiasecSection(data) : null),
+    [data]
+  );
+
   const scores = data?.scores ?? [];
   const topKeys = data?.top3 ?? ([] as RIASECKey[]);
-  const topString = useMemo(() => topKeys.join(" - "), [topKeys]);
 
-  // UI states
+  /* -------------------- UI states -------------------- */
   if (loading || busy)
     return (
-      <div className="max-w-3xl mx-auto py-12 px-4 text-sm text-gray-600">
+      <div className="max-w-3xl mx-auto py-20 px-4 text-center text-gray-600 text-lg">
         Loading your RIASEC profile…
       </div>
     );
 
   if (error)
     return (
-      <div className="max-w-3xl mx-auto py-12 px-4 text-red-600">{error}</div>
+      <div className="max-w-3xl mx-auto py-20 px-4 text-center text-red-700">
+        {error}
+      </div>
     );
 
-  if (!data) return null;
+  if (!data || !section) return null;
 
+  /* -------------------- Render -------------------- */
   return (
     <div
-      className={`max-w-3xl mx-auto px-4 py-12 space-y-10 transition-all ${reveal}`}
+      className={`max-w-3xl mx-auto px-4 py-16 space-y-12 transition-all ${reveal}`}
     >
-      <header className="space-y-2 text-center">
-        <h1 className="text-3xl font-semibold">Your RIASEC Profile</h1>
-        <p className="text-gray-600">
-          A snapshot of where your interests and motivation tend to peak.
+      <header className="space-y-3 text-center">
+        <h1 className="text-4xl font-semibold text-gray-900">
+          So, {(intake?.name) || "".trim()}...
+        </h1>
+        <p className="text-[1.15rem] md:text-[1.25rem] leading-relaxed text-gray-700 max-w-2xl mx-auto">
+          Now it’s time to dive a little deeper into your{" "}
+          <span className="text-gradient font-semibold">RIASEC Profile</span>.
         </p>
       </header>
 
-      {/* Overview */}
-      <section className="rounded-2xl border p-6 bg-white shadow-sm">
-        <h2 className="text-xl font-semibold mb-2">Overview</h2>
-        <p className="text-sm text-gray-700">
-          Your top areas are <strong>{topString}</strong>. These patterns
-          reflect the kinds of work and environments that naturally energize
-          you.
+      <section className="text-center space-y-4">
+        <p className="text-gray-700 text-[1.05rem] leading-relaxed max-w-2xl mx-auto">
+          Just a quick refresher — your RIASEC profile explores six key
+          dimensions of career interests:
+          <strong>
+            {" "}
+            Realistic, Investigative, Artistic, Social, Enterprising,{" "}
+          </strong>
+          and <strong>Conventional</strong>.
+        </p>
+        <p className="text-gray-700 text-[1.05rem] leading-relaxed max-w-2xl mx-auto">
+          Think of it as a snapshot of your natural work style — what energizes
+          you, what environments you thrive in, and how you like to bring ideas
+          to life.
         </p>
       </section>
 
-      {/* Per-trait summary */}
-      <section className="space-y-5">
-        {scores.map((s) => (
-          <div key={s.key} className="space-y-2">
-            <h3 className="text-lg font-semibold text-gray-800">
-              {LABELS[s.key]} ({s.key})
-            </h3>
-            <p className="text-sm text-gray-700">{TRAIT_DESC[s.key]}</p>
-            <TraitBar
-              label={LABELS[s.key]}
-              value={s.avg}
-              color={TRAIT_COLORS[s.key]}
-              highlight={topKeys.includes(s.key)}
-            />
+      {/* 2) Trait breakdowns */}
+      <section className="space-y-10">
+        {section.traits.map((t) => (
+          <div
+            key={t.key}
+            className="space-y-3 border-b border-gray-200 pb-8 last:border-none"
+          >
+            <h3 className="text-xl font-semibold text-gray-900">{t.header}</h3>
+
+            <div className="max-w-md">
+              <TraitBar
+                label={LABELS[t.key]}
+                value={t.score}
+                color={TRAIT_COLORS[t.key]}
+                highlight={topKeys.includes(t.key)}
+              />
+            </div>
+
+            <p className="text-gray-700 text-[1.05rem] leading-relaxed">
+              {t.paragraph}
+            </p>
           </div>
         ))}
       </section>
 
-      {/* Top-3 summary */}
-      <section className="rounded-2xl border p-6 bg-white shadow-sm">
-        <h2 className="text-xl font-semibold mb-3">Top Interests</h2>
-        <ul className="grid sm:grid-cols-3 gap-3 text-sm text-gray-700">
-          {topKeys.map((k) => (
-            <li key={k} className="rounded-lg border p-3 bg-[--surface]">
-              <div className="font-medium mb-1">{LABELS[k]}</div>
-              <div className="text-gray-600">{TRAIT_DESC[k]}</div>
-            </li>
+      {/* 3) Combined insight */}
+      <section className="space-y-4 pt-4 text-center">
+        <h2 className="text-2xl font-semibold text-gray-900">
+          Putting it all together
+        </h2>
+        <p className="text-gray-700 text-[1.1rem] leading-relaxed max-w-2xl mx-auto">
+          {section.combinedInsight}
+        </p>
+      </section>
+
+      {/* 4) Environments & activities */}
+      <section className="space-y-4 text-center">
+        <h2 className="text-2xl font-semibold text-gray-900">
+          Where you'll thrive
+        </h2>
+        <p className="text-gray-700 text-[1.05rem] leading-relaxed max-w-2xl mx-auto">
+          {section.environments.paragraph}
+        </p>
+
+        <ul className="max-w-md mx-auto text-gray-700 list-disc list-inside space-y-2 text-left">
+          {section.environments.examples.map((ex, i) => (
+            <li key={i}>{ex}</li>
           ))}
         </ul>
       </section>
 
-      <div className="text-center">
+      {/* Nav */}
+      <div className="text-center pt-10">
         <button
           onClick={() => router.push(`/app/report/big5?rid=${rid}`)}
-          className="btn btn-primary"
+          className="btn btn-primary text-lg font-semibold"
+          style={{
+            background: "linear-gradient(90deg,var(--mint-400),var(--sky-400))",
+            border: "none",
+            boxShadow: "0 3px 8px rgba(0,0,0,0.06)",
+          }}
         >
           Next: Big-5 Personality →
         </button>
