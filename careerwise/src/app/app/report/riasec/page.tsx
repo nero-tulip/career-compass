@@ -211,7 +211,7 @@ export default function RiasecReportPage() {
           >
             <h3 className="text-xl font-semibold text-gray-900">{t.header}</h3>
 
-            <div className="max-w-md">
+            <div className="max-w-3xl">
               <TraitBar
                 label={LABELS[t.key]}
                 value={t.score}
@@ -260,6 +260,18 @@ export default function RiasecReportPage() {
 
       {/* Nav */}
       <div className="text-center pt-10">
+        <button
+          onClick={() => router.push(`/app/report/overview?rid=${rid}`)}
+          className="btn btn-primary text-lg font-semibold"
+          style={{
+            background: "linear-gradient(90deg,var(--sky-400),var(--mint-400))",
+            border: "none",
+            boxShadow: "0 3px 8px rgba(0,0,0,0.06)",
+          }}
+        >
+          ← Back: Overview
+        </button>
+        {" "}{" "}
         <button
           onClick={() => router.push(`/app/report/big5?rid=${rid}`)}
           className="btn btn-primary text-lg font-semibold"
