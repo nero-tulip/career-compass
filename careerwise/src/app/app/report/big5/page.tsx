@@ -6,12 +6,16 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { loadBig5Summary } from "@/app/lib/results/loaders/map-big5";
 import type { Big5Summary, Big5Key } from "@/app/lib/results/loaders/map-big5";
-import {
-  generateBig5Section,
-  type Big5Section,
-} from "@/app/lib/results/generators/generate-big5-section";
 
-/** Quick fade-in for initial page reveal */
+const LABELS: Record<Big5Key, string> = {
+  O: "Openness (O)",
+  C: "Conscientiousness (C)",
+  E: "Extraversion (E)",
+  A: "Agreeableness (A)",
+  N: "Neuroticism (N)",
+};
+
+/** Quick fade-in */
 function useReveal() {
   const [v, setV] = useState(false);
   useEffect(() => {
@@ -52,33 +56,6 @@ function TraitBar({
   );
 }
 
-/** Sequential fade/slide animation like Overview */
-function FadeBlock({
-  children,
-  index,
-  delayPerItem = 200,
-}: {
-  children: React.ReactNode;
-  index: number;
-  delayPerItem?: number;
-}) {
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setVisible(true), 250 + index * delayPerItem);
-    return () => clearTimeout(t);
-  }, [index, delayPerItem]);
-
-  return (
-    <div
-      className={`transition-all duration-700 ease-out text-[1.05rem] leading-relaxed ${
-        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-      }`}
-    >
-      {children}
-    </div>
-  );
-}
-
 export default function Big5ResultsPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -107,14 +84,17 @@ export default function Big5ResultsPage() {
   }, [user, rid, loading]);
 
   // ---- hooks above any early returns ----
-  const scores = data?.scores ?? [];
-  const topKeys = data?.top3 ?? ([] as Big5Key[]);
+  const scores = data?.scores ?? [];          // [{ key, avg, sum, count }]
+  const topKeys = data?.top3 ?? ([] as Big5Key[]); // already ["O","C","E"]
+  const topString = useMemo(() => topKeys.join(" - "), [topKeys]);
 
-  // Always run useMemo — safe because generateBig5Section handles undefined gracefully
-  const section: Big5Section | null = useMemo(() => {
-    if (!data) return null;
-    return generateBig5Section(data);
-  }, [data]);
+  const TRAIT_BLURBS: Record<Big5Key, string> = {
+    O: "Curious, creative, enjoys ideas and variety.",
+    C: "Organized, reliable, prefers structure and follow-through.",
+    E: "Energized by people, stimulation, and outward impact.",
+    A: "Cooperative, empathetic, team-oriented and supportive.",
+    N: "Emotionally sensitive; benefits from stability and healthy coping.",
+  };
 
   // ---- safe early returns ----
   if (loading || busy) {
@@ -129,85 +109,60 @@ export default function Big5ResultsPage() {
       <div className="max-w-3xl mx-auto py-12 px-4 text-red-600">{error}</div>
     );
   }
-  if (!data || !section) return null;
+  if (!data) return null;
 
   return (
     <div
-      className={`max-w-3xl mx-auto px-4 py-16 space-y-12 transition-all ${reveal}`}
+      className={`max-w-3xl mx-auto px-4 py-12 space-y-8 transition-all ${reveal}`}
     >
-      {/* HEADER */}
-      <div className="flex flex-col items-center space-y-6 text-center">
-        <FadeBlock index={0}>
-          <h1 className="text-4xl font-semibold text-gray-900">
-            Let’s take a closer look at your personality
-          </h1>
-        </FadeBlock>
-        <FadeBlock index={1}>
-          <p className="text-[1.3rem] text-gray-700">
-            Your{" "}
-            <span className="text-gradient font-semibold">Big-5 Profile</span>{" "}
-            reveals the deeper tendencies shaping how you think, feel, and work.
-          </p>
-        </FadeBlock>
-      </div>
-
-      {/* INTRO */}
-      <FadeBlock index={2}>
-        <p className="text-gray-700 text-[1.15rem] leading-relaxed text-center max-w-2xl mx-auto">
-          {section.intro}
+      <header className="text-center space-y-2">
+        <h1 className="text-3xl font-semibold tracking-tight">
+          Your Big-5 Personality
+        </h1>
+        <p className="text-gray-600">
+          A high-level view of your dispositional tendencies at work.
         </p>
-      </FadeBlock>
+      </header>
 
-      {/* TRAITS */}
-      <section className="space-y-10">
-        {section.traits.map((t, i) => (
-          <FadeBlock key={t.key} index={i + 3}>
-            <div className="space-y-3 border-b border-gray-200 pb-8 last:border-none">
-              <h3 className="text-xl font-semibold text-gray-900">
-                {t.header}
-              </h3>
-              <TraitBar
-                label={t.header}
-                value={t.score}
-                highlight={topKeys.includes(t.key)}
-              />
-              <p className="text-gray-700 text-[1.05rem] leading-relaxed">
-                {t.paragraph}
-              </p>
-            </div>
-          </FadeBlock>
-        ))}
+      <section className="rounded-2xl border p-6 bg-white shadow-sm">
+        <h2 className="text-xl font-semibold mb-3">Overview</h2>
+        <p className="text-sm text-gray-700">
+          Your standout traits are <strong>{topString}</strong>. These
+          tendencies shape your work style, collaboration preferences, and how
+          you approach learning and problem-solving.
+        </p>
+        <ul className="mt-3 grid sm:grid-cols-3 gap-3 text-sm text-gray-700">
+          {topKeys.map((k) => (
+            <li key={k} className="rounded-lg border p-3 bg-[--surface]">
+              <div className="font-medium mb-1">{LABELS[k]}</div>
+              <div className="text-gray-600">{TRAIT_BLURBS[k]}</div>
+            </li>
+          ))}
+        </ul>
       </section>
 
-      {/* COMBINED INSIGHT */}
-      <FadeBlock index={10}>
-        <section className="space-y-4 text-center">
-          <h2 className="text-2xl font-semibold text-gray-900">
-            What it all means
-          </h2>
-          <p className="text-gray-700 text-[1.1rem] leading-relaxed max-w-2xl mx-auto">
-            {section.combinedInsight}
-          </p>
-        </section>
-      </FadeBlock>
-
-      {/* NEXT BUTTON */}
-      <FadeBlock index={11}>
-        <div className="text-center pt-10">
-          <button
-            onClick={() => router.push(`/app/report/values?rid=${rid}`)}
-            className="btn btn-primary text-lg font-semibold"
-            style={{
-              background:
-                "linear-gradient(90deg,var(--mint-400),var(--sky-400))",
-              border: "none",
-              boxShadow: "0 3px 8px rgba(0,0,0,0.06)",
-            }}
-          >
-            Next: Work Values →
-          </button>
+      <section className="rounded-2xl border p-6 bg-white shadow-sm space-y-3">
+        <h2 className="text-xl font-semibold">Scores</h2>
+        <div className="grid grid-cols-1 gap-3">
+          {scores.map((s) => (
+            <TraitBar
+              key={s.key}
+              label={LABELS[s.key]}
+              value={s.avg}            // 1–5 mean from scorer
+              highlight={topKeys.includes(s.key)}
+            />
+          ))}
         </div>
-      </FadeBlock>
+      </section>
+
+      <div className="text-center">
+        <button
+          onClick={() => router.push(`/app/report/values?rid=${rid}`)}
+          className="btn btn-primary"
+        >
+          Next: Work Values →
+        </button>
+      </div>
     </div>
   );
 }
