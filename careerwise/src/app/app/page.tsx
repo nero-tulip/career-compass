@@ -281,8 +281,8 @@ function ModuleCard(props: {
 
 function ProBadge({ locked }: { locked: boolean }) {
   return (
-    <span className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
-      {locked ? "🔒" : "⭐️"} PRO
+    <span className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-purple-700 text-white border border-purple-900 font-medium">
+      PRO
     </span>
   );
 }
