@@ -41,6 +41,11 @@ export default function Footer() {
           </a>
         </div>
       </div>
+      {/* Bottom line */}
+      <div className="mt-6 text-center text-[13px] text-gray-500">
+        Made with <span className="text-[var(--lav-400)]">❤️</span> by{" "}
+        <span className="font-medium text-gray-700">CareerCompass</span>
+      </div>
     </footer>
   );
 }
