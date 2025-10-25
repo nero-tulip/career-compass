@@ -4,6 +4,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/providers/AuthProvider";
+import Footer from "@/app/components/Footer";
+
 
 // Firestore (client)
 import {
@@ -156,7 +158,7 @@ const MODULES: ModuleDef[] = [
   {
     key: "deepDive",
     title: "Industry Deep Dive",
-    subtitle: "Key industry insights.",
+    subtitle: "Key industry insights",
     kind: "service",
     tier: "comingSoon",
     viewPath: "/app/deepdive",
@@ -165,6 +167,126 @@ const MODULES: ModuleDef[] = [
       "Explore in-depth analyses of various industries to inform your career decisions. Coming soon!",
   },
 ];
+
+// ---------- UI ----------
+function ModuleCard(props: {
+  title: string;
+  subtitle?: string;
+  icon?: string;
+  tier: "free" | "pro" | "comingSoon";
+  locked?: boolean;
+  busy?: boolean;
+  primaryLabel: string;
+  onPrimary: () => void;
+  progress?: Progress;
+  blurb?: string;
+  secondaryLabel?: string;
+  onSecondary?: (() => void) | undefined;
+}) {
+  const {
+    title,
+    subtitle,
+    icon,
+    tier,
+    locked,
+    busy,
+    primaryLabel,
+    onPrimary,
+    progress,
+    blurb,
+  } = props;
+
+  return (
+    <div className="group relative rounded-2xl p-4 bg-white flex flex-col justify-between transition-all shadow-sm ring-1 ring-black/5 hover:shadow-md hover:-translate-y-0.5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <div className="h-9 w-9 grid place-items-center text-lg">
+            {icon ?? "🧭"}
+          </div>
+          <div>
+            <div className="font-semibold">{title}</div>
+            {subtitle ? (
+              <div className="text-xs text-gray-600">{subtitle}</div>
+            ) : null}
+          </div>
+        </div>
+        {/* Only show PRO badge; Free badge removed */}
+        {tier === "pro" ? <ProBadge locked={!!locked} /> : null}
+      </div>
+
+      {/* Progress (optional) */}
+      {typeof progress?.pct === "number" ? (
+        <div className="mt-4">
+          <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className="h-full"
+              style={{
+                width: `${Math.max(0, Math.min(100, progress.pct))}%`,
+                background: locked
+                  ? "linear-gradient(90deg,#a78bfa,#f472b6)"
+                  : "linear-gradient(90deg,#22d3ee,#a855f7)",
+              }}
+            />
+          </div>
+          <div className="mt-1 text-[11px] text-gray-500">
+            {locked ? "Locked" : progress.label ?? `${progress.pct}% complete`}
+          </div>
+        </div>
+      ) : (
+        <div className="mt-4 h-2" />
+      )}
+
+      <div className="mt-4 flex items-center gap-2">
+        <button
+          onClick={onPrimary}
+          disabled={busy}
+          className={[
+            "px-3 py-1.5 rounded-lg text-sm cursor-pointer",
+            props.tier === "comingSoon"
+              ? "bg-gradient-to-r from-[var(--lav-400)] to-[var(--sky-400)] text-black cursor-not-allowed opacity-80"
+              : locked
+              ? "bg-purple-600 text-white"
+              : "bg-black text-white",
+            "hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-black/10",
+          ].join(" ")}
+        >
+          {primaryLabel}
+        </button>
+
+        {props.onSecondary ? (
+          <button
+            onClick={props.onSecondary}
+            disabled={busy}
+            className="px-3 py-1.5 rounded-lg cursor-pointer text-sm ring-1 ring-gray-200 text-gray-700 hover:bg-gray-50"
+          >
+            {props.secondaryLabel}
+          </button>
+        ) : null}
+      </div>
+
+      {/* Hover tooltip */}
+      {blurb ? (
+        <div
+          className="pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full opacity-0 group-hover:opacity-100 transition
+                     w-[min(92vw,28rem)]"
+        >
+          <div className="rounded-xl bg-white shadow-md ring-1 ring-black/5 p-3 text-xs text-gray-700">
+            {blurb}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function ProBadge({ locked }: { locked: boolean }) {
+  return (
+    <span className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+      {locked ? "🔒" : "⭐️"} PRO
+    </span>
+  );
+}
+
 
 // ---------- Page ----------
 export default function AppHome() {
@@ -361,7 +483,7 @@ export default function AppHome() {
       <header>
         <h1 className="text-2xl font-semibold">Your CareerCompass</h1>
         <p className="text-gray-700">
-          Build your profile, explore insights, and go deeper with PRO.
+          A suite of tools and resources to help you discover and plan your ideal career.
         </p>
       </header>
 
@@ -376,22 +498,20 @@ export default function AppHome() {
               (m.tier === "pro" && !isPro) || m.tier === "comingSoon";
             const busy = busyKey === m.key;
             const pct = progressForModule[m.key]?.pct ?? 0;
-            const primaryCta =
-              m.tier === "comingSoon"
-                ? "Coming Soon"
-                : locked
-                ? "Unlock PRO"
-                : pct >= 100
-                ? "Review"
-                : pct > 0
-                ? "Continue"
-                : "Start";
-            const onPrimary =
-              m.tier === "comingSoon"
-                ? () => {}
-                : locked
-                ? () => router.push("/app/pro")
-                : () => handleStartOrResume(m);
+            let primaryCta =
+              pct >= 100 ? "Review" : pct > 0 ? "Continue" : "Start";
+            let onPrimary: () => void = () => handleStartOrResume(m);
+
+            // --- Coming soon override ---
+            if (m.tier === "comingSoon") {
+              primaryCta = "Coming Soon";
+              onPrimary = () => {};
+            }
+            // --- Pro-only override ---
+            else if (m.tier === "pro" && !isPro) {
+              primaryCta = "Unlock PRO";
+              onPrimary = () => router.push("/app/pro");
+            }
 
             return (
               <ModuleCard
@@ -494,125 +614,8 @@ export default function AppHome() {
           })}
         </div>
       </div>
+      <Footer />
     </section>
   );
 }
 
-// ---------- UI ----------
-function ModuleCard(props: {
-  title: string;
-  subtitle?: string;
-  icon?: string;
-  tier: "free" | "pro" | "comingSoon";
-  locked?: boolean;
-  busy?: boolean;
-  primaryLabel: string;
-  onPrimary: () => void;
-  progress?: Progress;
-  blurb?: string;
-  secondaryLabel?: string;
-  onSecondary?: (() => void) | undefined;
-}) {
-  const {
-    title,
-    subtitle,
-    icon,
-    tier,
-    locked,
-    busy,
-    primaryLabel,
-    onPrimary,
-    progress,
-    blurb,
-  } = props;
-
-  return (
-    <div className="group relative rounded-2xl p-4 bg-white flex flex-col justify-between transition-all shadow-sm ring-1 ring-black/5 hover:shadow-md hover:-translate-y-0.5">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <div className="h-9 w-9 grid place-items-center text-lg">
-            {icon ?? "🧭"}
-          </div>
-          <div>
-            <div className="font-semibold">{title}</div>
-            {subtitle ? (
-              <div className="text-xs text-gray-600">{subtitle}</div>
-            ) : null}
-          </div>
-        </div>
-        {/* Only show PRO badge; Free badge removed */}
-        {tier === "pro" ? <ProBadge locked={!!locked} /> : null}
-      </div>
-
-      {/* Progress (optional) */}
-      {typeof progress?.pct === "number" ? (
-        <div className="mt-4">
-          <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-            <div
-              className="h-full"
-              style={{
-                width: `${Math.max(0, Math.min(100, progress.pct))}%`,
-                background: locked
-                  ? "linear-gradient(90deg,#a78bfa,#f472b6)"
-                  : "linear-gradient(90deg,#22d3ee,#a855f7)",
-              }}
-            />
-          </div>
-          <div className="mt-1 text-[11px] text-gray-500">
-            {locked ? "Locked" : progress.label ?? `${progress.pct}% complete`}
-          </div>
-        </div>
-      ) : (
-        <div className="mt-4 h-2" />
-      )}
-
-      <div className="mt-4 flex items-center gap-2">
-        <button
-          onClick={onPrimary}
-          disabled={busy}
-          className={[
-            "px-3 py-1.5 rounded-lg text-sm cursor-pointer",
-            props.tier === "comingSoon"
-              ? "bg-gradient-to-r from-pink-400 to-amber-400 text-white cursor-not-allowed opacity-80"
-              : locked
-              ? "bg-purple-600 text-white"
-              : "bg-black text-white",
-            "hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-black/10",
-          ].join(" ")}
-        >
-          {primaryLabel}
-        </button>
-
-        {props.onSecondary ? (
-          <button
-            onClick={props.onSecondary}
-            disabled={busy}
-            className="px-3 py-1.5 rounded-lg cursor-pointer text-sm ring-1 ring-gray-200 text-gray-700 hover:bg-gray-50"
-          >
-            {props.secondaryLabel}
-          </button>
-        ) : null}
-      </div>
-
-      {/* Hover tooltip */}
-      {blurb ? (
-        <div
-          className="pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full opacity-0 group-hover:opacity-100 transition
-                     w-[min(92vw,28rem)]"
-        >
-          <div className="rounded-xl bg-white shadow-md ring-1 ring-black/5 p-3 text-xs text-gray-700">
-            {blurb}
-          </div>
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function ProBadge({ locked }: { locked: boolean }) {
-  return (
-    <span className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
-      {locked ? "🔒" : "⭐️"} PRO
-    </span>
-  );
-}
