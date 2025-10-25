@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/providers/AuthProvider";
 import Footer from "@/app/components/Footer";
-
+import { fetchUserEntitlementServer } from "../lib/server/actions";
 
 // Firestore (client)
 import {
@@ -243,7 +243,7 @@ function ModuleCard(props: {
           className={[
             "px-3 py-1.5 rounded-lg text-sm cursor-pointer",
             props.tier === "comingSoon"
-              ? "bg-gradient-to-r from-[var(--lav-400)] to-[var(--sky-400)] text-black cursor-not-allowed opacity-80"
+              ? "bg-[var(--sky-400)] text-black border-[var(--sky-600)] cursor-not-allowed opacity-80"
               : locked
               ? "bg-purple-600 text-white"
               : "bg-black text-white",
@@ -287,7 +287,6 @@ function ProBadge({ locked }: { locked: boolean }) {
   );
 }
 
-
 // ---------- Page ----------
 export default function AppHome() {
   const router = useRouter();
@@ -299,11 +298,12 @@ export default function AppHome() {
     if (!user || loading) return;
     (async () => {
       try {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        const ent = userDoc.data()?.entitlement;
+        const token = await user.getIdToken();
+        const ent = await fetchUserEntitlementServer(token);
         setIsPro(ent === "pro");
-      } catch (e) {
-        console.error("Failed to load entitlement", e);
+      } catch (err) {
+        console.error("Failed to fetch entitlement:", err);
+        setIsPro(false);
       }
     })();
   }, [user, loading]);
@@ -483,7 +483,8 @@ export default function AppHome() {
       <header>
         <h1 className="text-2xl font-semibold">Your CareerCompass</h1>
         <p className="text-gray-700">
-          A suite of tools and resources to help you discover and plan your ideal career.
+          A suite of tools and resources to help you discover and plan your
+          ideal career.
         </p>
       </header>
 
@@ -552,9 +553,20 @@ export default function AppHome() {
             const locked =
               (m.tier === "pro" && !isPro) || m.tier === "comingSoon";
             const busy = busyKey === m.key;
-            const onPrimary = locked
-              ? () => router.push("/app/pro")
-              : () => handleView(m);
+            let primaryCta = "View";
+            let onPrimary: () => void = () => handleView(m);
+
+            // --- Coming Soon override ---
+            if (m.tier === "comingSoon") {
+              primaryCta = "Coming Soon";
+              onPrimary = () => {};
+            }
+            // --- Pro-only override ---
+            else if (m.tier === "pro" && !isPro) {
+              primaryCta = "Go PRO";
+              onPrimary = () => router.push("/app/pro");
+            }
+
             return (
               <ModuleCard
                 key={m.key}
@@ -565,7 +577,7 @@ export default function AppHome() {
                 locked={locked}
                 busy={busy}
                 onPrimary={onPrimary}
-                primaryLabel={busy ? "Loading…" : "View"}
+                primaryLabel={busy ? "Loading…" : primaryCta}
                 blurb={m.blurb}
               />
             );
@@ -618,4 +630,3 @@ export default function AppHome() {
     </section>
   );
 }
-
