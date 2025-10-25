@@ -15,6 +15,7 @@ import {
 } from "@/app/lib/results/generators/generate-riasec-section";
 import { loadIntakeSummary } from "@/app/lib/results/loaders";
 import type { IntakeSummary } from "@/app/lib/results/types";
+import ReportNav from "@/app/components/ReportNav";
 
 type RIASEC = {
   R: number;
@@ -377,6 +378,10 @@ export default function RiasecReportPage() {
   /* -------------------- Render -------------------- */
   return (
     <div className={`max-w-3xl mx-auto py-16 px-4 space-y-12 ${reveal}`}>
+      {/* NAV */}
+      <FadeBlock index={-1}>
+        <ReportNav rid={rid} />
+      </FadeBlock>
       {/* INTRO HEADER */}
       <div className="flex flex-col items-center space-y-6 text-center">
         <FadeBlock index={0}>

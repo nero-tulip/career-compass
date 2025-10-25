@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { generateTeamRole } from "@/app/lib/results/generators/generate-team-roles";
 import type { TeamRoleSummary } from "@/app/lib/results/generators/generate-team-roles";
+import ReportNav from "@/app/components/ReportNav";
 
 /** Quick fade-in */
 function useReveal() {
@@ -126,6 +127,10 @@ export default function TeamRolePage() {
     <div
       className={`max-w-3xl mx-auto px-4 py-12 space-y-8 transition-all ${reveal}`}
     >
+      {/* NAV */}
+      <ReportNav rid={rid} />
+      
+      {/* HEADER */}
       <header className="space-y-1 text-center">
         <h1 className="text-3xl font-semibold tracking-tight">
           Team Role & Collaboration

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { generateWorkMotivations } from "@/app/lib/results/generators/generate-work-motivations";
 import type { Motivator } from "@/app/lib/results/types";
+import ReportNav from "@/app/components/ReportNav";
 
 function Badge({ children }: { children: React.ReactNode }) {
   return <span className="badge">{children}</span>;
@@ -50,6 +51,10 @@ export default function WorkValuesPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-12 space-y-8">
+      {/* NAV */}
+      <ReportNav rid={rid} />
+
+      {/* HEADER */}
       <header className="text-center space-y-2">
         <h1 className="text-3xl font-semibold tracking-tight">Work Values & Motivations</h1>
         <p className="text-gray-600">

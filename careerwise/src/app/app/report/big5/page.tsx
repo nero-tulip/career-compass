@@ -12,6 +12,7 @@ import {
   generateBig5Section,
   type Big5Section,
 } from "@/app/lib/results/generators/generate-big5-section";
+import ReportNav from "@/app/components/ReportNav";
 
 /* -------------------- Labels & Pop stats -------------------- */
 const LABELS: Record<Big5Key, string> = {
@@ -472,6 +473,9 @@ export default function Big5ResultsPage() {
     <div
       className={`max-w-3xl mx-auto px-4 py-16 space-y-12 transition-all ${reveal}`}
     >
+      <FadeBlock index={-1}>
+        <ReportNav rid={rid} />
+      </FadeBlock>
       {/* HEADER */}
       <div className="flex flex-col items-center space-y-6 text-center">
         <FadeBlock index={0}>
@@ -594,8 +598,7 @@ export default function Big5ResultsPage() {
             }}
           >
             ← Back: RIASEC Analysis
-          </button>
-          {" "}{" "}
+          </button>{" "}
           <button
             onClick={() => router.push(`/app/report/values?rid=${rid}`)}
             className="btn btn-primary text-lg font-semibold"

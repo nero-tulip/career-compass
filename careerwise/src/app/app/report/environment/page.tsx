@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { generateEnvironmentSummary } from "@/app/lib/results/generators/generate-environment";
+import ReportNav from "@/app/components/ReportNav";
 
 export default function EnvironmentPage() {
   const { user, loading } = useAuth();
@@ -37,6 +38,10 @@ export default function EnvironmentPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-12 space-y-8">
+      {/* NAV */}
+      <ReportNav rid={rid} />
+      
+      {/* HEADER */}
       <header className="text-center space-y-2">
         <h1 className="text-3xl font-semibold tracking-tight">Your Ideal Work Environment</h1>
         <p className="text-gray-600">Where your personality, preferences, and motivations come together.</p>

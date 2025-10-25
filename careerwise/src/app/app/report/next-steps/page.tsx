@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { generateNextSteps } from "@/app/lib/results/generators/generate-next-steps";
+import ReportNav from "@/app/components/ReportNav";
 
 function useReveal() {
   const [v, setV] = useState(false);
@@ -53,6 +54,10 @@ export default function NextStepsPage() {
 
   return (
     <div className={`max-w-3xl mx-auto px-4 py-12 space-y-8 transition-all ${reveal}`}>
+      {/* NAV */}
+      <ReportNav rid={rid} />
+
+      {/* HEADER */}
       <header className="text-center space-y-2">
         <h1 className="text-3xl font-semibold tracking-tight">Next Steps</h1>
         <p className="text-gray-600">
