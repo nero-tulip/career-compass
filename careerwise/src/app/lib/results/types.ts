@@ -89,6 +89,7 @@ export type MotivatorKey =
   | "service"         // care, mentorship, community
   | "adventure"       // novelty, challenge, variety
   | "structure"       // order, systems, process
+  | "belonging"       // teamwork, supportive culture
 
 export type Motivator = {
   key: MotivatorKey;
@@ -99,4 +100,22 @@ export type Motivator = {
     signal: string;            // e.g. "income_priority: High" or "RIASEC: A high"
   }>;
   confidence: "low" | "medium" | "high";
+  score?: number;           // 0–100 optional overall score
+};
+
+// src/app/lib/results/types.ts
+export type ValuesReport = {
+  opening: string;
+  topValues: Array<{
+    key: MotivatorKey;
+    label: string;
+    score: number;
+    confidence: "low" | "medium" | "high";
+    coachNote: string;
+    examples: string[];      // keep per-value examples on the cards
+  }>;
+  tradeoffs: Array<{ a: string; b: string; note: string }>;
+  thriveConditions: string[];
+  watchouts: string[];
+  talkTrack: string;
 };
