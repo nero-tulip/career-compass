@@ -1,4 +1,5 @@
 // Shared types for the unified results pipeline
+import type { MotivationName } from "./values-taxonomy";
 
 export type LabeledValue<T = string | number | boolean> = {
   /** The raw value we store (id / code / number / boolean) */
@@ -103,19 +104,23 @@ export type Motivator = {
   score?: number;           // 0–100 optional overall score
 };
 
-// src/app/lib/results/types.ts
+
+
 export type ValuesReport = {
-  opening: string;
-  topValues: Array<{
-    key: MotivatorKey;
-    label: string;
-    score: number;
-    confidence: "low" | "medium" | "high";
-    coachNote: string;
-    examples: string[];      // keep per-value examples on the cards
-  }>;
-  tradeoffs: Array<{ a: string; b: string; note: string }>;
-  thriveConditions: string[];
-  watchouts: string[];
-  talkTrack: string;
+  title: string;                     // e.g., "What Drives You at Work"
+  opening: string;                   // explainer: what/why/how to use this
+  topMotivations: Array<{
+    name: MotivationName;
+    score?: number;                  // optional: from deterministic hints
+    why: string;                     // LLM short rationale grounded in user data
+  }>; // length 3
+  lowMotivations: Array<{
+    name: MotivationName;
+    why: string;                     // LLM rationale for “less important”
+  }>; // length 3
+  summary: string;                   // empathetic, career-coach tone “what this means for you”
+  debug?: {                          // handy while building; safe to omit in prod
+    usedSignals: Record<string, unknown>;
+  };
 };
+

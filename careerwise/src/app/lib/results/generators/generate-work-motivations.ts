@@ -8,6 +8,7 @@ import {
 } from "@/app/lib/results/loaders/client-loaders";
 import type { Motivator, MotivatorKey, RIASECProfile } from "@/app/lib/results/types";
 import type { ValuesReport } from "@/app/lib/results/types";
+import type { MotivationName } from "@/app/lib/results/values-taxonomy";
 
 /* ---------------------------- labels ---------------------------- */
 
@@ -22,6 +23,20 @@ const LABELS: Record<MotivatorKey, string> = {
   adventure: "Challenge & Variety",
   structure: "Structure & Clarity",
   belonging: "Belonging & Teamwork",
+};
+
+/** Map internal keys → public taxonomy names shown to users */
+const TAXONOMY_NAME: Record<MotivatorKey, MotivationName> = {
+  mastery: "Mastery",
+  impact: "Impact",
+  autonomy: "Autonomy",
+  stability: "Stability",
+  recognition: "Recognition",
+  creativity: "Creativity",
+  service: "Service/Mentorship",
+  adventure: "Variety/Challenge",
+  structure: "Structure/Clarity",
+  belonging: "Belonging",
 };
 
 /* ------------------------ macro id registry --------------------- */
@@ -65,10 +80,10 @@ function toScore(m: Pick<Motivator, "confidence" | "sources" | "key">): number {
   const richnessCap = Math.min(15, richness);
 
   // small key weight to stabilize order (optional)
-  const keyWeight = {
+  const keyWeight: Record<MotivatorKey, number> = {
     impact: 6, mastery: 5, creativity: 4, autonomy: 4,
-    recognition: 3, service: 3, stability: 3, structure: 2, adventure: 2,
-  } as Record<MotivatorKey, number>;
+    recognition: 3, service: 3, stability: 3, structure: 2, adventure: 2, belonging: 2,
+  };
 
   const raw = base + confBonus + diversity + richnessCap + (keyWeight[m.key] ?? 0);
   return Math.max(0, Math.min(100, Math.round(raw)));
@@ -364,43 +379,37 @@ function buildOpening(top: Motivator[]) {
 export async function generateValuesReport(user: User, rid: string): Promise<ValuesReport> {
   const motivs = await generateWorkMotivations(user, rid);
   const top = motivs.slice(0, 3);
-  const opening = `${buildOpening(top)} Let’s translate that into day-to-day choices.`;
+  const openingCoach = `${buildOpening(top)} Let’s translate that into day-to-day choices.`;
 
   const keys = new Set<MotivatorKey>(motivs.map((m) => m.key));
-  const tradeoffs = buildTradeoffs(keys);
+  const tradeoffs = buildTradeoffs(keys); // currently not returned; keep if you later add it to ValuesReport UI
+  const thriveConditions = top.flatMap((m) => THRIVE_BY_KEY[m.key] ?? []); // same note
 
-  const thriveConditions = top.flatMap((m) => THRIVE_BY_KEY[m.key] ?? []);
-
-  const watchouts: string[] = [];
-  const has = (k: MotivatorKey) => keys.has(k);
-  if (has("autonomy") && !has("structure")) {
-    watchouts.push("High autonomy can turn into chaos without weekly checkpoints.");
-  }
-  if (has("recognition") && has("service")) {
-    watchouts.push("Protect time for both visibility and support so neither lags.");
-  }
-  if (has("stability") && has("adventure")) {
-    watchouts.push("Batch novelty to avoid constant context switching.");
-  }
-
-  const talkTrack =
-    `“I do my best work when I have ${top[0]?.label}${
-      top[1] ? " and " + top[1].label : ""
-    }. Could we shape my next project to include those conditions?”`;
-
-  return {
-    opening,
-    topValues: top.map((m) => ({
-      key: m.key,
-      label: m.label,
-      score: m.score ?? 0,
-      confidence: m.confidence,
-      coachNote: m.rationale,
-      examples: EXAMPLES_BY_KEY[m.key] ?? [],
+  // Assemble ValuesReport in the exact expected shape
+  const report: ValuesReport = {
+    title: "What Drives You at Work",
+    opening: openingCoach,
+    topMotivations: top.map((m) => ({
+      name: TAXONOMY_NAME[m.key],
+      why: m.rationale,
+      score: m.score, // optional in type
     })),
-    tradeoffs,
-    thriveConditions,
-    watchouts,
-    talkTrack,
+    lowMotivations: motivs.slice(-3).map((m) => ({
+      name: TAXONOMY_NAME[m.key],
+      why: m.rationale,
+      // (no score here—ValuesReport.lowMotivations doesn’t define it)
+    })),
+    summary: `Your top work values are ${top.map((m) => TAXONOMY_NAME[m.key]).join(", ")}. Prioritize roles and environments that offer these conditions to stay motivated and fulfilled. Avoid settings that over-index on ${motivs
+      .slice(-3)
+      .map((m) => TAXONOMY_NAME[m.key])
+      .join(", ")}.`,
+    // debug / coach extras could be added here later if you extend the type:
+    // debug: { tradeoffs, thriveConditions },
   };
+
+  return report;
 }
+
+/* ========================================================================== */
+/*                Old-style report for experiments (not used)                 */
+/* ========================================================================== */
