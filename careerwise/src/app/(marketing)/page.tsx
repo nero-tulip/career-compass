@@ -2,7 +2,13 @@
 
 import JoinPlatformButton from "../components/JoinPlatformButton";
 import Image from "next/image";
-import { useEffect, useRef, useState, ElementType, PropsWithChildren } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  ElementType,
+  PropsWithChildren,
+} from "react";
 
 /** ----------------------------------------------------------
  * Tiny reveal-on-scroll helper (no external deps)
@@ -71,12 +77,59 @@ function Reveal({
   );
 }
 
+// Small, reusable screenshot card with a subtle frame + caption
+function ScreenshotCard({
+  src,
+  alt,
+  caption,
+  delay = 0,
+}: {
+  src: string;
+  alt: string;
+  caption: string;
+  delay?: number;
+}) {
+  return (
+    <Reveal
+      as="figure"
+      delay={delay}
+      direction="up"
+      className="snap-center shrink-0"
+    >
+      <div className="rounded-2xl bg-white/80 backdrop-blur border border-black/10 shadow-[var(--shadow-1)] overflow-hidden w-[380px] md:w-[600px]">
+        {/* faux device header */}
+        <div className="h-8 bg-gradient-to-b from-white/70 to-white/30 border-b border-black/5 flex items-center gap-1 px-3">
+          <span className="inline-block w-2 h-2 rounded-full bg-[#FF5F57]" />
+          <span className="inline-block w-2 h-2 rounded-full bg-[#FEBC2E]" />
+          <span className="inline-block w-2 h-2 rounded-full bg-[#28C840]" />
+          <div className="ml-2 text-xs text-gray-500 truncate">
+            CareerCompass
+          </div>
+        </div>
+
+        {/* image */}
+        <div className="relative aspect-[3/2]">
+          <Image src={src} alt={alt} fill className="object-cover" />
+        </div>
+
+        {/* caption */}
+        <figcaption className="px-4 py-3 text-sm text-gray-700">
+          {caption}
+        </figcaption>
+      </div>
+    </Reveal>
+  );
+}
+
 export default function Home() {
   return (
     <div className="relative overflow-hidden">
       {/* background textures */}
       <div aria-hidden className="bg-hero absolute inset-0" />
-      <div aria-hidden className="bg-noise absolute inset-0 opacity-[0.06] pointer-events-none" />
+      <div
+        aria-hidden
+        className="bg-noise absolute inset-0 opacity-[0.06] pointer-events-none"
+      />
 
       {/* HERO */}
       <section className="relative mx-auto max-w-6xl px-4 pt-24 md:pt-36 pb-20">
@@ -88,19 +141,38 @@ export default function Home() {
         <div className="grid gap-10 md:grid-cols-[1.2fr_1fr] items-center">
           <Reveal as="div" direction="up" delay={0.05}>
             <h1 className="text-balance text-4xl md:text-6xl font-semibold tracking-tight leading-tight glow">
-              Finding the perfect career, <span className="text-gradient">for you</span>.
+              Finding the perfect career,{" "}
+              <span className="text-gradient">for you</span>.
             </h1>
-            <Reveal as="p" className="mt-6 text-lg text-[--text-dim] max-w-prose" delay={0.15}>
-              We combine <span className="underline-accent-green">psychological assessments</span> with <span className="underline-accent">job-market insight</span> to help you find
-              career environments where you’ll thrive.
+            <Reveal
+              as="p"
+              className="mt-6 text-lg text-[--text-dim] max-w-prose"
+              delay={0.15}
+            >
+              We combine{" "}
+              <span className="underline-accent-green">
+                psychological assessments
+              </span>{" "}
+              with <span className="underline-accent">job-market insight</span>{" "}
+              to help you find career environments where you’ll thrive.
             </Reveal>
 
-            <Reveal as="div" className="mt-8 flex flex-wrap items-center gap-4" delay={0.25}>
+            <Reveal
+              as="div"
+              className="mt-8 flex flex-wrap items-center gap-4"
+              delay={0.25}
+            >
               <JoinPlatformButton />
-              <a href="#how-it-works" className="btn btn-ghost">How it works</a>
+              <a href="#how-it-works" className="btn btn-ghost">
+                How it works
+              </a>
             </Reveal>
 
-            <Reveal as="div" className="mt-6 flex flex-wrap gap-3 text-sm text-[--text-dim]" delay={0.35}>
+            <Reveal
+              as="div"
+              className="mt-6 flex flex-wrap gap-3 text-sm text-[--text-dim]"
+              delay={0.35}
+            >
               <span className="badge">Psychological analysis</span>
               <span className="badge">Job market insight</span>
               <span className="badge">Resources and mentorship</span>
@@ -108,7 +180,12 @@ export default function Home() {
           </Reveal>
 
           {/* image column — no white box, aligned with text, larger */}
-          <Reveal as="div" className="relative min-h-[420px] md:min-h-[520px]" direction="left" delay={0.15}>
+          <Reveal
+            as="div"
+            className="relative min-h-[420px] md:min-h-[520px]"
+            direction="left"
+            delay={0.15}
+          >
             <Image
               src="/hero-illustration.svg"
               alt="Career search illustration"
@@ -122,7 +199,11 @@ export default function Home() {
 
       {/* THE PROBLEM */}
       <section className="relative mx-auto max-w-6xl px-4 py-20">
-        <Reveal as="h2" className="text-3xl md:text-5xl font-semibold mb-8" delay={0.05}>
+        <Reveal
+          as="h2"
+          className="text-3xl md:text-5xl font-semibold mb-8"
+          delay={0.05}
+        >
           The problem
         </Reveal>
 
@@ -131,10 +212,13 @@ export default function Home() {
             className="rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-6 shadow-[var(--shadow-1)]"
             delay={0.05}
           >
-            <div className="text-sm uppercase tracking-wide text-gray-500 mb-2">Problem #1</div>
+            <div className="text-sm uppercase tracking-wide text-gray-500 mb-2">
+              Problem #1
+            </div>
             <p className="text-lg leading-relaxed">
-              <span className="underline-accent">Lack of self-awareness</span>: few people have a clear,
-              psychological understanding of <span className="underline-accent">who they are</span>.
+              <span className="underline-accent">Lack of self-awareness</span>:
+              few people have a clear, psychological understanding of{" "}
+              <span className="underline-accent">who they are</span>.
             </p>
           </Reveal>
 
@@ -142,10 +226,16 @@ export default function Home() {
             className="rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-6 shadow-[var(--shadow-1)]"
             delay={0.15}
           >
-            <div className="text-sm uppercase tracking-wide text-gray-500 mb-2">Problem #2</div>
+            <div className="text-sm uppercase tracking-wide text-gray-500 mb-2">
+              Problem #2
+            </div>
             <p className="text-lg leading-relaxed">
-              <span className="underline-accent-green">Lack of job-market knowledge</span>: even fewer people
-              know what roles and paths are available or <span className="underline-accent-green">how to pursue them</span>.
+              <span className="underline-accent-green">
+                Lack of job-market knowledge
+              </span>
+              : even fewer people know what roles and paths are available or{" "}
+              <span className="underline-accent-green">how to pursue them</span>
+              .
             </p>
           </Reveal>
         </div>
@@ -153,7 +243,11 @@ export default function Home() {
 
       {/* OUR APPROACH */}
       <section className="relative mx-auto max-w-6xl px-4 pb-20">
-        <Reveal as="h2" className="text-3xl md:text-5xl font-semibold mb-8" delay={0.05}>
+        <Reveal
+          as="h2"
+          className="text-3xl md:text-5xl font-semibold mb-8"
+          delay={0.05}
+        >
           Our approach
         </Reveal>
 
@@ -162,10 +256,13 @@ export default function Home() {
             className="rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-6 shadow-[var(--shadow-1)]"
             delay={0.05}
           >
-            <div className="text-sm uppercase tracking-wide text-gray-500 mb-2">Step 1</div>
+            <div className="text-sm uppercase tracking-wide text-gray-500 mb-2">
+              Step 1
+            </div>
             <h3 className="font-medium mb-2">Data Collection</h3>
             <p className="text-[15px] text-[--text-dim]">
-              We'll get to know you through a number of psychometric assessments.
+              We'll get to know you through a number of psychometric
+              assessments.
             </p>
           </Reveal>
 
@@ -173,10 +270,14 @@ export default function Home() {
             className="rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-6 shadow-[var(--shadow-1)]"
             delay={0.15}
           >
-            <div className="text-sm uppercase tracking-wide text-gray-500 mb-2">Step 2</div>
+            <div className="text-sm uppercase tracking-wide text-gray-500 mb-2">
+              Step 2
+            </div>
             <h3 className="font-medium mb-2">Mapping & Analysis</h3>
             <p className="text-[15px] text-[--text-dim]">
-              Utilizing government-collected data, we map your RIASEC profile and personality traits to career environments where you’re most likely to thrive.
+              Utilizing government-collected data, we map your RIASEC profile
+              and personality traits to career environments where you’re most
+              likely to thrive.
             </p>
           </Reveal>
 
@@ -184,62 +285,112 @@ export default function Home() {
             className="rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-6 shadow-[var(--shadow-1)]"
             delay={0.25}
           >
-            <div className="text-sm uppercase tracking-wide text-gray-500 mb-2">Step 3</div>
+            <div className="text-sm uppercase tracking-wide text-gray-500 mb-2">
+              Step 3
+            </div>
             <h3 className="font-medium mb-2">Kicking Goals</h3>
             <p className="text-[15px] text-[--text-dim]">
-              We'll provide you with personalized resources and mentor guidance to help you achieve your career goals.
+              We'll provide you with personalized resources and mentor guidance
+              to help you achieve your career goals.
             </p>
           </Reveal>
         </div>
       </section>
 
-      {/* HOW IT WORKS (timeline, no cards) */}
-      <section id="how-it-works" className="relative mx-auto max-w-5xl px-4 py-20">
-        <Reveal as="h2" className="text-center text-3xl font-semibold" delay={0.05}>
-          How it works
+      {/* HOW IT WORKS — product screenshot scroller */}
+      <section
+        id="how-it-works"
+        className="relative mx-auto max-w-6xl px-4 py-20"
+      >
+        <Reveal
+          as="h2"
+          className="text-center text-3xl md:text-5xl font-semibold"
+          delay={0.05}
+        >
+          How it works (a quick look)
         </Reveal>
-        <ol className="mt-10 relative">
-          <div aria-hidden className="absolute left-4 md:left-1/2 md:-translate-x-1/2 top-0 bottom-0 w-px bg-[linear-gradient(to_bottom,transparent,rgba(0,0,0,0.08),transparent)]" />
-          <Reveal as="li" className="timeline-step" delay={0.05}>
-            <span className="timeline-dot" />
-            <div className="timeline-content">
-              <h3 className="font-medium">Tell us about you</h3>
-              <p className="muted mt-1">A few quick questions to set context — name, country, stage.</p>
-            </div>
-          </Reveal>
-          <Reveal as="li" className="timeline-step" delay={0.15}>
-            <span className="timeline-dot" />
-            <div className="timeline-content">
-              <h3 className="font-medium">Answer thoughtfully</h3>
-              <p className="muted mt-1">Values and interests using research-backed questionnaires.</p>
-            </div>
-          </Reveal>
-          <Reveal as="li" className="timeline-step" delay={0.25}>
-            <span className="timeline-dot" />
-            <div className="timeline-content">
-              <h3 className="font-medium">See your profile</h3>
-              <p className="muted mt-1">A clear snapshot, tailored matches, and practical next steps.</p>
-            </div>
-          </Reveal>
-        </ol>
+
+        {/* subtle rail background */}
+        <div
+          aria-hidden
+          className="mt-10 h-[2px] bg-[linear-gradient(to_right,transparent,rgba(0,0,0,0.08),transparent)] rounded"
+        />
+
+        {/* horizontal scroller */}
+        <div
+          className="
+      mt-8 flex gap-6 overflow-x-auto snap-x snap-mandatory pb-4
+      [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
+    "
+        >
+          {/* Replace src paths with your real screenshots */}
+          <ScreenshotCard
+            src="/screens/intro.png"
+            alt="Intro flow"
+            caption="Answer quick, research-backed questions."
+            delay={0.05}
+          />
+          <ScreenshotCard
+            src="/screens/riasec.png"
+            alt="RIASEC assessment"
+            caption="Build your RIASEC profile and discover natural interests."
+            delay={0.1}
+          />
+          <ScreenshotCard
+            src="/screens/report-values.png"
+            alt="Work values report"
+            caption="See the work conditions where you thrive."
+            delay={0.15}
+          />
+          <ScreenshotCard
+            src="/screens/matches.png"
+            alt="Career matches"
+            caption="Explore tailored career environments with fit explanations."
+            delay={0.2}
+          />
+          <ScreenshotCard
+            src="/screens/resources.png"
+            alt="Resources & roadmap"
+            caption="Get a short roadmap and curated resources to move forward."
+            delay={0.25}
+          />
+        </div>
+
+        {/* foot notes */}
+        <Reveal
+          as="p"
+          className="mt-6 text-center text-sm text-[--text-dim]"
+          delay={0.15}
+        >
+          Drag to explore • Screens represent typical results; your experience
+          adapts to your answers.
+        </Reveal>
       </section>
 
       {/* TESTIMONIALS (flowing quotes) */}
       <section className="relative mx-auto max-w-6xl px-4 py-20">
-        <Reveal as="h2" className="text-center text-3xl font-semibold" delay={0.05}>
+        <Reveal
+          as="h2"
+          className="text-center text-3xl font-semibold"
+          delay={0.05}
+        >
           What people are saying
         </Reveal>
         <div className="mt-10 grid gap-8 md:grid-cols-3">
           <Reveal className="quote" delay={0.05}>
-            “Told me things about myself I didn't even know. Super insightful. No one in school or uni ever focused on these things.”
+            “Told me things about myself I didn't even know. Super insightful.
+            No one in school or uni ever focused on these things.”
             <cite>— Annie, 22 (Sydney, Aus)</cite>
           </Reveal>
           <Reveal className="quote" delay={0.15}>
-            “So much better than what was offered in school in terms of guidance. The increased self-awareness alone was incredibly helpful.”
+            “So much better than what was offered in school in terms of
+            guidance. The increased self-awareness alone was incredibly
+            helpful.”
             <cite>— James, 20 (London, UK)</cite>
           </Reveal>
           <Reveal className="quote" delay={0.25}>
-            “Helped me feel more confident in the uni degree I chose. I now feel like I have a plan with a goal and I know how to get there.”
+            “Helped me feel more confident in the uni degree I chose. I now feel
+            like I have a plan with a goal and I know how to get there.”
             <cite>— Sarah, 19 (Melbourne, Aus)</cite>
           </Reveal>
         </div>
@@ -252,7 +403,9 @@ export default function Home() {
           delay={0.05}
         >
           <h2 className="text-3xl font-semibold">Ready to find your fit?</h2>
-          <p className="muted mt-2">Start now and get a research-based snapshot of where you’ll thrive.</p>
+          <p className="muted mt-2">
+            Start now and get a research-based snapshot of where you’ll thrive.
+          </p>
           <div className="mt-6 flex justify-center">
             <JoinPlatformButton />
           </div>
@@ -261,7 +414,11 @@ export default function Home() {
 
       {/* FAQ */}
       <section className="relative mx-auto max-w-5xl px-4 pb-24">
-        <Reveal as="h2" className="text-2xl md:text-3xl font-semibold mb-6 text-center" delay={0.05}>
+        <Reveal
+          as="h2"
+          className="text-2xl md:text-3xl font-semibold mb-6 text-center"
+          delay={0.05}
+        >
           Frequently asked questions
         </Reveal>
         <div className="space-y-3">
@@ -272,10 +429,13 @@ export default function Home() {
           >
             <summary className="flex cursor-pointer list-none items-center justify-between">
               <span className="font-medium">What is CareerCompass?</span>
-              <span className="ml-4 text-gray-500 transition group-open:rotate-45">＋</span>
+              <span className="ml-4 text-gray-500 transition group-open:rotate-45">
+                ＋
+              </span>
             </summary>
             <div className="mt-3 text-[15px] text-[--text-dim]">
-              A research-based platform that maps your interests and preferences to career environments where you’re most likely to thrive.
+              A research-based platform that maps your interests and preferences
+              to career environments where you’re most likely to thrive.
             </div>
           </Reveal>
 
@@ -285,11 +445,16 @@ export default function Home() {
             delay={0.15}
           >
             <summary className="flex cursor-pointer list-none items-center justify-between">
-              <span className="font-medium">How long does the free profile take?</span>
-              <span className="ml-4 text-gray-500 transition group-open:rotate-45">＋</span>
+              <span className="font-medium">
+                How long does the free profile take?
+              </span>
+              <span className="ml-4 text-gray-500 transition group-open:rotate-45">
+                ＋
+              </span>
             </summary>
             <div className="mt-3 text-[15px] text-[--text-dim]">
-              Around 8–10 minutes. You can pause anytime — your progress is saved to your account.
+              Around 8–10 minutes. You can pause anytime — your progress is
+              saved to your account.
             </div>
           </Reveal>
 
@@ -300,10 +465,14 @@ export default function Home() {
           >
             <summary className="flex cursor-pointer list-none items-center justify-between">
               <span className="font-medium">What do I get with PRO?</span>
-              <span className="ml-4 text-gray-500 transition group-open:rotate-45">＋</span>
+              <span className="ml-4 text-gray-500 transition group-open:rotate-45">
+                ＋
+              </span>
             </summary>
             <div className="mt-3 text-[15px] text-[--text-dim]">
-              A deeper psychological profile (Big 5), higher-precision career matches, personalized resources, and upcoming mentor access — all for a one-time fee.
+              A deeper psychological profile (Big 5), higher-precision career
+              matches, personalized resources, and upcoming mentor access — all
+              for a one-time fee.
             </div>
           </Reveal>
 
@@ -314,10 +483,13 @@ export default function Home() {
           >
             <summary className="flex cursor-pointer list-none items-center justify-between">
               <span className="font-medium">Can I edit my answers later?</span>
-              <span className="ml-4 text-gray-500 transition group-open:rotate-45">＋</span>
+              <span className="ml-4 text-gray-500 transition group-open:rotate-45">
+                ＋
+              </span>
             </summary>
             <div className="mt-3 text-[15px] text-[--text-dim]">
-              Yes. The platform lets you revisit each section (Basics, Preferences, RIASEC) and regenerate results anytime.
+              Yes. The platform lets you revisit each section (Basics,
+              Preferences, RIASEC) and regenerate results anytime.
             </div>
           </Reveal>
 
@@ -328,10 +500,14 @@ export default function Home() {
           >
             <summary className="flex cursor-pointer list-none items-center justify-between">
               <span className="font-medium">Is my data private?</span>
-              <span className="ml-4 text-gray-500 transition group-open:rotate-45">＋</span>
+              <span className="ml-4 text-gray-500 transition group-open:rotate-45">
+                ＋
+              </span>
             </summary>
             <div className="mt-3 text-[15px] text-[--text-dim]">
-              We take privacy seriously. Your responses are tied to your account, used to generate your results, and not sold to third parties.
+              We take privacy seriously. Your responses are tied to your
+              account, used to generate your results, and not sold to third
+              parties.
             </div>
           </Reveal>
         </div>
