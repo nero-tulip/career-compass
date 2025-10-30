@@ -325,31 +325,31 @@ export default function Home() {
         >
           {/* Replace src paths with your real screenshots */}
           <ScreenshotCard
-            src="/screens/intro.png"
+            src="/assets/screenshot1.png"
             alt="Intro flow"
             caption="Answer quick, research-backed questions."
             delay={0.05}
           />
           <ScreenshotCard
-            src="/screens/riasec.png"
+            src="/assets/screenshot2.png"
             alt="RIASEC assessment"
             caption="Build your RIASEC profile and discover natural interests."
             delay={0.1}
           />
           <ScreenshotCard
-            src="/screens/report-values.png"
+            src="/assets/screenshot3.png"
             alt="Work values report"
             caption="See the work conditions where you thrive."
             delay={0.15}
           />
           <ScreenshotCard
-            src="/screens/matches.png"
+            src="/assets/screenshot4.png"
             alt="Career matches"
             caption="Explore tailored career environments with fit explanations."
             delay={0.2}
           />
           <ScreenshotCard
-            src="/screens/resources.png"
+            src="/public/assets/screenshot5.png"
             alt="Resources & roadmap"
             caption="Get a short roadmap and curated resources to move forward."
             delay={0.25}
