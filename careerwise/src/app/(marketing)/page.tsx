@@ -367,6 +367,37 @@ export default function Home() {
         </Reveal>
       </section>
 
+      {/* DEMO VIDEO */}
+      <section className="relative mx-auto max-w-6xl px-4 pb-20">
+        <div className="rounded-2xl overflow-hidden bg-black/5 border border-black/5 shadow-[var(--shadow-2)]">
+          <div className="aspect-video w-full bg-black/70">
+            <video
+              className="h-full w-full object-cover"
+              src="/assets/platform-demo.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+            />
+          </div>
+          <div className="p-5 md:p-6 flex items-center justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-semibold">See it in action</h3>
+              <p className="text-sm text-[--text-dim]">
+                Real UI. Real results. This is what paying users get.
+              </p>
+            </div>
+            {/* optional button */}
+            <a
+              href="#"
+              className="hidden md:inline-flex items-center gap-1 text-sm font-medium text-[var(--accent)]"
+            >
+              View full walkthrough →
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* TESTIMONIALS (flowing quotes) */}
       <section className="relative mx-auto max-w-6xl px-4 py-20">
         <Reveal
