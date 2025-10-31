@@ -586,28 +586,16 @@ export default function Big5ResultsPage() {
 
       {/* NAV */}
       <FadeBlock index={12}>
-        <div className="text-center pt-10">
+        <div className="flex justify-between pt-2">
           <button
             onClick={() => router.push(`/app/report/riasec?rid=${rid}`)}
-            className="btn btn-primary text-lg font-semibold"
-            style={{
-              background:
-                "linear-gradient(90deg,var(--sky-400),var(--mint-400))",
-              border: "none",
-              boxShadow: "0 3px 8px rgba(0,0,0,0.06)",
-            }}
+            className="btn btn-ghost"
           >
             ← Back: RIASEC Analysis
           </button>{" "}
           <button
             onClick={() => router.push(`/app/report/values?rid=${rid}`)}
-            className="btn btn-primary text-lg font-semibold"
-            style={{
-              background:
-                "linear-gradient(90deg,var(--mint-400),var(--sky-400))",
-              border: "none",
-              boxShadow: "0 3px 8px rgba(0,0,0,0.06)",
-            }}
+            className="btn btn-primary"
           >
             Next: Work Values →
           </button>
@@ -616,3 +604,4 @@ export default function Big5ResultsPage() {
     </div>
   );
 }
+      {/* NAV */}

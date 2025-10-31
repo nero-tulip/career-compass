@@ -496,26 +496,16 @@ export default function RiasecReportPage() {
       </FadeBlock>
 
       {/* Nav */}
-      <div className="text-center pt-10">
+      <div className="flex justify-between pt-2">
         <button
           onClick={() => router.push(`/app/report/overview?rid=${rid}`)}
-          className="btn btn-primary text-lg font-semibold"
-          style={{
-            background: "linear-gradient(90deg,var(--sky-400),var(--mint-400))",
-            border: "none",
-            boxShadow: "0 3px 8px rgba(0,0,0,0.06)",
-          }}
+          className="btn btn-ghost"
         >
           ← Back: Overview
         </button>{" "}
         <button
           onClick={() => router.push(`/app/report/big5?rid=${rid}`)}
-          className="btn btn-primary text-lg font-semibold"
-          style={{
-            background: "linear-gradient(90deg,var(--mint-400),var(--sky-400))",
-            border: "none",
-            boxShadow: "0 3px 8px rgba(0,0,0,0.06)",
-          }}
+          className="btn btn-primary"
         >
           Next: Big-5 Personality →
         </button>

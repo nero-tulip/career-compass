@@ -148,7 +148,7 @@ export default function OverviewResultsPage() {
       ) : null}
 
       {/* Navigation */}
-      <div className="pt-10 flex items-center justify-center gap-3 flex-wrap">
+      <div className="pt-2 flex justify-center gap-4">
           <button
             onClick={() =>
               router.push(`/app/quiz/intake?rid=${encodeURIComponent(rid)}`)
@@ -161,12 +161,7 @@ export default function OverviewResultsPage() {
           onClick={() =>
             router.push(`/app/report/riasec?rid=${encodeURIComponent(rid)}`)
           }
-          className="btn btn-primary text-lg font-semibold"
-          style={{
-            background: "linear-gradient(90deg,var(--mint-400),var(--sky-400))",
-            border: "none",
-            boxShadow: "0 3px 8px rgba(0,0,0,0.06)",
-          }}
+          className="btn btn-primary"
         >
           Sounds great!
         </button>

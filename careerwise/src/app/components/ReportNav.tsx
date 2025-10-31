@@ -131,15 +131,15 @@ const ReportNav = memo(function ReportNav({
                   "group inline-block rounded-xl px-3 py-2 text-[8px] sm:text-sm transition-all text-center",
                   "ring-1 ring-black/5 hover:shadow-sm whitespace-nowrap",
                   isActive
-                    ? "bg-[var(--sky-200)] text-black ring-[var(--sky-200)]"
-                    : "bg-white text-gray-700 hover:bg-[var(--sky-50)]"
+                    ? "bg-[var(--mint-200)] text-black ring-[var(--mint-200)]"
+                    : "bg-white text-gray-700 hover:bg-[var(--mint-50)]"
                 )}
               >
                 <span
                   className={cls(
                     "font-medium",
                     isActive &&
-                      "underline decoration-[var(--sky-400)] underline-offset-4"
+                      "underline decoration-[var(--mint-600)] underline-offset-4"
                   )}
                 >
                   {it.title}
