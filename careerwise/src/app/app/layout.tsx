@@ -32,7 +32,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <div className="mx-auto max-w-6xl px-4 h-14 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link href="/" className="font-semibold text-lg tracking-tight">
-                CareerCompass
+                Career Compass
               </Link>
 
               <nav className="flex items-center gap-2">

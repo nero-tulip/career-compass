@@ -8,12 +8,10 @@ import {
 import { loadRiasecSummary } from "@/app/lib/results/loaders/map-riasec";
 import { loadBig5Summary } from "@/app/lib/results/loaders/map-big5";
 import { computeMotivators } from "@/app/lib/results/motivators/computeMotivators";
-import { MOTIVATION_TAXONOMY, type MotivationName } from "@/app/lib/results/values-taxonomy";
 import type { ValuesReport } from "@/app/lib/results/types";
+import type { MotivationName } from "@/app/lib/results/values-taxonomy";
 
-const MODEL = process.env.OPENAI_VALUES_MODEL ?? "gpt-4o-2024-08-06";
-
-/** Cache helpers (Firestore under the user’s draft run) */
+/** Cache helpers */
 async function readCache(uid: string, rid: string): Promise<ValuesReport | undefined> {
   const ref = adminDb().doc(`users/${uid}/drafts/${rid}`);
   const snap = await ref.get();
@@ -26,116 +24,18 @@ async function writeCache(uid: string, rid: string, report: ValuesReport) {
   await ref.set({ valuesReport: report, updatedAt: new Date() }, { merge: true });
 }
 
-/** JSON Schema for Structured Outputs */
-const schema = {
-  type: "object",
-  additionalProperties: false,
-  properties: {
-    topMotivations: {
-      type: "array",
-      minItems: 3,
-      maxItems: 3,
-      items: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          name: { type: "string", enum: [...MOTIVATION_TAXONOMY] },
-          why: { type: "string", minLength: 20, maxLength: 400 },
-        },
-        required: ["name", "why"],
-      },
-    },
-    lowMotivations: {
-      type: "array",
-      minItems: 3,
-      maxItems: 3,
-      items: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          name: { type: "string", enum: [...MOTIVATION_TAXONOMY] },
-          why: { type: "string", minLength: 20, maxLength: 400 },
-        },
-        required: ["name", "why"],
-      },
-    },
-    summary: { type: "string", minLength: 60, maxLength: 600 },
-  },
-  required: ["topMotivations", "lowMotivations", "summary"],
-} as const;
-
-/** Call OpenAI *Responses* API with Structured Outputs (no SDK needed) */
-async function callOpenAIResponses(rawSignals: unknown) {
-  const res = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: MODEL,
-      temperature: 0.3,
-      response_format: {
-        type: "json_schema",
-        json_schema: { name: "ValuesReport", schema, strict: true },
-      },
-      input: [
-        {
-          role: "system",
-          content: [
-            {
-              type: "text",
-              text:
-                "You are a certified career coach and organizational psychologist. " +
-                "Be empathetic, precise, and practical. Ground every conclusion in RIASEC, Big-5, Macro, and Intake signals.",
-            },
-          ],
-        },
-        {
-          role: "user",
-          content: [
-            {
-              type: "input_text",
-              text:
-                "Map this user to the fixed motivation taxonomy and write an empathetic coach-style summary.\n\n" +
-                "- Use only the taxonomy names.\n" +
-                "- Pick exactly 3 top motivations and 3 low motivations.\n" +
-                "- Ground each rationale in the signals.\n\n" +
-                `Taxonomy:\n${MOTIVATION_TAXONOMY.join(", ")}\n\n` +
-                "Signals (JSON):\n" +
-                JSON.stringify(rawSignals, null, 2),
-            },
-          ],
-        },
-      ],
-    }),
-  });
-
-  if (!res.ok) {
-    const txt = await res.text().catch(() => "");
-    throw new Error(`OpenAI HTTP ${res.status}: ${txt}`);
-  }
-
-  const data = await res.json();
-  const text =
-    data?.output?.[0]?.content?.[0]?.text ??
-    data?.output_text ??
-    "";
-  if (!text) throw new Error("OpenAI returned no structured text");
-  return JSON.parse(text) as {
-    topMotivations: Array<{ name: MotivationName; why: string }>;
-    lowMotivations: Array<{ name: MotivationName; why: string }>;
-    summary: string;
-  };
+/** Simple template generator for the summary */
+function generateSummary(top3: MotivationName[]): string {
+  const joined = top3.join(", ");
+  return `Your profile suggests you are primarily driven by ${joined}. You likely thrive in environments that prioritize these values, while roles that conflict with them may lead to burnout or disengagement. Use these drivers as your "must-haves" when evaluating new opportunities.`;
 }
 
-/** Main server generator */
 export async function generateValuesReport(uid: string, rid: string): Promise<ValuesReport> {
-  // 1) Cache
+  // 1) Check Cache
   const cached = await readCache(uid, rid).catch(() => undefined);
   if (cached) return cached;
 
-  // 2) Load signals (these “client-loaders” only read Firestore; they typically need the uid)
+  // 2) Load Data
   const fakeUser = { uid } as any;
   const [intake, macro, riasec, big5] = await Promise.all([
     loadIntakeSummary(fakeUser, rid).catch(() => undefined),
@@ -144,7 +44,7 @@ export async function generateValuesReport(uid: string, rid: string): Promise<Va
     loadBig5Summary(fakeUser, rid).catch(() => undefined),
   ]);
 
-  // 3) Intake string (bounded)
+  // 3) Prepare Inputs
   const intakeText = intake
     ? Object.values(intake)
         .map((v) => (typeof v === "string" ? v : JSON.stringify(v)))
@@ -152,12 +52,12 @@ export async function generateValuesReport(uid: string, rid: string): Promise<Va
         .slice(0, 4000)
     : "";
 
-  // 4) Deterministic rails (features + fallback)
   const riasecMap = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
   (riasec?.scores ?? []).forEach((s: any) => {
     const k = s.key as keyof typeof riasecMap;
     if (k in riasecMap) riasecMap[k] = s.avg ?? 0;
   });
+
   const big5Map = {
     O: big5?.avg?.O ?? 0,
     C: big5?.avg?.C ?? 0,
@@ -165,79 +65,45 @@ export async function generateValuesReport(uid: string, rid: string): Promise<Va
     A: big5?.avg?.A ?? 0,
     N: big5?.avg?.N ?? 0,
   };
-  const motivatorHints = await computeMotivators({
+
+  // 4) Compute Motivators (Pure Logic)
+  // We pass 'macro' now so the calculator can see explicit user choices
+  const allMotivators = await computeMotivators({
     big5: big5Map,
     riasec: riasecMap,
     intakeText,
+    macro, 
   });
 
-  const rawSignals = { intakeText, macro, riasec, big5, motivatorHints };
+  // 5) Sort & Slice
+  // computeMotivators already returns sorted by score (desc), but let's be safe
+  const sorted = [...allMotivators].sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+  
+  const topMotivators = sorted.slice(0, 3).map((m) => ({
+    name: m.label as MotivationName,
+    why: m.rationale,
+    score: m.score,
+  }));
 
-  // 5) LLM (with fallback)
-  let llmJson:
-    | { topMotivations: Array<{ name: MotivationName; why: string }>; lowMotivations: Array<{ name: MotivationName; why: string }>; summary: string }
-    | null = null;
+  const lowMotivators = sorted.slice(-3).map((m) => ({
+    name: m.label as MotivationName,
+    why: m.rationale, // You might want to flip the text here for "low" logic later
+  }));
 
-  try {
-    llmJson = await callOpenAIResponses(rawSignals);
-  } catch {
-    // fallback to deterministic extremes if LLM fails
-    const pickName = (label: string): MotivationName => {
-      if (label.includes("Mastery")) return "Mastery";
-      if (label.includes("Creativity")) return "Creativity";
-      if (label.includes("Impact")) return "Impact";
-      if (label.includes("Autonomy")) return "Autonomy";
-      if (label.includes("Belonging")) return "Belonging";
-      if (label.includes("Recognition")) return "Recognition";
-      if (label.includes("Stability")) return "Stability";
-      if (label.includes("Structure")) return "Structure/Clarity";
-      if (label.includes("Service")) return "Service/Mentorship";
-      if (label.includes("Adventure")) return "Variety/Challenge";
-      if (label.includes("Growth")) return "Learning/Growth";
-      if (label.includes("Prestige") || label.includes("Status")) return "Prestige/Status";
-      if (label.includes("Purpose") || label.includes("Mission")) return "Purpose/Mission";
-      if (label.includes("Harmony") || label.includes("Balance")) return "Work–Life Harmony";
-      if (label.includes("Financial")) return "Financial Reward";
-      if (label.includes("Leadership")) return "Leadership";
-      return "Learning/Growth";
-    };
-
-    const top = motivatorHints.slice(0, 3).map((m) => ({
-      name: pickName(m.label),
-      why: `Strong signals for ${m.label.toLowerCase()} across your profile.`,
-    }));
-    const low = motivatorHints.slice(-3).map((m) => ({
-      name: pickName(m.label),
-      why: `Fewer signals for ${m.label.toLowerCase()} in your current data.`,
-    }));
-    llmJson = {
-      topMotivations: top,
-      lowMotivations: low,
-      summary:
-        "You’re motivated by growth and visible contribution more than predictability. Choose roles that let you improve your craft, share outcomes, and iterate with feedback; avoid environments that over-index on rigid process or narrow routine.",
-    };
-  }
-
-  // 6) Copy for the page
-  const title = "What Drives You at Work";
-  const opening =
-    "Work values are the conditions that make work feel meaningful—things like mastery, creativity, impact, or stability. They matter because they shape motivation, focus, and long-term fit. Use this page to shortlist roles and environments that align, and say “no” faster to paths that don’t.";
-
-  // merge optional scores from deterministic hints (for UI)
-  const topWithScores = llmJson.topMotivations.map((m) => {
-    const hit = motivatorHints.find((h) =>
-      m.name.toLowerCase().includes(h.label.toLowerCase().split(" ")[0])
-    );
-    return { ...m, score: hit?.score };
-  });
-
+  // 6) Construct Report
   const report: ValuesReport = {
-    title,
-    opening,
-    topMotivations: topWithScores,
-    lowMotivations: llmJson.lowMotivations,
-    summary: llmJson.summary,
-    debug: { usedSignals: { macro, riasec, big5, motivatorHints } },
+    title: "What Drives You at Work",
+    opening:
+      "Work values are the conditions that make work feel meaningful. They shape your motivation, focus, and long-term satisfaction. Here is what your data suggests matters most to you.",
+    topMotivations: topMotivators,
+    lowMotivations: lowMotivators,
+    summary: generateSummary(topMotivators.map((m) => m.name)),
+    debug: { 
+      usedSignals: { 
+        macroIds: Object.keys(macro?.likert ?? {}), 
+        riasecTop: riasec?.top3 
+      } 
+    },
   };
 
   await writeCache(uid, rid, report).catch(() => {});
