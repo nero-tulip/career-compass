@@ -124,3 +124,27 @@ export type ValuesReport = {
   };
 };
 
+export type OnetAttribute = {
+  name: string;
+  score: number;
+};
+
+export type ExtendedCareerAttributes = {
+  Knowledge?: OnetAttribute[];
+  Skills?: OnetAttribute[];
+  Abilities?: OnetAttribute[];
+  Interest: OnetAttribute[]; // Crucial: This contains the RIASEC scores
+  Style?: OnetAttribute[];   // Maps to Big 5 Work Styles
+};
+
+export type ExtendedCareer = {
+  id: string; // e.g. "11-1011.00"
+  title: string;
+  description: string;
+  job_zone: number;
+  attributes: ExtendedCareerAttributes;
+};
+
+export type CareerMatchResult = ExtendedCareer & {
+  matchScore: number; // The cosine similarity score (0.00 to 1.00)
+};
