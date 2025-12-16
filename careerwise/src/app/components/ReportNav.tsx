@@ -14,7 +14,6 @@ type ReportKey = "overview"
 | "skills" 
 | "decision-making"
 | "career-clusters"
-| "example-roles"
 | "next-steps";
 
 type Item = {
@@ -71,11 +70,6 @@ const DEFAULT_ITEMS: Item[] = [
     href: (rid) => `/app/report/career-clusters?rid=${encodeURIComponent(rid)}`,
   },
   {
-    key: "example-roles",
-    title: "Roles",
-    href: (rid) => `/app/report/example-roles?rid=${encodeURIComponent(rid)}`,
-  },
-  {
     key: "next-steps",
     title: "Next Steps",
     href: (rid) => `/app/report/next-steps?rid=${encodeURIComponent(rid)}`,
@@ -107,7 +101,7 @@ const ReportNav = memo(function ReportNav({
 
     if (page === "report") return "overview"; // handle root /app/report
 
-    const validKeys: ReportKey[] = ["overview", "riasec", "big5", "values", "team-role", "environment", "skills", "decision-making", "career-clusters", "example-roles", "next-steps"];
+    const validKeys: ReportKey[] = ["overview", "riasec", "big5", "values", "team-role", "environment", "skills", "decision-making", "career-clusters", "next-steps"];
     return validKeys.includes(page as ReportKey) ? (page as ReportKey) : null;
   }, [pathname]);
 
