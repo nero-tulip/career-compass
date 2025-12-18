@@ -6,6 +6,9 @@ import { useAuth } from "@/app/providers/AuthProvider";
 import { generateCareerClusters } from "@/app/lib/results/generators/generate-career-clusters";
 import ReportNav from "@/app/components/ReportNav";
 
+/* The Career Clusters page orients users to the worlds of work that fit their psychology.
+ It explains why, surfaces tradeoffs, and stops short of prescribing specific jobs.
+ */
 // --- Components ---
 
 function FadeIn({ 

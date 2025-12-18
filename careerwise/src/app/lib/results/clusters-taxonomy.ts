@@ -1,159 +1,196 @@
 // src/app/lib/results/clusters-taxonomy.ts
 
+/* The Career Clusters page orients users to the worlds of work that fit their psychology.
+ It explains why, surfaces tradeoffs, and stops short of prescribing specific jobs.
+ */
+
 export type ClusterId =
-  | "agriculture"
-  | "architecture"
-  | "arts_av_tech"
-  | "business"
-  | "education"
-  | "finance"
-  | "government"
-  | "health"
-  | "hospitality"
-  | "human_services"
-  | "it"
-  | "law_public_safety"
-  | "manufacturing"
-  | "marketing"
-  | "stem"
-  | "transportation";
+  // High-Structure / Low-Ambiguity Worlds
+  | "operations_admin"
+  | "accounting_financial_control"
+  | "manufacturing_industrial"
+  | "logistics_supply_chain"
+
+  // Competitive / High-Upside Worlds
+  | "entrepreneurship_startups"
+  | "high_finance_investing"
+  | "sales_revenue"
+
+  // Analytical / Abstract Worlds
+  | "law_legal_reasoning"
+  | "policy_government_regulation"
+  | "academic_theoretical_research"
+
+  // Technical / Problem-Solving Worlds
+  | "applied_engineering"
+  | "software_technology"
+  | "scientific_lab_research"
+
+  // Human-Centric Care Worlds
+  | "clinical_healthcare"
+  | "mental_health_counseling"
+  | "education_training"
+  | "human_social_services"
+
+  // Creative / Expressive Worlds
+  | "creative_media"
+  | "marketing_brand_design"
+
+  // Action-Oriented / Physical Worlds
+  | "public_safety_emergency"
+  | "skilled_trades_construction"
+  | "transportation_physical_operations";
 
 export type CareerClusterDef = {
   id: ClusterId;
   label: string;
   description: string;
-  socPrefixes: string[];
-  riasecFocus: string[];
-  commonPathways: string[]; // <--- NEW: Broad, recognizable fields
 };
 
 export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
-  agriculture: {
-    id: "agriculture",
-    label: "Agriculture, Food & Natural Resources",
-    description: "Producing, processing, and distributing food, fiber, wood products, and natural resources.",
-    socPrefixes: ["45", "19-1"],
-    riasecFocus: ["R", "I"],
-    commonPathways: ["Environmental Science", "Farming & Ranching", "Veterinary Services", "Forestry & Conservation", "Food Science"],
+  // High-Structure / Low-Ambiguity Worlds
+  operations_admin: {
+    id: "operations_admin",
+    label: "Operations & Administration",
+    description:
+      "Careers focused on managing organizational processes, ensuring efficiency, and maintaining structured environments.",
   },
-  architecture: {
-    id: "architecture",
-    label: "Architecture & Construction",
-    description: "Designing, planning, managing, building, and maintaining the built environment.",
-    socPrefixes: ["47", "17-1", "17-3"],
-    riasecFocus: ["R", "A", "E"],
-    commonPathways: ["Architecture", "Civil Engineering", "Construction Management", "Skilled Trades", "Urban Planning"],
+  accounting_financial_control: {
+    id: "accounting_financial_control",
+    label: "Accounting & Financial Control",
+    description:
+      "Careers centered around financial record-keeping, auditing, and ensuring regulatory compliance.",
   },
-  arts_av_tech: {
-    id: "arts_av_tech",
-    label: "Arts, A/V Technology & Communications",
-    description: "Designing, producing, exhibiting, performing, writing, and publishing multimedia content.",
-    socPrefixes: ["27"],
-    riasecFocus: ["A", "E"],
-    commonPathways: ["Graphic Design", "Journalism & Writing", "Film & Video Production", "Performing Arts", "Media Technology"],
+  manufacturing_industrial: {
+    id: "manufacturing_industrial",
+    label: "Manufacturing & Industrial",
+    description:
+      "Careers involving the production of goods, quality control, and industrial operations.",
   },
-  business: {
-    id: "business",
-    label: "Business Management & Administration",
-    description: "Planning, organizing, directing, and evaluating business functions.",
-    socPrefixes: ["11", "13-1"],
-    riasecFocus: ["E", "C"],
-    commonPathways: ["Human Resources", "Project Management", "Business Analytics", "Operations", "Entrepreneurship"],
+  logistics_supply_chain: {
+    id: "logistics_supply_chain",
+    label: "Logistics & Supply Chain",
+    description:
+      "Careers focused on the management of supply chains, transportation, and distribution of goods.",
   },
-  education: {
-    id: "education",
+
+  // Competitive / High-Upside Worlds
+  entrepreneurship_startups: {
+    id: "entrepreneurship_startups",
+    label: "Entrepreneurship & Startups",
+    description:
+      "Careers focused on innovation, business development, and creating new ventures.",
+  },
+  high_finance_investing: {
+    id: "high_finance_investing",
+    label: "High Finance & Investing",
+    description:
+      "Careers centered around financial markets, investment strategies, and wealth management.",
+  },
+  sales_revenue: {
+    id: "sales_revenue",
+    label: "Sales & Revenue",
+    description:
+      "Careers focused on driving sales, managing client relationships, and maximizing revenue.",
+  },
+  
+  // Analytical / Abstract Worlds
+  law_legal_reasoning: {
+    id: "law_legal_reasoning",
+    label: "Law & Legal Reasoning",
+    description:
+      "Careers centered around legal analysis, advocacy, and the interpretation of laws and regulations.",
+  },
+  policy_government_regulation: {
+    id: "policy_government_regulation",
+    label: "Policy, Government & Regulation",
+    description:
+      "Careers focused on public policy development, regulatory compliance, and governmental affairs.",
+  },
+  academic_theoretical_research: {
+    id: "academic_theoretical_research",
+    label: "Academic, Theoretical & Research",
+    description:
+      "Careers involving scholarly research, theoretical exploration, and academic pursuits.",
+  },
+
+  // Technical / Problem-Solving Worlds
+  applied_engineering: {
+    id: "applied_engineering",
+    label: "Applied Engineering",
+    description:
+      "Careers focused on designing, building, and maintaining technological systems and structures.",
+  },
+  software_technology: {
+    id: "software_technology",
+    label: "Software & Technology",
+    description:
+      "Careers focused on the development, implementation, and management of software and technology solutions.",
+  },
+  scientific_lab_research: {
+    id: "scientific_lab_research",
+    label: "Scientific & Lab Research",
+    description:
+      "Careers centered around experimental research, data analysis, and scientific discovery.",
+  },
+
+  // Human-Centric Care Worlds
+  clinical_healthcare: {
+    id: "clinical_healthcare",
+    label: "Clinical Healthcare",
+    description:
+      "Careers focused on medical treatment, patient care, and healthcare services.",
+  },
+  mental_health_counseling: {
+    id: "mental_health_counseling",
+    label: "Mental Health & Counseling",
+    description:
+      "Careers centered around psychological support, therapy, and mental wellness.",
+  },
+  education_training: {
+    id: "education_training",
     label: "Education & Training",
-    description: "Planning, managing, and providing education and training services.",
-    socPrefixes: ["25"],
-    riasecFocus: ["S", "A"],
-    commonPathways: ["K-12 Teaching", "Higher Education", "Corporate Training", "Counseling", "Library Science"],
+    description:
+      "Careers focused on teaching, curriculum development, and educational administration.",
   },
-  finance: {
-    id: "finance",
-    label: "Finance",
-    description: "Services for financial and investment planning, banking, insurance, and business financial management.",
-    socPrefixes: ["13-2"],
-    riasecFocus: ["C", "E"],
-    commonPathways: ["Investment Banking", "Financial Planning", "Accounting", "Insurance", "Corporate Finance"],
+  human_social_services: {
+    id: "human_social_services",
+    label: "Human & Social Services",
+    description:
+      "Careers centered around community support, social work, and human services.",
   },
-  government: {
-    id: "government",
-    label: "Government & Public Administration",
-    description: "Executing governmental functions including national security, foreign service, and regulation.",
-    socPrefixes: ["55", "11-103"],
-    riasecFocus: ["E", "S", "C"],
-    commonPathways: ["Public Policy", "Diplomacy", "City Planning", "Regulatory Affairs", "National Security"],
+
+  // Creative / Expressive Worlds
+  creative_media: {
+    id: "creative_media",
+    label: "Creative Media",
+    description:
+      "Careers focused on content creation, media production, and artistic expression.",
   },
-  health: {
-    id: "health",
-    label: "Health Science",
-    description: "Planning, managing, and providing therapeutic, diagnostic, and support health services.",
-    socPrefixes: ["29", "31"],
-    riasecFocus: ["S", "I", "R"],
-    commonPathways: ["Medicine & Nursing", "Allied Health", "Mental Health", "Medical Research", "Public Health"],
+  marketing_brand_design: {
+    id: "marketing_brand_design",
+    label: "Marketing, Brand & Design",
+    description:
+      "Careers centered around brand development, marketing strategies, and visual design.",
   },
-  hospitality: {
-    id: "hospitality",
-    label: "Hospitality & Tourism",
-    description: "Management and operations of restaurants, lodging, attractions, and recreation events.",
-    socPrefixes: ["35", "37", "39-6", "39-7"],
-    riasecFocus: ["E", "S", "R"],
-    commonPathways: ["Event Planning", "Hotel Management", "Culinary Arts", "Travel & Tourism", "Recreation"],
+
+  // Action-Oriented / Physical Worlds
+  public_safety_emergency: {
+    id: "public_safety_emergency",
+    label: "Public Safety & Emergency",
+    description:
+      "Careers focused on law enforcement, emergency response, and public safety services.",
   },
-  human_services: {
-    id: "human_services",
-    label: "Human Services",
-    description: "Preparing individuals for employment in pathways that relate to families and human needs.",
-    socPrefixes: ["21", "39-1", "39-2", "39-3", "39-4", "39-5", "39-9"],
-    riasecFocus: ["S", "E"],
-    commonPathways: ["Social Work", "Family Services", "Non-Profit Management", "Personal Care", "Community Advocacy"],
+  skilled_trades_construction: {
+    id: "skilled_trades_construction",
+    label: "Skilled Trades & Construction",
+    description:
+      "Careers centered around manual skills, construction, and skilled trades work.",
   },
-  it: {
-    id: "it",
-    label: "Information Technology",
-    description: "Building, testing, and maintaining hardware, software, multimedia, and systems.",
-    socPrefixes: ["15"],
-    riasecFocus: ["I", "C", "R"],
-    commonPathways: ["Software Development", "Cybersecurity", "Data Science", "Network Engineering", "IT Support"],
-  },
-  law_public_safety: {
-    id: "law_public_safety",
-    label: "Law, Public Safety, Corrections & Security",
-    description: "Planning, managing, and providing legal, public safety, protective services and homeland security.",
-    socPrefixes: ["23", "33"],
-    riasecFocus: ["R", "E", "S"],
-    commonPathways: ["Legal Services", "Law Enforcement", "Emergency Services", "Forensics", "Security"],
-  },
-  manufacturing: {
-    id: "manufacturing",
-    label: "Manufacturing",
-    description: "Planning, managing, and performing the processing of materials into intermediate or final products.",
-    socPrefixes: ["51"],
-    riasecFocus: ["R", "C"],
-    commonPathways: ["Production Management", "Process Engineering", "Quality Assurance", "Logistics", "Machine Operations"],
-  },
-  marketing: {
-    id: "marketing",
-    label: "Marketing",
-    description: "Planning, managing, and performing marketing activities to reach organizational objectives.",
-    socPrefixes: ["41", "13-116"],
-    riasecFocus: ["E", "A", "C"],
-    commonPathways: ["Digital Marketing", "Sales Management", "Market Research", "Public Relations", "Brand Management"],
-  },
-  stem: {
-    id: "stem",
-    label: "Science, Technology, Engineering & Mathematics",
-    description: "Planning, managing, and providing scientific research and professional and technical services.",
-    socPrefixes: ["17-2", "19-2", "19-3", "19-4"],
-    riasecFocus: ["I", "R"],
-    commonPathways: ["Engineering", "Laboratory Science", "Research & Development", "Mathematics", "Biotechnology"],
-  },
-  transportation: {
-    id: "transportation",
-    label: "Transportation, Distribution & Logistics",
-    description: "Planning, management, and movement of people, materials, and goods.",
-    socPrefixes: ["53"],
-    riasecFocus: ["R", "C", "E"],
-    commonPathways: ["Aviation", "Logistics Management", "Supply Chain", "Automotive Technology", "Freight & Distribution"],
+  transportation_physical_operations: {
+    id: "transportation_physical_operations",
+    label: "Transportation & Physical Operations",
+    description:
+      "Careers focused on the movement of goods and people, logistics, and physical operations.",
   },
 };
