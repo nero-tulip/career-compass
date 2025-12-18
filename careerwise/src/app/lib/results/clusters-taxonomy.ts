@@ -41,10 +41,121 @@ export type ClusterId =
   | "skilled_trades_construction"
   | "transportation_physical_operations";
 
+// src/app/lib/results/clusters-taxonomy.ts
+
+/* 
+Career clusters describe psychologically coherent worlds of work.
+They orient users toward environments that fit their interests,
+temperament, and tolerance for tradeoffs — without prescribing jobs.
+*/
+
+export type RiasecVector = {
+  R: number;
+  I: number;
+  A: number;
+  S: number;
+  E: number;
+  C: number;
+};
+
+export type BigFiveVector = {
+  openness: number;          // tolerance for abstraction, novelty
+  conscientiousness: number; // structure, discipline, reliability
+  extraversion: number;      // social energy, assertiveness
+  agreeableness: number;     // cooperation vs competitiveness
+  neuroticism: number;       // stress sensitivity, volatility
+};
+
 export type CareerClusterDef = {
+  /** Stable identifier used by the algorithm */
   id: ClusterId;
+
+  /** Human-readable name shown in UI */
   label: string;
+
+  /** High-level explanation of what this world is */
   description: string;
+
+  /* =========================
+     PSYCHOLOGICAL FOUNDATIONS
+     ========================= */
+
+  /**
+   * What kinds of interests this world actively rewards.
+   * Used as the PRIMARY orientation gate.
+   * Values are relative weights, not absolute scores.
+   */
+  riasecProfile: RiasecVector;
+
+  /**
+   * Temperamental demands of this environment.
+   * Used to MODULATE fit within RIASEC-viable clusters.
+   */
+  bigFiveProfile: BigFiveVector;
+
+  /**
+   * Psychological traits that tend to clash with this world.
+   * Used for explicit penalties or warnings — never hidden.
+   */
+  riasecConflicts?: Partial<RiasecVector>;
+
+  /* =========================
+     ENVIRONMENT & TRADEOFFS
+     ========================= */
+
+  /**
+   * How this world feels to live in, day-to-day.
+   * These do NOT drive ranking directly — they frame expectations.
+   */
+  environment: {
+    structure: "low" | "medium" | "high";
+    ambiguity: "low" | "medium" | "high";
+    competitiveness: "low" | "medium" | "high";
+    socialIntensity: "low" | "medium" | "high";
+    pressure: "low" | "medium" | "high";
+  };
+
+  /**
+   * Typical long-term rewards associated with this world.
+   * Used for explanation, not prescription.
+   */
+  rewards: {
+    incomePotential: "low" | "medium" | "high";
+    statusPrestige: "low" | "medium" | "high";
+    autonomy: "low" | "medium" | "high";
+    impact: "low" | "medium" | "high";
+    stability: "low" | "medium" | "high";
+  };
+
+  /**
+   * Common psychological costs or risks.
+   * These are surfaced explicitly to users.
+   */
+  stressors: {
+    burnoutRisk: "low" | "medium" | "high";
+    emotionalLoad: "low" | "medium" | "high";
+    workLifeImbalance: "low" | "medium" | "high";
+  };
+
+  /* =========================
+     ORIENTATION & EXPLORATION
+     ========================= */
+
+  /**
+   * Broad, recognisable arenas within this world.
+   * Used for exploratory nudges — never hard recommendations.
+   */
+  pathways: string[];
+
+  /**
+   * Plain-English explanation hooks used by the report generator
+   * (e.g. “People like you often value…”)
+   */
+  narrativeHooks: {
+    thrivesWhen: string[];
+    strugglesWhen: string[];
+    valuesOftenInclude: string[];
+  };
 };
 
 export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
