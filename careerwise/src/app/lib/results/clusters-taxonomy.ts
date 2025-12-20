@@ -8,6 +8,7 @@ export type ClusterId =
   // High-Structure / Low-Ambiguity Worlds
   | "operations_admin"
   | "accounting_financial_control"
+  | "corporate_strategy_leadership"
   | "manufacturing_industrial"
   | "logistics_supply_chain"
 
@@ -41,7 +42,16 @@ export type ClusterId =
   | "skilled_trades_construction"
   | "transportation_physical_operations";
 
-// src/app/lib/results/clusters-taxonomy.ts
+
+  export type Scale =
+  | "very_low"
+  | "low"
+  | "low_medium"
+  | "medium"
+  | "medium_high"
+  | "high"
+  | "very_high"
+  | "variable";
 
 /* 
 Career clusters describe psychologically coherent worlds of work.
@@ -108,11 +118,11 @@ export type CareerClusterDef = {
    * These do NOT drive ranking directly — they frame expectations.
    */
   environment: {
-    structure: "low" | "medium" | "high";
-    ambiguity: "low" | "medium" | "high";
-    competitiveness: "low" | "medium" | "high";
-    socialIntensity: "low" | "medium" | "high";
-    pressure: "low" | "medium" | "high";
+    structure: Scale;
+    ambiguity: Scale;
+    competitiveness: Scale;
+    socialIntensity: Scale;
+    pressure: Scale;
   };
 
   /**
@@ -120,11 +130,11 @@ export type CareerClusterDef = {
    * Used for explanation, not prescription.
    */
   rewards: {
-    incomePotential: "low" | "medium" | "high";
-    statusPrestige: "low" | "medium" | "high";
-    autonomy: "low" | "medium" | "high";
-    impact: "low" | "medium" | "high";
-    stability: "low" | "medium" | "high";
+    incomePotential: Scale;
+    statusPrestige: Scale;
+    autonomy: Scale;
+    impact: Scale;
+    stability: Scale;
   };
 
   /**
@@ -132,9 +142,9 @@ export type CareerClusterDef = {
    * These are surfaced explicitly to users.
    */
   stressors: {
-    burnoutRisk: "low" | "medium" | "high";
-    emotionalLoad: "low" | "medium" | "high";
-    workLifeImbalance: "low" | "medium" | "high";
+    burnoutRisk: Scale;
+    emotionalLoad: Scale;
+    workLifeImbalance: Scale;
   };
 
   /* =========================
@@ -298,7 +308,7 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
 
     rewards: {
       incomePotential: "medium",
-      statusPrestige: "low",
+      statusPrestige: "medium",
       autonomy: "low_medium",
       impact: "high", // Quiet but real organizational impact
       stability: "very_high",
@@ -341,6 +351,101 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
       ],
     },
   },
+
+  corporate_strategy_leadership: {
+  id: "corporate_strategy_leadership",
+  label: "Corporate Strategy & Leadership",
+  description:
+    "Careers centered on steering large organizations through complex decisions under uncertainty. This world rewards analytical synthesis, influence without chaos, and the ability to balance structure, competition, and long-term outcomes across multiple stakeholders.",
+
+  /* =========================
+     PSYCHOLOGICAL FOUNDATIONS
+     ========================= */
+
+  // Analysis + influence + structured power
+  riasecProfile: {
+    R: 0.6, // Minimal hands-on or mechanical engagement
+    I: 4.0, // Core driver: strategic analysis and systems thinking
+    A: 1.4, // Creativity is instrumental, not expressive
+    S: 3.0, // Stakeholder navigation, alignment, leadership presence
+    E: 4.2, // Dominant driver: influence, competition, decision authority
+    C: 3.6, // Strong need for structure, frameworks, governance
+  },
+
+  // Temperament favors ambition, composure, and strategic patience
+  bigFiveProfile: {
+    openness: 3.6,          // Conceptual thinking and synthesis matter
+    conscientiousness: 4.2, // Execution, reliability, and follow-through
+    extraversion: 3.4,      // Comfort leading discussions and decisions
+    agreeableness: 2.8,     // Cooperation without excessive deference
+    neuroticism: 2.2,       // Emotional control under pressure
+  },
+
+  // Psychological mismatches
+  riasecConflicts: {
+    R: 2.5, // Strongly hands-on personalities feel abstracted
+    A: 2.2, // Pure creatives resent instrumental constraints
+  },
+
+  /* =========================
+     ENVIRONMENT & TRADEOFFS
+     ========================= */
+
+  environment: {
+    structure: "medium_high",
+    ambiguity: "medium_high",
+    competitiveness: "high",
+    socialIntensity: "medium_high",
+    pressure: "high",
+  },
+
+  rewards: {
+    incomePotential: "high",
+    statusPrestige: "high",
+    autonomy: "medium_high",
+    impact: "very_high",
+    stability: "medium_high",
+  },
+
+  stressors: {
+    burnoutRisk: "medium_high",
+    emotionalLoad: "medium",
+    workLifeImbalance: "medium_high",
+  },
+
+  /* =========================
+     ORIENTATION & EXPLORATION
+     ========================= */
+
+  pathways: [
+    "Corporate Strategy",
+    "Management Consulting",
+    "Product & General Management",
+    "Business Operations & Strategy",
+    "Executive Leadership & Governance",
+  ],
+
+  narrativeHooks: {
+    thrivesWhen: [
+      "decisions require balancing competing priorities and incentives",
+      "influence is exercised through reasoning, alignment, and authority",
+      "structure exists, but judgment matters more than rules",
+    ],
+    strugglesWhen: [
+      "work is purely operational or clerical",
+      "authority exists without accountability or consequence",
+      "chaos replaces strategy or outcomes lack ownership",
+    ],
+    valuesOftenInclude: [
+      "leverage",
+      "decision-making authority",
+      "long-term impact",
+      "status through responsibility",
+      "strategic clarity",
+    ],
+  },
+},
+
   manufacturing_industrial: {
     id: "manufacturing_industrial",
     label: "Manufacturing & Industrial Operations",
@@ -821,8 +926,8 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
       R: 0.4, // Little physical or hands-on engagement
       I: 4.2, // Core driver: analytical and logical reasoning
       A: 0.6, // Creativity is tightly constrained by precedent
-      S: 1.8, // Social interaction exists, but is instrumental
-      E: 2.8, // Advocacy, persuasion, and competitive positioning
+      S: 1.6, // Social interaction exists, but is instrumental
+      E: 3.4, // Advocacy, persuasion, and competitive positioning
       C: 3.8, // Strong reliance on formal rules and procedures
     },
 
@@ -1041,7 +1146,7 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
       incomePotential: "low_medium",
       statusPrestige: "medium",
       autonomy: "high",
-      impact: "long_term",
+      impact: "medium_high", // Long-term, knowledge-driven impact
       stability: "medium",
     },
 
@@ -1319,7 +1424,7 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
     incomePotential: "low_medium",
     statusPrestige: "medium",
     autonomy: "medium",
-    impact: "long_term",
+    impact: "medium_high",
     stability: "medium",
   },
 
@@ -1780,8 +1885,8 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
   },
 
   rewards: {
-    incomePotential: "low_highly_variable",
-    statusPrestige: "variable",
+    incomePotential: "variable",
+    statusPrestige: "medium",
     autonomy: "high",
     impact: "medium_high",
     stability: "low",
@@ -1968,7 +2073,7 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
 
   rewards: {
     incomePotential: "low_medium",
-    statusPrestige: "community_high",
+    statusPrestige: "medium",
     autonomy: "low",
     impact: "very_high",
     stability: "high",
@@ -2061,7 +2166,7 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
 
   rewards: {
     incomePotential: "medium_high",
-    statusPrestige: "craft_respect",
+    statusPrestige: "low_medium",
     autonomy: "medium",
     impact: "high",
     stability: "high",
