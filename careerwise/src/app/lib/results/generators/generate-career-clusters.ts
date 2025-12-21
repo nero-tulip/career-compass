@@ -1,8 +1,11 @@
 // src/app/lib/results/generators/generate-career-clusters.ts
 
 import type { User } from "firebase/auth";
-import { loadRiasecSummary } from "@/app/lib/results/loaders/client-loaders";
 import { CAREER_CLUSTERS, type ClusterId } from "../clusters-taxonomy";
+import { loadUserSignals } from "@/app/lib/results/loaders/load-user-signals";
+import { calculateAsymmetricFit } from "@/app/lib/results/scoring-utils";
+
+type RiasecCode = "R" | "I" | "A" | "S" | "E" | "C";
 
 export type ClusterItem = {
   /* =========================
@@ -30,12 +33,12 @@ export type ClusterItem = {
   interestFit: {
     level: "strong" | "moderate" | "weak";
     matchedTraits: Array<{
-      code: "R" | "I" | "A" | "S" | "E" | "C";
+      code: RiasecCode;
       label: string;
       strength: "core" | "supporting";
     }>;
     missingTraits: Array<{
-      code: "R" | "I" | "A" | "S" | "E" | "C";
+      code: RiasecCode;
       reason: string;
     }>;
   };
@@ -46,8 +49,8 @@ export type ClusterItem = {
 
   sustainability: {
     level: "safe" | "risky" | "unsustainable";
-    supports: string[]; // e.g. “High conscientiousness supports reliability”
-    risks: string[]; // e.g. “High neuroticism may amplify stress”
+    supports: string[];
+    risks: string[];
   };
 
   /* =========================
@@ -56,8 +59,8 @@ export type ClusterItem = {
 
   lifestyleAlignment: {
     level: "aligned" | "mixed" | "misaligned";
-    alignedWith: string[]; // e.g. “Prefers structured environments”
-    tradeoffs: string[]; // e.g. “Low tolerance for ambiguity may clash”
+    alignedWith: string[];
+    tradeoffs: string[];
   };
 
   /* =========================
@@ -66,7 +69,7 @@ export type ClusterItem = {
 
   relevance: {
     level: "high" | "medium" | "low";
-    notes: string[]; // e.g. “Often pursued after early career specialization”
+    notes: string[];
   };
 
   /* =========================
@@ -74,80 +77,174 @@ export type ClusterItem = {
      ========================= */
 
   summary: {
-    headline: string; // One-sentence orientation summary
-    bullets: string[]; // 3–5 key reasons / caveats
+    headline: string;
+    bullets: string[];
   };
 
   /* =========================
      EXPLORATION (NOT PRESCRIPTION)
      ========================= */
 
-  pathways: string[]; // Broad arenas only
+  pathways: string[];
 };
 
 export type ClusterResult = {
   clusters: ClusterItem[];
 };
 
-export async function generateCareerClusters(
-  user: User,
-  rid: string
-): Promise<ClusterResult> {
-  // 1. Load ONLY Riasec
-  const riasec = await loadRiasecSummary(user, rid).catch(() => undefined);
+const RIASEC_LABEL: Record<RiasecCode, string> = {
+  R: "Realistic",
+  I: "Investigative",
+  A: "Artistic",
+  S: "Social",
+  E: "Enterprising",
+  C: "Conventional",
+};
 
-  // User's top 3 RIASEC letters (e.g. ["E", "S", "A"])
-  const topLetters = riasec?.top3 || [];
+function sumRiasec(v: Record<string, number> | undefined) {
+  if (!v) return 0;
+  return (v.R ?? 0) + (v.I ?? 0) + (v.A ?? 0) + (v.S ?? 0) + (v.E ?? 0) + (v.C ?? 0);
+}
 
-  // 2. Iterate over the 16 Clusters
-  const results = Object.values(CAREER_CLUSTERS).map((def) => {
-    let score = 0;
-    const signals: string[] = [];
+function toMatchLevel(score: number): ClusterItem["matchLevel"] {
+  if (score >= 80) return "Strong Fit";
+  if (score >= 60) return "Viable with Tradeoffs";
+  if (score >= 40) return "High Risk";
+  return "Low Fit";
+}
 
-    // --- Cluster Scoring (RIASEC Only) ---
-    // Check intersection between Cluster's Focus and User's Top 3
-    const intersection = def.riasecFocus.filter((value) =>
-      topLetters.includes(value as any)
+function toInterestLevel(score: number): ClusterItem["interestFit"]["level"] {
+  if (score >= 80) return "strong";
+  if (score >= 55) return "moderate";
+  return "weak";
+}
+
+function traitStrength(target: number): "core" | "supporting" {
+  // Simple rule for Step 1:
+  // "core" = the world strongly rewards it
+  // "supporting" = it helps but isn't the main engine
+  return target >= 3.5 ? "core" : "supporting";
+}
+
+export async function generateCareerClusters(user: User, rid: string): Promise<ClusterResult> {
+  // STEP 1: load unified signals and require RIASEC
+  const signals = await loadUserSignals(user, rid);
+
+  // Your UX gates this, but we still hard-fail if RIASEC isn't actually present.
+  // (loadUserSignals currently can return zeros if missing; this detects that too.)
+  const userRiasec = signals.riasec;
+  if (!userRiasec || sumRiasec(userRiasec as any) === 0) {
+    throw new Error("Cluster Gen: Missing RIASEC profile (user has not completed RIASEC).");
+  }
+
+  const clusters: ClusterItem[] = Object.values(CAREER_CLUSTERS).map((def) => {
+    // --- RIASEC Fit (PRIMARY) ---
+    const fit = calculateAsymmetricFit(
+      userRiasec as any,
+      def.riasecProfile as any,
+      (def.riasecConflicts as any) ?? {}
     );
 
-    if (intersection.length > 0) {
-      // Base match score
-      score += 50;
-      // Boost for matching multiple letters
-      score += intersection.length * 15;
+    const score = Math.max(0, Math.min(100, fit.score));
 
-      // Generate clean tags for the "Why" section
-      intersection.forEach((letter) => {
-        if (letter === "R") signals.push("Realistic Interest");
-        if (letter === "I") signals.push("Investigative Interest");
-        if (letter === "A") signals.push("Artistic Interest");
-        if (letter === "S") signals.push("Social Interest");
-        if (letter === "E") signals.push("Enterprising Interest");
-        if (letter === "C") signals.push("Conventional Interest");
-      });
-    } else {
-      // If no top 3 match, give a small base score if it matches the *primary* driver only
-      // (Optional: keep score 0 if strictly no match)
+    // Build matched/missing traits in a deterministic way:
+    const matchedTraits: ClusterItem["interestFit"]["matchedTraits"] = [];
+    const missingTraits: ClusterItem["interestFit"]["missingTraits"] = [];
+
+    (["R", "I", "A", "S", "E", "C"] as RiasecCode[]).forEach((code) => {
+      const target = (def.riasecProfile as any)[code] ?? 0;
+      const userVal = (userRiasec as any)[code] ?? 0;
+
+      // Only talk about traits the cluster meaningfully cares about
+      if (target < 2.0) return;
+
+      // Allow the same “noise band” your scorer uses (0.5)
+      const deficit = target - userVal;
+
+      if (deficit <= 0.5) {
+        matchedTraits.push({
+          code,
+          label: `${RIASEC_LABEL[code]} Interest`,
+          strength: traitStrength(target),
+        });
+      } else {
+        missingTraits.push({
+          code,
+          reason: `This world typically rewards higher ${RIASEC_LABEL[code]} interest than your current profile suggests.`,
+        });
+      }
+    });
+
+    // Sort matched traits so "core" shows first, then by target level desc
+    matchedTraits.sort((a, b) => {
+      const aTarget = (def.riasecProfile as any)[a.code] ?? 0;
+      const bTarget = (def.riasecProfile as any)[b.code] ?? 0;
+      if (a.strength !== b.strength) return a.strength === "core" ? -1 : 1;
+      return bTarget - aTarget;
+    });
+
+    // Headline: emphasize top 2 matched traits if available
+    const topMatched = matchedTraits.slice(0, 2).map((t) => RIASEC_LABEL[t.code]);
+    const headline =
+      topMatched.length > 0
+        ? `Your interests align with ${topMatched.join(" + ")} demands in this world.`
+        : `This world rewards interests that may not be central in your current profile.`;
+
+    // Bullets: use fit details/warnings (already deficit/conflict aware)
+    // Keep it short and UI-friendly.
+    const bullets = [
+      ...fit.details.slice(0, 2),
+      ...fit.warnings.slice(0, 2),
+    ].slice(0, 4);
+
+    // Ensure we always have at least *something* user-facing
+    if (bullets.length === 0) {
+      bullets.push("RIASEC alignment is broadly neutral here (no major deficits detected).");
     }
-
-    // --- Finalize ---
-    const finalScore = Math.min(100, Math.round(score));
-
-    let matchLevel: ClusterItem["matchLevel"] = "Low";
-    if (finalScore >= 80) matchLevel = "High";
-    else if (finalScore >= 50) matchLevel = "Medium";
 
     return {
       key: def.id,
       label: def.label,
       description: def.description,
-      score: finalScore,
-      matchLevel,
-      matchSignals: signals,
-      pathways: def.commonPathways, // Uses the broad list (e.g. "Investment Banking")
+
+      score,
+      matchLevel: toMatchLevel(score),
+
+      interestFit: {
+        level: toInterestLevel(score),
+        matchedTraits,
+        missingTraits,
+      },
+
+      // Step 2 will replace this (Big Five fit)
+      sustainability: {
+        level: "risky",
+        supports: [],
+        risks: ["Big Five fit not evaluated yet (Step 2)."],
+      },
+
+      // Step 3 will replace this (Macro fit)
+      lifestyleAlignment: {
+        level: "mixed",
+        alignedWith: [],
+        tradeoffs: ["Macro lifestyle/values alignment not evaluated yet (Step 3)."],
+      },
+
+      // Step 3 will replace this (Intake relevance)
+      relevance: {
+        level: "medium",
+        notes: ["Intake relevance not evaluated yet (Step 3)."],
+      },
+
+      summary: {
+        headline,
+        bullets,
+      },
+
+      pathways: def.pathways ?? [],
     };
   });
 
-  // 3. Sort by Score (Desc)
-  return { clusters: results.sort((a, b) => b.score - a.score) };
+  clusters.sort((a, b) => b.score - a.score);
+  return { clusters };
 }
