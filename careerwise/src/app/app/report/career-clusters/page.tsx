@@ -278,9 +278,9 @@ export default function CareerClustersPage() {
     );
   }
 
-  // Top 3 for main view, next 6 for "Other Options"
-  const topClusters = data.clusters.slice(0, 3);
-  const otherClusters = data.clusters.slice(3, 9);
+  // Top 5 for main view, next 6 for "Other Options"
+  const topClusters = data.clusters.slice(0, 5);
+  const otherClusters = data.clusters.slice(5, 9);
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-16 space-y-12">
@@ -311,7 +311,7 @@ export default function CareerClustersPage() {
 
       {/* Other Clusters Section */}
       <section className="space-y-6 pt-8 border-t border-gray-100">
-        <FadeIn delayIndex={3}>
+        <FadeIn delayIndex={5}>
           <div className="flex items-center gap-3 mb-6">
             <div className="h-8 w-1 bg-gray-300 rounded-full" />
             <h2 className="text-xl font-semibold text-gray-700">Other Clusters Worth Exploring</h2>
