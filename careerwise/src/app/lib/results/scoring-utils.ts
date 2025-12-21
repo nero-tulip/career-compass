@@ -63,7 +63,7 @@ export function calculateAsymmetricFit(
 
       totalPenalty += penalty;
       breakdown.push({ trait, penalty, kind: "deficit" });
-      details.push(`Lower ${trait} than ideal (-${Math.round(penalty)})`);
+      details.push(`Lower ${trait} than ideal.`);
     }
   }
 
@@ -83,7 +83,7 @@ export function calculateAsymmetricFit(
 
       totalPenalty += penalty;
       breakdown.push({ trait, penalty, kind: "conflict" });
-      warnings.push(`High ${trait} may clash here (-${Math.round(penalty)})`);
+      warnings.push(`High ${trait} may clash here.`);
     }
   }
 

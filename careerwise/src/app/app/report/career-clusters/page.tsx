@@ -70,6 +70,26 @@ function MatchBadge({ level }: { level: ClusterItem["matchLevel"] }) {
   );
 }
 
+function SustainabilityBadge({ level }: { level: ClusterItem["sustainability"]["level"] }) {
+  const styles: Record<ClusterItem["sustainability"]["level"], string> = {
+    safe: "bg-emerald-50 text-emerald-700 border-emerald-100",
+    risky: "bg-amber-50 text-amber-700 border-amber-100",
+    unsustainable: "bg-rose-50 text-rose-700 border-rose-100",
+  };
+
+  const label: Record<ClusterItem["sustainability"]["level"], string> = {
+    safe: "Sustainable",
+    risky: "Some Friction",
+    unsustainable: "High Burnout Risk",
+  };
+
+  return (
+    <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${styles[level]}`}>
+      {label[level]}
+    </span>
+  );
+}
+
 function ClusterCard({ cluster, index }: { cluster: ClusterItem; index: number }) {
   return (
     <div className="group relative overflow-hidden rounded-2xl border bg-white border-gray-200 shadow-sm hover:shadow-md transition-all">
@@ -103,6 +123,38 @@ function ClusterCard({ cluster, index }: { cluster: ClusterItem; index: number }
               <li key={i}>{b}</li>
             ))}
           </ul>
+        </div>
+
+        {/* STEP 2: Sustainability / Temperament (Big Five) */}
+        <div className="rounded-xl bg-white border border-gray-200 p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              Sustainability & Temperament
+            </h4>
+            <SustainabilityBadge level={cluster.sustainability.level} />
+          </div>
+
+          {cluster.sustainability.supports.length > 0 && (
+            <div className="space-y-1">
+              <div className="text-xs font-semibold text-emerald-700">Supports</div>
+              <ul className="text-sm text-gray-600 space-y-1 list-disc pl-5">
+                {cluster.sustainability.supports.slice(0, 3).map((s, i) => (
+                  <li key={i}>{s}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {cluster.sustainability.risks.length > 0 && (
+            <div className="space-y-1">
+              <div className="text-xs font-semibold text-amber-700">Risks</div>
+              <ul className="text-sm text-gray-600 space-y-1 list-disc pl-5">
+                {cluster.sustainability.risks.slice(0, 3).map((r, i) => (
+                  <li key={i}>{r}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         <div className="h-px bg-gray-100 w-full" />

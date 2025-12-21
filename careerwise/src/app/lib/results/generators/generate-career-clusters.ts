@@ -120,10 +120,94 @@ function toInterestLevel(score: number): ClusterItem["interestFit"]["level"] {
 }
 
 function traitStrength(target: number): "core" | "supporting" {
-  // Simple rule for Step 1:
   // "core" = the world strongly rewards it
   // "supporting" = it helps but isn't the main engine
   return target >= 3.5 ? "core" : "supporting";
+}
+
+/* =========================
+   STEP 2 HELPERS (BIG FIVE)
+   ========================= */
+
+type Big5Short = "O" | "C" | "E" | "A" | "N";
+type Big5Verbose = "openness" | "conscientiousness" | "extraversion" | "agreeableness" | "neuroticism";
+type AnyBig5Key = Big5Short | Big5Verbose;
+
+const BIG5_LABEL: Record<AnyBig5Key, string> = {
+  O: "Openness",
+  C: "Conscientiousness",
+  E: "Extraversion",
+  A: "Agreeableness",
+  N: "Neuroticism",
+  openness: "Openness",
+  conscientiousness: "Conscientiousness",
+  extraversion: "Extraversion",
+  agreeableness: "Agreeableness",
+  neuroticism: "Neuroticism",
+};
+
+function usesShortBig5Keys(profile: any): boolean {
+  return profile && typeof profile === "object" && ("O" in profile || "N" in profile);
+}
+
+function mapUserBig5ToTargetKeys(userBig5: Record<string, number>, targetUsesShort: boolean): Record<string, number> {
+  if (targetUsesShort) {
+    return {
+      O: userBig5.O,
+      C: userBig5.C,
+      E: userBig5.E,
+      A: userBig5.A,
+      N: userBig5.N,
+    };
+  }
+  return {
+    openness: userBig5.O,
+    conscientiousness: userBig5.C,
+    extraversion: userBig5.E,
+    agreeableness: userBig5.A,
+    neuroticism: userBig5.N,
+  };
+}
+
+function buildBig5Targets(defBig5: any) {
+  const targetUsesShort = usesShortBig5Keys(defBig5);
+
+  // Treat N as a ceiling/conflict (low N should never be penalized)
+  const noiseBand = 0.5;
+
+  if (targetUsesShort) {
+    const target: Record<string, number> = {
+      O: defBig5.O,
+      C: defBig5.C,
+      E: defBig5.E,
+      A: defBig5.A,
+      // N excluded (handled as conflict)
+    };
+    const conflicts: Record<string, number> = {
+      N: Math.min(5, (defBig5.N ?? 3) + noiseBand),
+    };
+    const traitOrder = ["O", "C", "E", "A", "N"];
+    return { targetUsesShort, target, conflicts, traitOrder, noiseBand };
+  }
+
+  const target: Record<string, number> = {
+    openness: defBig5.openness,
+    conscientiousness: defBig5.conscientiousness,
+    extraversion: defBig5.extraversion,
+    agreeableness: defBig5.agreeableness,
+    // neuroticism excluded (handled as conflict)
+  };
+  const conflicts: Record<string, number> = {
+    neuroticism: Math.min(5, (defBig5.neuroticism ?? 3) + noiseBand),
+  };
+  const traitOrder = ["openness", "conscientiousness", "extraversion", "agreeableness", "neuroticism"];
+  return { targetUsesShort, target, conflicts, traitOrder, noiseBand };
+}
+
+function toSustainabilityLevel(score: number): ClusterItem["sustainability"]["level"] {
+  if (score >= 80) return "safe";
+  if (score >= 60) return "risky";
+  return "unsustainable";
 }
 
 export async function generateCareerClusters(user: User, rid: string): Promise<ClusterResult> {
@@ -137,35 +221,129 @@ export async function generateCareerClusters(user: User, rid: string): Promise<C
     throw new Error("Cluster Gen: Missing RIASEC profile (user has not completed RIASEC).");
   }
 
+  const userBig5 = signals.big5;
+
   const clusters: ClusterItem[] = Object.values(CAREER_CLUSTERS).map((def) => {
     // --- RIASEC Fit (PRIMARY) ---
-    const fit = calculateAsymmetricFit(
+    const interestFitScore = calculateAsymmetricFit(
       userRiasec as any,
       def.riasecProfile as any,
-      (def.riasecConflicts as any) ?? {}
+      (def.riasecConflicts as any) ?? {},
+      { traitOrder: ["R", "I", "A", "S", "E", "C"] }
     );
 
-    const score = Math.max(0, Math.min(100, fit.score));
+    const interestScore = Math.max(0, Math.min(100, interestFitScore.score));
+
+    // Build clean interest bullets from breakdown (full names, no raw letters, no penalty numbers)
+    const interestDeficits = interestFitScore.breakdown
+      .filter((b) => b.kind === "deficit")
+      .sort((a, b) => b.penalty - a.penalty)
+      .map(({ trait }) => {
+        const code = trait as RiasecCode;
+        return `Lower ${RIASEC_LABEL[code]} interest than ideal.`;
+      });
+
+    const interestConflicts = interestFitScore.breakdown
+      .filter((b) => b.kind === "conflict")
+      .sort((a, b) => b.penalty - a.penalty)
+      .map(({ trait }) => {
+        const code = trait as RiasecCode;
+        return `Very high ${RIASEC_LABEL[code]} interest may clash in this world.`;
+      });
+
+    // --- STEP 2: Big Five fit (MODULATOR) ---
+    let big5Score: number | null = null;
+    let sustainabilitySupports: string[] = [];
+    let sustainabilityRisks: string[] = [];
+
+    if (userBig5 && def.bigFiveProfile) {
+      const { targetUsesShort, target, conflicts, traitOrder, noiseBand } = buildBig5Targets(def.bigFiveProfile as any);
+      const userBig5Mapped = mapUserBig5ToTargetKeys(userBig5 as any, targetUsesShort);
+
+      const big5Fit = calculateAsymmetricFit(
+        userBig5Mapped,
+        target,
+        conflicts,
+        {
+          traitOrder,
+          strictMissing: true,
+          // Slightly gentler than interest scoring; this is a modulator, not the gate.
+          deficitFactor: 2.5,
+          conflictFactor: 10,
+          conflictQuadratic: true,
+          noiseBand,
+        }
+      );
+
+      big5Score = Math.max(0, Math.min(100, big5Fit.score));
+
+      // Build supports/risks deterministically (readable, not raw trait keys)
+      for (const trait of traitOrder) {
+        const label = BIG5_LABEL[trait as AnyBig5Key] ?? trait;
+
+        // Conflicts first (e.g., Neuroticism ceiling)
+        if (trait in conflicts) {
+          const threshold = conflicts[trait];
+          const uv = userBig5Mapped[trait];
+          if (uv > threshold + 0.0) {
+            sustainabilityRisks.push(
+              `Higher ${label} may make this environment feel more intense day-to-day.`
+            );
+          } else if (uv <= threshold - noiseBand) {
+            sustainabilitySupports.push(
+              `Lower ${label} can be an advantage under pressure.`
+            );
+          }
+          continue;
+        }
+
+        if (!(trait in target)) continue;
+
+        const tv = target[trait];
+        const uv = userBig5Mapped[trait];
+
+        if (uv + noiseBand < tv) {
+          sustainabilityRisks.push(
+            `This world tends to reward higher ${label}; you may need more deliberate habits here.`
+          );
+        } else if (uv >= tv + noiseBand) {
+          sustainabilitySupports.push(
+            `Your ${label} supports the day-to-day demands of this world.`
+          );
+        }
+      }
+
+      // Keep UI tidy
+      sustainabilitySupports = sustainabilitySupports.slice(0, 3);
+      sustainabilityRisks = sustainabilityRisks.slice(0, 3);
+    }
+
+    // Final score for ranking/UI: 85% interest, 15% temperament (if available)
+    const overallScore =
+      typeof big5Score === "number"
+        ? Math.round(interestScore * 0.85 + big5Score * 0.15)
+        : interestScore;
+
+    const score = Math.max(0, Math.min(100, overallScore));
 
     // Build matched/missing traits in a deterministic way:
     const matchedTraits: ClusterItem["interestFit"]["matchedTraits"] = [];
     const missingTraits: ClusterItem["interestFit"]["missingTraits"] = [];
 
     (["R", "I", "A", "S", "E", "C"] as RiasecCode[]).forEach((code) => {
-      const target = (def.riasecProfile as any)[code] ?? 0;
+      const targetVal = (def.riasecProfile as any)[code] ?? 0;
       const userVal = (userRiasec as any)[code] ?? 0;
 
       // Only talk about traits the cluster meaningfully cares about
-      if (target < 2.0) return;
+      if (targetVal < 2.0) return;
 
-      // Allow the same “noise band” your scorer uses (0.5)
-      const deficit = target - userVal;
+      const deficit = targetVal - userVal;
 
       if (deficit <= 0.5) {
         matchedTraits.push({
           code,
           label: `${RIASEC_LABEL[code]} Interest`,
-          strength: traitStrength(target),
+          strength: traitStrength(targetVal),
         });
       } else {
         missingTraits.push({
@@ -190,17 +368,21 @@ export async function generateCareerClusters(user: User, rid: string): Promise<C
         ? `Your interests align with ${topMatched.join(" + ")} demands in this world.`
         : `This world rewards interests that may not be central in your current profile.`;
 
-    // Bullets: use fit details/warnings (already deficit/conflict aware)
-    // Keep it short and UI-friendly.
+    // Bullets: interest reasons + one sustainability caveat (if any), short and UI-friendly
     const bullets = [
-      ...fit.details.slice(0, 2),
-      ...fit.warnings.slice(0, 2),
+      ...interestDeficits.slice(0, 2),
+      ...interestConflicts.slice(0, 2),
+      ...(sustainabilityRisks.length ? [sustainabilityRisks[0]] : []),
     ].slice(0, 4);
 
-    // Ensure we always have at least *something* user-facing
     if (bullets.length === 0) {
       bullets.push("RIASEC alignment is broadly neutral here (no major deficits detected).");
     }
+
+    const sustainabilityLevel =
+      typeof big5Score === "number"
+        ? toSustainabilityLevel(big5Score)
+        : "risky";
 
     return {
       key: def.id,
@@ -211,16 +393,18 @@ export async function generateCareerClusters(user: User, rid: string): Promise<C
       matchLevel: toMatchLevel(score),
 
       interestFit: {
-        level: toInterestLevel(score),
+        level: toInterestLevel(interestScore),
         matchedTraits,
         missingTraits,
       },
 
-      // Step 2 will replace this (Big Five fit)
       sustainability: {
-        level: "risky",
-        supports: [],
-        risks: ["Big Five fit not evaluated yet (Step 2)."],
+        level: sustainabilityLevel,
+        supports: typeof big5Score === "number" ? sustainabilitySupports : [],
+        risks:
+          typeof big5Score === "number"
+            ? (sustainabilityRisks.length ? sustainabilityRisks : ["Temperament fit looks broadly neutral."])
+            : ["Big Five fit not evaluated (missing Big Five signals)."],
       },
 
       // Step 3 will replace this (Macro fit)
