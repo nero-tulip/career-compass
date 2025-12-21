@@ -69,11 +69,11 @@ export type RiasecVector = {
 };
 
 export type BigFiveVector = {
-  openness: number; // tolerance for abstraction, novelty
-  conscientiousness: number; // structure, discipline, reliability
-  extraversion: number; // social energy, assertiveness
-  agreeableness: number; // cooperation vs competitiveness
-  neuroticism: number; // stress sensitivity, volatility
+  O: number; // tolerance for abstraction, novelty
+  C: number; // structure, discipline, reliability
+  E: number; // social energy, assertiveness
+  A: number; // cooperation vs competitiveness
+  N: number; // stress sensitivity, volatility
 };
 
 export type CareerClusterDef = {
@@ -190,11 +190,11 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
     },
 
     bigFiveProfile: {
-      openness: 2.0,
-      conscientiousness: 4.5,
-      extraversion: 2.5,
-      agreeableness: 3.0,
-      neuroticism: 2.0,
+      O: 2.0,
+      C: 4.5,
+      E: 2.5,
+      A: 3.0,
+      N: 2.0,
     },
 
     riasecConflicts: {
@@ -281,11 +281,11 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
 
     // Temperamentally demanding: discipline, emotional stability, attention to detail
     bigFiveProfile: {
-      openness: 1.5, // Novelty-seeking actively hurts performance
-      conscientiousness: 4.8, // Absolute requirement
-      extraversion: 2.0, // Mostly solitary, task-focused work
-      agreeableness: 3.0, // Professional cooperation, not warmth-driven
-      neuroticism: 1.8, // High stress tolerance required
+      O: 1.5, // Novelty-seeking actively hurts performance
+      C: 4.8, // Absolute requirement
+      E: 2.0, // Mostly solitary, task-focused work
+      A: 3.0, // Professional cooperation, not warmth-driven
+      N: 1.8, // High stress tolerance required
     },
 
     // Psychological tensions with this world
@@ -374,11 +374,11 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
 
   // Temperament favors ambition, composure, and strategic patience
   bigFiveProfile: {
-    openness: 3.6,          // Conceptual thinking and synthesis matter
-    conscientiousness: 4.2, // Execution, reliability, and follow-through
-    extraversion: 3.4,      // Comfort leading discussions and decisions
-    agreeableness: 2.8,     // Cooperation without excessive deference
-    neuroticism: 2.2,       // Emotional control under pressure
+    O: 3.6,          // Conceptual thinking and synthesis matter
+    C: 4.2, // Execution, reliability, and follow-through
+    E: 3.4,      // Comfort leading discussions and decisions
+    A: 2.8,     // Cooperation without excessive deference
+    N: 2.2,       // Emotional control under pressure
   },
 
   // Psychological mismatches
@@ -468,11 +468,11 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
 
     // Temperament favors steadiness, discipline, and tolerance for repetition
     bigFiveProfile: {
-      openness: 2.0, // Novelty-seeking is not rewarded
-      conscientiousness: 4.2, // Critical for safety, quality, and consistency
-      extraversion: 2.2, // Task-focused, not socially driven
-      agreeableness: 3.0, // Cooperative but not emotionally oriented
-      neuroticism: 2.2, // Emotional steadiness under routine pressure
+      O: 2.0, // Novelty-seeking is not rewarded
+      C: 4.2, // Critical for safety, quality, and consistency
+      E: 2.2, // Task-focused, not socially driven
+      A: 3.0, // Cooperative but not emotionally oriented
+      N: 2.2, // Emotional steadiness under routine pressure
     },
 
     // Psychological mismatches
@@ -561,11 +561,11 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
 
     // Temperament favors composure, planning, and tolerance for disruption
     bigFiveProfile: {
-      openness: 2.5, // Some adaptability required, but not novelty-seeking
-      conscientiousness: 4.2, // Critical for reliability and follow-through
-      extraversion: 2.8, // Functional communication, not performative
-      agreeableness: 3.2, // Cooperation across parties matters
-      neuroticism: 2.5, // Must remain calm under time pressure
+      O: 2.5, // Some adaptability required, but not novelty-seeking
+      C: 4.2, // Critical for reliability and follow-through
+      E: 2.8, // Functional communication, not performative
+      A: 3.2, // Cooperation across parties matters
+      N: 2.5, // Must remain calm under time pressure
     },
 
     // Common psychological mismatches
@@ -655,11 +655,11 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
 
     // Temperamentally demanding: energy, resilience, and emotional volatility tolerance
     bigFiveProfile: {
-      openness: 4.2, // Strong appetite for novelty and experimentation
-      conscientiousness: 3.5, // Necessary, but flexible rather than rigid
-      extraversion: 3.8, // Comfort asserting ideas and selling visions
-      agreeableness: 2.5, // Willingness to push, disagree, and negotiate
-      neuroticism: 2.8, // Must tolerate stress, rejection, and uncertainty
+      O: 4.2, // Strong appetite for novelty and experimentation
+      C: 3.5, // Necessary, but flexible rather than rigid
+      E: 3.8, // Comfort asserting ideas and selling visions
+      A: 2.5, // Willingness to push, disagree, and negotiate
+      N: 2.8, // Must tolerate stress, rejection, and uncertainty
     },
 
     // Psychological mismatches
@@ -747,11 +747,11 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
 
     // Temperament favors intensity, focus, and emotional containment
     bigFiveProfile: {
-      openness: 3.0, // Abstract thinking helps, novelty-seeking does not
-      conscientiousness: 4.2, // Precision and discipline are mandatory
-      extraversion: 2.8, // Can perform socially, not socially driven
-      agreeableness: 2.3, // Competitive environments reward assertiveness
-      neuroticism: 2.5, // Must tolerate volatility and pressure
+      O: 3.0, // Abstract thinking helps, novelty-seeking does not
+      C: 4.2, // Precision and discipline are mandatory
+      E: 2.8, // Can perform socially, not socially driven
+      A: 2.3, // Competitive environments reward assertiveness
+      N: 2.5, // Must tolerate volatility and pressure
     },
 
     // Psychological mismatches
@@ -839,11 +839,11 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
 
     // Temperament favors energy, optimism, and emotional resilience
     bigFiveProfile: {
-      openness: 3.2, // Adaptable in messaging and approach
-      conscientiousness: 3.5, // Important, but flexible
-      extraversion: 4.2, // Strong comfort initiating interaction
-      agreeableness: 3.2, // Warmth helps, but assertiveness matters
-      neuroticism: 3.0, // Must tolerate rejection and volatility
+      O: 3.2, // Adaptable in messaging and approach
+      C: 3.5, // Important, but flexible
+      E: 4.2, // Strong comfort initiating interaction
+      A: 3.2, // Warmth helps, but assertiveness matters
+      N: 3.0, // Must tolerate rejection and volatility
     },
 
     // Psychological mismatches
@@ -933,11 +933,11 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
 
     // Temperament favors discipline, resilience, and tolerance for conflict
     bigFiveProfile: {
-      openness: 3.2, // Abstract thinking helps, novelty-seeking does not
-      conscientiousness: 4.3, // Precision, preparation, and follow-through are critical
-      extraversion: 2.8, // Can argue forcefully without being socially driven
-      agreeableness: 2.2, // Low agreeableness helps in adversarial contexts
-      neuroticism: 2.5, // Must tolerate pressure, conflict, and scrutiny
+      O: 3.2, // Abstract thinking helps, novelty-seeking does not
+      C: 4.3, // Precision, preparation, and follow-through are critical
+      E: 2.8, // Can argue forcefully without being socially driven
+      A: 2.2, // Low agreeableness helps in adversarial contexts
+      N: 2.5, // Must tolerate pressure, conflict, and scrutiny
     },
 
     // Psychological mismatches
@@ -1025,11 +1025,11 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
 
     // Temperament favors patience, steadiness, and tolerance for slow progress
     bigFiveProfile: {
-      openness: 3.2, // Abstract and systemic thinking helps
-      conscientiousness: 4.2, // Procedure, documentation, and follow-through matter
-      extraversion: 2.8, // Functional communication, not performative
-      agreeableness: 3.8, // Cooperation and compromise are essential
-      neuroticism: 2.2, // Emotional steadiness under public scrutiny
+      O: 3.2, // Abstract and systemic thinking helps
+      C: 4.2, // Procedure, documentation, and follow-through matter
+      E: 2.8, // Functional communication, not performative
+      A: 3.8, // Cooperation and compromise are essential
+      N: 2.2, // Emotional steadiness under public scrutiny
     },
 
     // Psychological mismatches
@@ -1117,11 +1117,11 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
 
     // Temperament favors curiosity, autonomy, and tolerance for ambiguity
     bigFiveProfile: {
-      openness: 4.8, // Essential: curiosity and abstraction
-      conscientiousness: 3.8, // Required for sustained independent work
-      extraversion: 1.8, // Comfort with solitude
-      agreeableness: 3.0, // Collegial but not consensus-driven
-      neuroticism: 2.5, // Must tolerate uncertainty and slow feedback
+      O: 4.8, // Essential: curiosity and abstraction
+      C: 3.8, // Required for sustained independent work
+      E: 1.8, // Comfort with solitude
+      A: 3.0, // Collegial but not consensus-driven
+      N: 2.5, // Must tolerate uncertainty and slow feedback
     },
 
     // Psychological mismatches
@@ -1211,11 +1211,11 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
 
     // Temperament favors focus, discipline, and tolerance for responsibility
     bigFiveProfile: {
-      openness: 3.0, // Conceptual thinking helps, novelty-seeking does not
-      conscientiousness: 4.3, // Precision and follow-through are critical
-      extraversion: 2.0, // Comfortable working independently
-      agreeableness: 3.0, // Cooperative but not people-driven
-      neuroticism: 2.2, // Emotional steadiness under technical pressure
+      O: 3.0, // Conceptual thinking helps, novelty-seeking does not
+      C: 4.3, // Precision and follow-through are critical
+      E: 2.0, // Comfortable working independently
+      A: 3.0, // Cooperative but not people-driven
+      N: 2.2, // Emotional steadiness under technical pressure
     },
 
     // Psychological mismatches
@@ -1303,11 +1303,11 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
 
   // Temperament favors autonomy, focus, and tolerance for ambiguity
   bigFiveProfile: {
-    openness: 4.0,          // Curiosity and abstract thinking are major advantages
-    conscientiousness: 3.8, // Needed to ship and maintain systems
-    extraversion: 2.0,      // Comfort working independently
-    agreeableness: 3.0,     // Cooperative, but not people-driven
-    neuroticism: 2.5,       // Emotional steadiness amid rapid feedback
+    O: 4.0,          // Curiosity and abstract thinking are major advantages
+    C: 3.8, // Needed to ship and maintain systems
+    E: 2.0,      // Comfort working independently
+    A: 3.0,     // Cooperative, but not people-driven
+    N: 2.5,       // Emotional steadiness amid rapid feedback
   },
 
   // Psychological mismatches
@@ -1395,11 +1395,11 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
 
   // Temperament favors patience, precision, and tolerance for uncertainty
   bigFiveProfile: {
-    openness: 4.0,          // Curiosity and exploratory thinking are essential
-    conscientiousness: 4.2, // Precision, documentation, and repeatability matter
-    extraversion: 1.8,      // Comfort with solitary, focused work
-    agreeableness: 3.0,     // Cooperative, but not socially driven
-    neuroticism: 2.4,       // Must tolerate ambiguity and delayed results
+    O: 4.0,          // Curiosity and exploratory thinking are essential
+    C: 4.2, // Precision, documentation, and repeatability matter
+    E: 1.8,      // Comfort with solitary, focused work
+    A: 3.0,     // Cooperative, but not socially driven
+    N: 2.4,       // Must tolerate ambiguity and delayed results
   },
 
   // Psychological mismatches
@@ -1489,11 +1489,11 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
 
   // Temperament favors steadiness, responsibility, and emotional regulation
   bigFiveProfile: {
-    openness: 2.8,          // Adaptability helps, novelty-seeking does not
-    conscientiousness: 4.6, // Non-negotiable: precision and reliability
-    extraversion: 2.8,      // Functional interpersonal engagement
-    agreeableness: 4.0,     // Empathy and cooperation are essential
-    neuroticism: 2.0,       // Emotional stability under stress is critical
+    O: 2.8,          // Adaptability helps, novelty-seeking does not
+    C: 4.6, // Non-negotiable: precision and reliability
+    E: 2.8,      // Functional interpersonal engagement
+    A: 4.0,     // Empathy and cooperation are essential
+    N: 2.0,       // Emotional stability under stress is critical
   },
 
   // Psychological mismatches
@@ -1581,11 +1581,11 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
 
   // Temperament demands emotional intelligence and self-regulation
   bigFiveProfile: {
-    openness: 3.8,          // Openness to inner experience and nuance
-    conscientiousness: 3.8, // Professional boundaries and consistency matter
-    extraversion: 2.5,      // Comfort with one-on-one interaction
-    agreeableness: 4.6,     // Empathy and warmth are core
-    neuroticism: 2.8,       // Must manage emotional exposure without collapse
+    O: 3.8,          // Openness to inner experience and nuance
+    C: 3.8, // Professional boundaries and consistency matter
+    E: 2.5,      // Comfort with one-on-one interaction
+    A: 4.6,     // Empathy and warmth are core
+    N: 2.8,       // Must manage emotional exposure without collapse
   },
 
   // Psychological mismatches
@@ -1673,11 +1673,11 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
 
   // Temperament favors patience, clarity, and emotional steadiness
   bigFiveProfile: {
-    openness: 3.6,          // Comfort with ideas and abstract concepts
-    conscientiousness: 4.2, // Reliability and preparation are essential
-    extraversion: 3.2,      // Sustained group interaction
-    agreeableness: 4.0,     // Cooperation and encouragement matter
-    neuroticism: 2.6,       // Emotional regulation under repetition and friction
+    O: 3.6,          // Comfort with ideas and abstract concepts
+    C: 4.2, // Reliability and preparation are essential
+    E: 3.2,      // Sustained group interaction
+    A: 4.0,     // Cooperation and encouragement matter
+    N: 2.6,       // Emotional regulation under repetition and friction
   },
 
   // Psychological mismatches
@@ -1765,11 +1765,11 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
 
   // Temperament favors empathy, endurance, and emotional regulation
   bigFiveProfile: {
-    openness: 2.8,          // Practical focus over abstraction
-    conscientiousness: 4.2, // Reliability and follow-through are critical
-    extraversion: 2.8,      // Sustained interpersonal engagement
-    agreeableness: 4.8,     // Compassion and patience are essential
-    neuroticism: 3.0,       // Must tolerate chronic stress without burnout
+    O: 2.8,          // Practical focus over abstraction
+    C: 4.2, // Reliability and follow-through are critical
+    E: 2.8,      // Sustained interpersonal engagement
+    A: 4.8,     // Compassion and patience are essential
+    N: 3.0,       // Must tolerate chronic stress without burnout
   },
 
   // Psychological mismatches
@@ -1859,11 +1859,11 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
 
   // Temperament favors openness, identity strength, and emotional resilience
   bigFiveProfile: {
-    openness: 4.8,          // Non-negotiable: curiosity and imagination
-    conscientiousness: 3.0, // Discipline helps but varies widely
-    extraversion: 2.8,      // Comfort with visibility, not dominance
-    agreeableness: 3.2,     // Too high can dilute creative voice
-    neuroticism: 3.2,       // Must withstand rejection and uncertainty
+    O: 4.8,          // Non-negotiable: curiosity and imagination
+    C: 3.0, // Discipline helps but varies widely
+    E: 2.8,      // Comfort with visibility, not dominance
+    A: 3.2,     // Too high can dilute creative voice
+    N: 3.2,       // Must withstand rejection and uncertainty
   },
 
   // Psychological mismatches
@@ -1951,11 +1951,11 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
 
   // Marketing rewards strategic thinking, adaptability, and execution
   bigFiveProfile: {
-    openness: 4.0,          // Needed for messaging and creative synthesis
-    conscientiousness: 4.0, // Campaign execution, testing, iteration
-    extraversion: 3.4,      // Comfort influencing others
-    agreeableness: 3.2,     // Too high weakens persuasion
-    neuroticism: 2.8,       // Must tolerate performance pressure
+    O: 4.0,          // Needed for messaging and creative synthesis
+    C: 4.0, // Campaign execution, testing, iteration
+    E: 3.4,      // Comfort influencing others
+    A: 3.2,     // Too high weakens persuasion
+    N: 2.8,       // Must tolerate performance pressure
   },
 
   // Psychological friction points
@@ -2046,11 +2046,11 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
 
   // Temperament favors emotional control and reliability
   bigFiveProfile: {
-    openness: 2.2,          // Novelty-seeking can be dangerous here
-    conscientiousness: 4.6, // Discipline, reliability, follow-through
-    extraversion: 3.0,      // Team coordination over social dominance
-    agreeableness: 3.6,     // Cooperation and trust
-    neuroticism: 2.0,       // Low reactivity under stress is essential
+    O: 2.2,          // Novelty-seeking can be dangerous here
+    C: 4.6, // Discipline, reliability, follow-through
+    E: 3.0,      // Team coordination over social dominance
+    A: 3.6,     // Cooperation and trust
+    N: 2.0,       // Low reactivity under stress is essential
   },
 
   // Psychological mismatches
@@ -2139,11 +2139,11 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
 
   // Temperament favors reliability and practical focus
   bigFiveProfile: {
-    openness: 2.4,          // Preference for concrete reality over abstraction
-    conscientiousness: 4.6, // Precision, safety, follow-through
-    extraversion: 2.6,      // Comfortable working independently or in small teams
-    agreeableness: 3.2,     // Cooperation without excessive emotionality
-    neuroticism: 2.2,       // Emotional steadiness under physical and time pressure
+    O: 2.4,          // Preference for concrete reality over abstraction
+    C: 4.6, // Precision, safety, follow-through
+    E: 2.6,      // Comfortable working independently or in small teams
+    A: 3.2,     // Cooperation without excessive emotionality
+    N: 2.2,       // Emotional steadiness under physical and time pressure
   },
 
   // Psychological friction points
@@ -2232,11 +2232,11 @@ export const CAREER_CLUSTERS: Record<ClusterId, CareerClusterDef> = {
 
   // Temperament favors steadiness, focus, and reliability
   bigFiveProfile: {
-    openness: 2.0,          // Novelty-seeking can reduce safety
-    conscientiousness: 4.6, // Precision, reliability, attention to detail
-    extraversion: 2.2,      // Comfort with solitude or limited interaction
-    agreeableness: 3.0,     // Cooperation without emotional labor
-    neuroticism: 2.0,       // Emotional stability under fatigue and pressure
+    O: 2.0,          // Novelty-seeking can reduce safety
+    C: 4.6, // Precision, reliability, attention to detail
+    E: 2.2,      // Comfort with solitude or limited interaction
+    A: 3.0,     // Cooperation without emotional labor
+    N: 2.0,       // Emotional stability under fatigue and pressure
   },
 
   // Psychological friction points
