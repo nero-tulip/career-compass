@@ -2,7 +2,7 @@
 
 import { ReactNode, useEffect, useState } from "react";
 import Link from "next/link";
-import { AuthProvider, useAuth } from "@/app/providers/AuthProvider";
+import { useAuth } from "@/app/providers/AuthProvider";
 import RequireAuth from "@/app/components/auth/RequireAuth";
 import UserMenuClient from "@/app/components/auth/UserMenuClient";
 import { fetchUserEntitlementServer } from "@/app/lib/server/actions";
@@ -25,7 +25,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   }, [user, loading]);
 
   return (
-    <AuthProvider>
+    
       <RequireAuth>
         {/* Header Nav */}
         <div className="border-b bg-white">
@@ -68,6 +68,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
         <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
       </RequireAuth>
-    </AuthProvider>
+    
   );
 }
