@@ -139,8 +139,13 @@ export default function Home() {
         <div aria-hidden className="hero-blob hero-blob--sky" />
         <div aria-hidden className="hero-blob hero-blob--blush" />
 
-        <div className="grid gap-10 md:grid-cols-[1.2fr_1fr] items-center">
-          <Reveal as="div" direction="up" delay={0.05}>
+        <div className="relative isolate">
+          <Reveal 
+            as="div" 
+            direction="up" 
+            delay={0.05} 
+            className="relative z-10 max-w-2xl bg-white/80 backdrop-blur-md p-6 md:p-8 rounded-3xl border border-white/40 shadow-sm"
+          >
             <h1 className="text-balance text-4xl md:text-6xl font-semibold tracking-tight leading-tight glow">
               Finding the perfect career,{" "}
               <span className="text-gradient">for you</span>.
@@ -180,21 +185,24 @@ export default function Home() {
             </Reveal>
           </Reveal>
 
-          {/* image column — no white box, aligned with text, larger */}
-          <Reveal
-            as="div"
-            className="relative min-h-[420px] md:min-h-[520px]"
-            direction="left"
-            delay={0.15}
-          >
-            <Image
-              src="/hero-illustration.svg"
-              alt="Career search illustration"
-              fill
-              className="object-cover"
-              priority
-            />
-          </Reveal>
+          {/* image column — absolute, larger than original but not huge, underlapping */}
+          {/* Original was approx 500px wide. 1.3x is approx 650px-700px. */}
+          <div className="absolute top-1/2 right-[-50px] md:right-[-100px] -translate-y-1/2 w-[450px] md:w-[850px] -z-10 opacity-80 pointer-events-none select-none">
+            <Reveal
+               as="div"
+               className="relative aspect-square"
+               direction="left"
+               delay={0.15}
+            >
+               <Image
+                 src="/hero-illustration.svg"
+                 alt="Career search illustration"
+                 fill
+                 className="object-contain"
+                 priority
+               />
+            </Reveal>
+          </div>
         </div>
       </section>
 
