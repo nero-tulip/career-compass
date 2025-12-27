@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/app/providers/AuthProvider';
 import ProgressBar from '@/app/components/ProgressBar';
 import QuizOptionGrid from '@/app/components/QuizOptionGrid';
+import QuizIntro from '@/app/components/QuizIntro';
 import big5Config from '@/app/data/big5Questions.json';
 import { ensureDraft, saveSection, loadSection } from '@/app/lib/drafts';
 
@@ -122,8 +123,6 @@ export default function Big5Page() {
     }
   }, [page]);
 
-  if (loading || !user) return null;
-
   // Deterministically shuffle questions once rid is known; otherwise fallback to original order temporarily
   const all = useMemo(() => {
     const items = cfg.items;
@@ -132,7 +131,7 @@ export default function Big5Page() {
 
   // Pagination math
   const start = Math.max(0, page) * QUESTIONS_PER_PAGE;
-  const pageQs = page >= 0 ? all.slice(start, start + QUESTIONS_PER_PAGE) : [];
+  const pageQs = useMemo(() => page >= 0 ? all.slice(start, start + QUESTIONS_PER_PAGE) : [], [page, all, start]);
   const isLast = page >= 0 && start + QUESTIONS_PER_PAGE >= all.length;
   const totalPages = Math.ceil(all.length / QUESTIONS_PER_PAGE);
 
@@ -146,6 +145,8 @@ export default function Big5Page() {
           (all.length || 1),
     [page, pageQs, answers, all.length]
   );
+  
+  if (loading || !user) return null;
 
   // Answer handler
   const onSelect = (questionId: string, score1to5: number) => {
@@ -241,61 +242,36 @@ export default function Big5Page() {
 
       {/* ---------------- Intro Step ---------------- */}
       {page < 0 ? (
-        <div className="space-y-6">
-          <header className="text-center space-y-2">
-            <h1 className="text-3xl font-semibold tracking-tight">
-              {cfg.meta.title || 'Big Five Personality'}
-            </h1>
-            <p className="text-gray-600">
-              {cfg.meta.description ||
-                'A well-validated framework describing five broad personality traits relevant to work and life.'}
-            </p>
-          </header>
-
-          <section className="rounded-2xl border bg-white p-6 shadow-sm space-y-4">
-            <h2 className="text-xl font-semibold">What this measures</h2>
-            <p className="text-gray-700">
-              The Big Five captures tendencies across five dimensions:
-              <span className="font-medium"> Openness</span>,{' '}
-              <span className="font-medium">Conscientiousness</span>,{' '}
-              <span className="font-medium">Extraversion</span>,{' '}
-              <span className="font-medium">Agreeableness</span>, and{' '}
-              <span className="font-medium">Neuroticism</span>. It helps explain how you prefer to work,
-              collaborate, make decisions, and respond to stress.
-            </p>
-          </section>
-
-          <section className="rounded-2xl border bg-white p-6 shadow-sm space-y-3">
-            <h2 className="text-xl font-semibold">How it works</h2>
-            <ul className="list-disc pl-5 text-gray-700 space-y-1">
-              <li>You’ll rate statements from “Very Inaccurate” to “Very Accurate”.</li>
-              <li>Some items are reverse-scored automatically — just answer honestly.</li>
-              <li>There are no right or wrong answers; be descriptive, not aspirational.</li>
-            </ul>
-            <p className="text-xs text-gray-500 mt-1">Estimated time: ~8–12 minutes.</p>
-          </section>
-
-          <section className="rounded-2xl border bg-white p-6 shadow-sm space-y-3">
-            <h2 className="text-xl font-semibold">Tips for accurate results</h2>
-            <ul className="list-disc pl-5 text-gray-700 space-y-1">
-              <li>Answer based on typical behavior over the last year.</li>
-              <li>If unsure, pick the option that fits you most of the time.</li>
-              <li>Trust your first instinct; don’t overthink.</li>
-            </ul>
-            <p className="text-xs text-gray-500 mt-1">
-              Your responses are used to personalize your report and recommendations.
-            </p>
-          </section>
-
-          <div className="flex items-center justify-between">
-            <button className="btn btn-ghost" onClick={() => router.push('/app')}>
-              Back to dashboard
-            </button>
-            <button onClick={startQuiz} className="btn btn-primary">
-              Start Big Five
-            </button>
-          </div>
-        </div>
+        <QuizIntro
+          title={cfg.meta.title || 'Big Five Personality'}
+          description={
+            cfg.meta.description ||
+            'A well-validated framework describing five broad personality traits relevant to work and life.'
+          }
+          timeEstimate="~10 mins"
+          onStart={startQuiz}
+          onBack={() => router.push('/app')}
+          whatItMeasures={{
+            title: 'What this measures',
+            items: [
+              'Openness: creative vs. pragmatic',
+              'Conscientiousness: organized vs. spontaneous',
+              'Extraversion: engaged vs. reserved',
+              'Agreeableness: cooperative vs. competitive',
+              'Neuroticism: sensitive vs. resilient',
+            ],
+          }}
+          howItWorks={[
+            'Rate statements from "Very Inaccurate" to "Very Accurate".',
+            'Some items are reverse-scored automatically — just answer honestly.',
+            'There are no right or wrong answers; be descriptive, not aspirational.',
+          ]}
+          tips={[
+            'Answer based on typical behavior over the last year.',
+            'If unsure, pick the option that fits you most of the time.',
+            'Trust your first instinct; don’t overthink.',
+          ]}
+        />
       ) : (
         /* ---------------- Quiz Pages ---------------- */
         <>

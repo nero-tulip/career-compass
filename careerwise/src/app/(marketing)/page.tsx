@@ -9,6 +9,7 @@ import {
   ElementType,
   PropsWithChildren,
 } from "react";
+import FAQ from "../components/FAQ";
 
 /** ----------------------------------------------------------
  * Tiny reveal-on-scroll helper (no external deps)
@@ -453,94 +454,13 @@ export default function Home() {
           Frequently asked questions
         </Reveal>
         <div className="space-y-3">
-          <Reveal
-            as="details"
-            className="group rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-5 shadow-[var(--shadow-1)]"
-            delay={0.05}
-          >
-            <summary className="flex cursor-pointer list-none items-center justify-between">
-              <span className="font-medium">What is CareerCompass?</span>
-              <span className="ml-4 text-gray-500 transition group-open:rotate-45">
-                ＋
-              </span>
-            </summary>
-            <div className="mt-3 text-[15px] text-[--text-dim]">
-              A research-based platform that maps your interests and preferences
-              to career environments where you’re most likely to thrive.
-            </div>
-          </Reveal>
-
-          <Reveal
-            as="details"
-            className="group rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-5 shadow-[var(--shadow-1)]"
-            delay={0.15}
-          >
-            <summary className="flex cursor-pointer list-none items-center justify-between">
-              <span className="font-medium">
-                How long does the free profile take?
-              </span>
-              <span className="ml-4 text-gray-500 transition group-open:rotate-45">
-                ＋
-              </span>
-            </summary>
-            <div className="mt-3 text-[15px] text-[--text-dim]">
-              Around 8–10 minutes. You can pause anytime — your progress is
-              saved to your account.
-            </div>
-          </Reveal>
-
-          <Reveal
-            as="details"
-            className="group rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-5 shadow-[var(--shadow-1)]"
-            delay={0.25}
-          >
-            <summary className="flex cursor-pointer list-none items-center justify-between">
-              <span className="font-medium">What do I get with PRO?</span>
-              <span className="ml-4 text-gray-500 transition group-open:rotate-45">
-                ＋
-              </span>
-            </summary>
-            <div className="mt-3 text-[15px] text-[--text-dim]">
-              A deeper psychological profile (Big 5), higher-precision career
-              matches, personalized resources, and upcoming mentor access — all
-              for a one-time fee.
-            </div>
-          </Reveal>
-
-          <Reveal
-            as="details"
-            className="group rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-5 shadow-[var(--shadow-1)]"
-            delay={0.35}
-          >
-            <summary className="flex cursor-pointer list-none items-center justify-between">
-              <span className="font-medium">Can I edit my answers later?</span>
-              <span className="ml-4 text-gray-500 transition group-open:rotate-45">
-                ＋
-              </span>
-            </summary>
-            <div className="mt-3 text-[15px] text-[--text-dim]">
-              Yes. The platform lets you revisit each section (Basics,
-              Preferences, RIASEC) and regenerate results anytime.
-            </div>
-          </Reveal>
-
-          <Reveal
-            as="details"
-            className="group rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-5 shadow-[var(--shadow-1)]"
-            delay={0.45}
-          >
-            <summary className="flex cursor-pointer list-none items-center justify-between">
-              <span className="font-medium">Is my data private?</span>
-              <span className="ml-4 text-gray-500 transition group-open:rotate-45">
-                ＋
-              </span>
-            </summary>
-            <div className="mt-3 text-[15px] text-[--text-dim]">
-              We take privacy seriously. Your responses are tied to your
-              account, used to generate your results, and not sold to third
-              parties.
-            </div>
-          </Reveal>
+        <Reveal
+          as="div"
+          className="w-full"
+          delay={0.05}
+        >
+          <FAQ />
+        </Reveal>
         </div>
       </section>
     </div>

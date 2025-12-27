@@ -6,6 +6,7 @@ import riaQuestions from "@/app/data/riasecQuestionsShuffled.json";
 import type { Answer } from "@/app/types/quiz";
 import ProgressBar from "@/app/components/ProgressBar";
 import QuizOptionGrid from "@/app/components/QuizOptionGrid";
+import QuizIntro from "@/app/components/QuizIntro";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { ensureDraft, saveSection } from "@/app/lib/drafts";
 
@@ -80,14 +81,12 @@ export default function RIASECPage() {
     }
   }, [page]);
 
-  if (loading || !user) return null;
-
   const all = riaQuestions as RiaQ[];
   const totalPages = Math.ceil(all.length / QUESTIONS_PER_PAGE);
 
   // Compute page slice only when in question pages
   const start = Math.max(0, page) * QUESTIONS_PER_PAGE;
-  const pageQs = page >= 0 ? all.slice(start, start + QUESTIONS_PER_PAGE) : [];
+  const pageQs = useMemo(() => page >= 0 ? all.slice(start, start + QUESTIONS_PER_PAGE) : [], [page, all, start]);
   const isLast = page >= 0 && start + QUESTIONS_PER_PAGE >= all.length;
 
   // Progress: on intro, show 0%
@@ -100,6 +99,8 @@ export default function RIASECPage() {
       (page * QUESTIONS_PER_PAGE + answeredOnPage) / (all.length || 1)
     );
   }, [page, pageQs, answers, all.length]);
+
+  if (loading || !user) return null;
 
   const onSelect = (questionId: string, score: number) => {
     setAnswers((prev) => {
@@ -167,57 +168,30 @@ export default function RIASECPage() {
 
       {/* ---------------- Intro Step ---------------- */}
       {page < 0 ? (
-        <div className="space-y-6">
-          <header className="text-center space-y-2">
-            <h1 className="text-3xl font-semibold tracking-tight">RIASEC Interests</h1>
-            <p className="text-gray-600">
-              A quick assessment of the kinds of work activities that naturally energize you.
-            </p>
-          </header>
-
-          <section className="rounded-2xl border bg-white p-6 shadow-sm space-y-4">
-            <h2 className="text-xl font-semibold">What this measures</h2>
-            <p className="text-gray-700">
-              RIASEC (Holland’s model) maps interests across six themes:
-              <span className="font-medium"> Realistic, Investigative, Artistic, Social, Enterprising,</span> and
-              <span className="font-medium"> Conventional</span>. It doesn’t box you in — it highlights environments and tasks where your motivation tends to rise.
-            </p>
-          </section>
-
-          <section className="rounded-2xl border bg-white p-6 shadow-sm space-y-3">
-            <h2 className="text-xl font-semibold">How it works</h2>
-            <ul className="list-disc pl-5 text-gray-700 space-y-1">
-              <li>Read each statement and select how accurately it describes you.</li>
-              <li>There are no right or wrong answers — be honest, not idealized.</li>
-              <li>Your top 2–3 themes help guide roles, teams, and environments.</li>
-            </ul>
-          </section>
-
-          <section className="rounded-2xl border bg-white p-6 shadow-sm space-y-3">
-            <h2 className="text-xl font-semibold">Tips for accurate results</h2>
-            <ul className="list-disc pl-5 text-gray-700 space-y-1">
-              <li>Answer based on what energizes you <em>today</em>, not what you wish were true.</li>
-              <li>If you’re unsure, pick the option you’d choose most of the time.</li>
-              <li>Move steadily — first instincts are usually best.</li>
-            </ul>
-            <p className="text-xs text-gray-500 mt-1">Estimated time: ~5–7 minutes.</p>
-          </section>
-
-          <div className="flex items-center justify-between">
-            <button
-              className="btn btn-ghost"
-              onClick={() => router.push("/app")}
-            >
-              Back to dashboard
-            </button>
-            <button
-              onClick={startQuiz}
-              className="btn btn-primary"
-            >
-              Start RIASEC
-            </button>
-          </div>
-        </div>
+        <QuizIntro
+          title="RIASEC Interests"
+          description="A quick assessment of the kinds of work activities that naturally energize you."
+          timeEstimate="~5 mins"
+          onStart={startQuiz}
+          onBack={() => router.push("/app")}
+          whatItMeasures={{
+            title: "What this measures",
+            items: [
+              "Realistic, Investigative, Artistic, Social, Enterprising, and Conventional themes.",
+              "It doesn’t box you in — it highlights environments and tasks where your motivation tends to rise.",
+            ],
+          }}
+          howItWorks={[
+            "Read each statement and select how accurately it describes you.",
+            "There are no right or wrong answers — be honest, not idealized.",
+            "Your top 2–3 themes help guide roles, teams, and environments.",
+          ]}
+          tips={[
+            "Answer based on what energizes you today, not what you wish were true.",
+            "If you’re unsure, pick the option you’d choose most of the time.",
+            "Move steadily — first instincts are usually best.",
+          ]}
+        />
       ) : (
         /* ---------------- Quiz Pages ---------------- */
         <>

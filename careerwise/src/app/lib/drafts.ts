@@ -144,7 +144,7 @@ export async function saveSection(
   // strip any undefined nested values before send
   const cleaned = stripUndefined(payload);
 
-  await updateDoc(ref, cleaned);
+  await updateDoc(ref, cleaned as any);
 }
 
 /**

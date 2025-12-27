@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import macroQuestions from "@/app/data/macroQuestions.json";
 import ProgressBar from "@/app/components/ProgressBar";
 import QuizOptionGrid from "@/app/components/QuizOptionGrid";
+import QuizIntro from "@/app/components/QuizIntro";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { ensureDraft, saveSection } from "@/app/lib/drafts";
 
@@ -397,52 +398,26 @@ export default function MacroPage() {
 
       {page < 0 ? (
         // ----------------------- INTRO STEP -----------------------
-        <div className="space-y-6">
-          <header className="text-center space-y-2">
-            <h1 className="text-3xl font-semibold tracking-tight">Career Preferences</h1>
-            <p className="text-gray-600">
-              These questions capture the big-picture drivers behind your career decisions — things like{" "}
-              <em>income, impact, autonomy, stability</em>, and where you’d like to work.
-            </p>
-          </header>
-
-          <section className="rounded-2xl border bg-white p-6 shadow-sm space-y-3">
-            <h2 className="text-xl font-semibold">What we’ll learn</h2>
-            <ul className="list-disc pl-5 text-gray-700 space-y-1">
-              <li>What outcomes matter most to you (purpose, pay, security, freedom).</li>
-              <li>Preferred environments (startup vs corporate, remote vs on-site, etc.).</li>
-              <li>How much social interaction, leadership, and flexibility you want day to day.</li>
-            </ul>
-            <p className="text-xs text-gray-500 mt-1">
-              We use this to tailor your report and later map you to clusters and roles that fit.
-            </p>
-          </section>
-
-          <section className="rounded-2xl border bg-white p-6 shadow-sm space-y-3">
-            <h2 className="text-xl font-semibold">Tips</h2>
-            <ul className="list-disc pl-5 text-gray-700 space-y-1">
-              <li>Answer based on what would keep you motivated <em>for months</em>, not just today.</li>
-              <li>There are no right answers — honesty beats “ideal” answers.</li>
-              <li>Unsure? Choose the option that feels true most of the time.</li>
-            </ul>
-          </section>
-
-          <section className="rounded-2xl border bg-white p-6 shadow-sm space-y-3">
-            <h2 className="text-xl font-semibold">Privacy</h2>
-            <p className="text-gray-700">
-              Your responses stay with your account and drive your personalized report. You can edit them anytime.
-            </p>
-          </section>
-
-          <div className="flex items-center justify-between">
-            <button className="btn btn-ghost" onClick={() => router.push("/app")}>
-              Back to dashboard
-            </button>
-            <button onClick={startMacro} className="btn btn-primary">
-              Start
-            </button>
-          </div>
-        </div>
+        <QuizIntro
+          title="Career Preferences"
+          description="These questions capture the big-picture drivers behind your career decisions — things like income, impact, autonomy, stability, and where you’d like to work."
+          timeEstimate="~5 mins"
+          onStart={startMacro}
+          onBack={() => router.push("/app")}
+          whatItMeasures={{
+            title: "What we'll learn",
+            items: [
+              "What outcomes matter most to you (purpose, pay, security, freedom).",
+              "Preferred environments (startup vs corporate, remote vs on-site, etc.).",
+              "How much social interaction, leadership, and flexibility you want day to day.",
+            ],
+          }}
+          tips={[
+            "Answer based on what would keep you motivated for months, not just today.",
+            "There are no right answers — honesty beats “ideal” answers.",
+            "Unsure? Choose the option that feels true most of the time.",
+          ]}
+        />
       ) : (
         // ----------------------- QUESTIONS -----------------------
         <>

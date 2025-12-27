@@ -7,6 +7,7 @@ import intakeConfig from "@/app/data/intakeQuestions.json";
 import { useAuth } from "@/app/providers/AuthProvider";
 import { ensureDraft, saveSection } from "@/app/lib/drafts";
 import ProgressBar from "@/app/components/ProgressBar";
+import QuizIntro from "@/app/components/QuizIntro";
 
 // Types derived from intakeQuestions.json
 type IntakeOption = { value: string; label: string };
@@ -86,14 +87,12 @@ export default function IntakePage() {
   useEffect(() => {
     if (!loading && !user) router.replace("/login?next=/app/quiz/intake");
   }, [loading, user, router]);
-  if (loading || !user) return null;
-
   // Prefill from saved answers if a rid is present (do not ensure draft yet on intro)
   useEffect(() => {
     let active = true;
     (async () => {
       try {
-        if (!ridParam) {
+        if (!ridParam || !user) {
           if (active) setPrefillLoading(false);
           return;
         }
@@ -118,6 +117,8 @@ export default function IntakePage() {
       active = false;
     };
   }, [ridParam, user]);
+
+  if (loading || !user) return null;
 
   const setVal = (id: string, v: AnswerValue) =>
     setAnswers((prev) => ({ ...prev, [id]: v }));
@@ -190,55 +191,29 @@ export default function IntakePage() {
 
       {/* ----------------------- INTRO STEP ----------------------- */}
       {page < 0 ? (
-        <div className="space-y-6">
-          <header className="text-center space-y-2">
-            <h1 className="text-3xl font-semibold tracking-tight">
-              {intakeConfig.meta?.title ?? "Tell us about you"}
-            </h1>
-            <p className="text-gray-600">
-              {intakeConfig.meta?.description ??
-                "We ask a few basics so the rest of your report reflects your real context."}
-            </p>
-          </header>
-
-          <section className="rounded-2xl border bg-white p-6 shadow-sm space-y-3">
-            <h2 className="text-xl font-semibold">What we’ll ask</h2>
-            <ul className="list-disc pl-5 text-gray-700 space-y-1">
-              <li>Background: where you are in life/study/work.</li>
-              <li>Context: location, education, preferred environments.</li>
-              <li>Focus: what you want to explore or achieve.</li>
-            </ul>
-            <p className="text-xs text-gray-500 mt-1">
-              These answers help personalize your results and recommendations.
-            </p>
-          </section>
-
-          <section className="rounded-2xl border bg-white p-6 shadow-sm space-y-3">
-            <h2 className="text-xl font-semibold">Tips</h2>
-            <ul className="list-disc pl-5 text-gray-700 space-y-1">
-              <li>Answer as you are today, not who you think you “should” be.</li>
-              <li>Short, honest inputs beat long, perfect ones.</li>
-              <li>Skip anything that isn’t relevant — you can refine later.</li>
-            </ul>
-          </section>
-
-          <section className="rounded-2xl border bg-white p-6 shadow-sm space-y-3">
-            <h2 className="text-xl font-semibold">Privacy</h2>
-            <p className="text-gray-700">
-              Your information is used to generate your report. You’re always in
-              control — you can review and edit answers later.
-            </p>
-          </section>
-
-          <div className="flex items-center justify-between">
-            <button className="btn btn-ghost" onClick={() => router.push("/app")}>
-              Back to dashboard
-            </button>
-            <button onClick={startIntake} className="btn btn-primary">
-              Start
-            </button>
-          </div>
-        </div>
+        <QuizIntro
+          title={intakeConfig.meta?.title ?? "Tell us about you"}
+          description={
+            intakeConfig.meta?.description ??
+            "We ask a few basics so the rest of your report reflects your real context."
+          }
+          timeEstimate="~2 mins"
+          onStart={startIntake}
+          onBack={() => router.push("/app")}
+          whatItMeasures={{
+            title: "What we'll ask",
+            items: [
+              "Background: where you are in life/study/work.",
+              "Context: location, education, preferred environments.",
+              "Focus: what you want to explore or achieve.",
+            ],
+          }}
+          tips={[
+            "Answer as you are today, not who you think you 'should' be.",
+            "Short, honest inputs beat long, perfect ones.",
+            "Skip anything that isn’t relevant — you can refine later.",
+          ]}
+        />
       ) : (
         /* ----------------------- QUESTIONS ----------------------- */
         <>

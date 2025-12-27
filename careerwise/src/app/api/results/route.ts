@@ -3,7 +3,7 @@ import { NextResponse, NextRequest } from 'next/server';
 import type { Answer } from '@/app/types/quiz';
 import type { MacroAnswer } from '@/app/types/quiz';
 import type { RIASECProfile } from '@/app/types/career';
-import { interpretMacroAnswer } from '@/app/lib/careerMatch';
+import { interpretMacroAnswer } from '../../lib/careerMatch';
 import careers from '@/app/data/careers.json';
 import { summarizeIntake } from "@/app/lib/intakeSummary";
 

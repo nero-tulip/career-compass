@@ -33,7 +33,7 @@ const TAXONOMY_NAME: Record<MotivatorKey, MotivationName> = {
   stability: "Stability",
   recognition: "Recognition",
   creativity: "Creativity",
-  service: "Service/Mentorship",
+  service: "Support/Mentorship",
   adventure: "Variety/Challenge",
   structure: "Structure/Clarity",
   belonging: "Belonging",

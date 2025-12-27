@@ -136,7 +136,7 @@ export async function generateNextSteps(user: User, rid: string): Promise<NextSt
 
   // ---- 5) Cluster-specific step
   if (topCluster) {
-    const key = topCluster.key;
+    const key = topCluster.key as string;
     if (key === "tech_engineering" || key === "data_research") {
       push(steps, {
         title: "Complete a scoped challenge",
