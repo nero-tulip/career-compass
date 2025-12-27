@@ -224,7 +224,7 @@ function ModuleCard(props: {
                 width: `${Math.max(0, Math.min(100, progress.pct))}%`,
                 background: locked
                   ? "var(--border)"
-                  : "linear-gradient(90deg, var(--mint-400), var(--mint-400))",
+                  : "linear-gradient(90deg, var(--mint-600), var(--mint-600))",
               }}
             />
           </div>
@@ -281,7 +281,7 @@ function ModuleCard(props: {
 
 function ProBadge({ locked }: { locked: boolean }) {
   return (
-    <span className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-gradient-to-r from-[var(--lav-600)] to-[var(--lav-400)] text-[#0b1b12] border border-black/5 font-medium">
+    <span className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-gradient-to-r from-[var(--lav-400)] to-[var(--lav-400)] text-[#0b1b12] font-medium">
       PRO
     </span>
   );
