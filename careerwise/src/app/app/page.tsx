@@ -223,8 +223,8 @@ function ModuleCard(props: {
               style={{
                 width: `${Math.max(0, Math.min(100, progress.pct))}%`,
                 background: locked
-                  ? "linear-gradient(90deg,#a78bfa,#f472b6)"
-                  : "linear-gradient(90deg,#22d3ee,#a855f7)",
+                  ? "var(--border)"
+                  : "linear-gradient(90deg, var(--mint-400), var(--mint-400))",
               }}
             />
           </div>
@@ -243,10 +243,10 @@ function ModuleCard(props: {
           className={[
             "px-3 py-1.5 rounded-lg text-sm cursor-pointer",
             props.tier === "comingSoon"
-              ? "bg-[var(--sky-400)] text-black border-[var(--sky-600)] cursor-not-allowed opacity-80"
+              ? "bg-[var(--sand-200)] text-[var(--sand-600)] cursor-not-allowed opacity-80"
               : locked
-              ? "bg-purple-600 text-white"
-              : "bg-black text-white",
+              ? "bg-[var(--bg)] text-[var(--text-dim)] border border-[var(--border)]"
+              : "bg-[var(--mint-400)] text-[#0b1b12] shadow-sm hover:bg-[var(--mint-400)]/90",
             "hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-black/10",
           ].join(" ")}
         >
@@ -281,7 +281,7 @@ function ModuleCard(props: {
 
 function ProBadge({ locked }: { locked: boolean }) {
   return (
-    <span className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-purple-700 text-white border border-purple-900 font-medium">
+    <span className="inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-full bg-gradient-to-r from-[var(--lav-600)] to-[var(--lav-400)] text-[#0b1b12] border border-black/5 font-medium">
       PRO
     </span>
   );
